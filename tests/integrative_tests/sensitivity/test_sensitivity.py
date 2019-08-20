@@ -1,13 +1,12 @@
 import unittest
 
 import numpy
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import Imputer
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
 from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
@@ -31,11 +30,8 @@ class TestSensitivity(unittest.TestCase):
         else:
             estimator = DecisionTreeRegressor
 
-        estimators = []
-        estimators.append(('Imputer', Imputer()))
-        # estimators.append(('nn', MLPRegressor(hidden_layer_sizes=(5,), max_iter=1000)))
-        estimators.append(('Estimator', estimator(random_state=0)))
-        model = Pipeline(estimators)
+        model = model = GeneralUtils.simple_imputation_pipeline(
+            estimator(random_state=0))
 
         return model
 
@@ -182,4 +178,4 @@ class TestSensitivity(unittest.TestCase):
             perturbed_sensitivity=perturb,
             perturbed_sensitivity_meta=perturbed_sensitivity_meta,
             missing_sensitivity=missing)
-        self.assertTrue(len(scores) > 3)
+        self.assertTrue(len(scores) >= 3)

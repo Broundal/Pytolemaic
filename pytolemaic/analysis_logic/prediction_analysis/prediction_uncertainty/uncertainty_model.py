@@ -1,8 +1,5 @@
 import numpy
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import Imputer
 
 from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
 from pytolemaic.utils.dmd import DMD
@@ -72,10 +69,8 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             estimator = RandomForestRegressor(
                 random_state=0, n_jobs=n_jobs, n_estimators=100)
 
-            estimators = []
-            estimators.append(('Imputer', Imputer()))
-            estimators.append(('Estimator', estimator))
-            self.uncertainty_model = Pipeline(steps=estimators)
+            self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
+                estimator)
 
             yp = self.predict(dmd_test)
             self.uncertainty_model.fit(dmd_test.values,
@@ -109,11 +104,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
         estimator = RandomForestClassifier(
             random_state=0, n_jobs=n_jobs, n_estimators=100)
 
-        estimators = []
-        estimators.append(('Imputer', Imputer()))
-        # estimators.append(('nn', MLPRegressor(hidden_layer_sizes=(5,), max_iter=1000)))
-        estimators.append(('Estimator', estimator))
-        return Pipeline(estimators)
+        return GeneralUtils.simple_imputation_pipeline(estimator)
 
     @classmethod
     def _get_probability_estimator(cls, n_jobs=-1):
@@ -121,11 +112,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
         estimator = RandomForestClassifier(
             random_state=0, n_jobs=n_jobs, n_estimators=100)
 
-        estimators = []
-        estimators.append(('Imputer', Imputer()))
-        # estimators.append(('nn', MLPRegressor(hidden_layer_sizes=(5,), max_iter=1000)))
-        estimators.append(('Estimator', estimator))
-        return Pipeline(estimators)
+        return GeneralUtils.simple_imputation_pipeline(estimator)
 
     def fit_uncertainty_model(self, dmd_test, estimator=None, n_jobs=-1,
                               **kwargs):
@@ -136,14 +123,14 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             estimator = RandomForestClassifier(
                 random_state=0, n_jobs=n_jobs, n_estimators=100)
 
-            estimators = []
-            estimators.append(('Imputer', SimpleImputer()))
-            estimators.append(('Estimator', estimator))
-            self.uncertainty_model = Pipeline(steps=estimators)
+            self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
+                estimator)
 
             yp = self.predict(dmd_test)
-            is_correct = (yp == dmd_test.target).astype(int)
+            is_correct = numpy.array(yp == dmd_test.target, dtype=int)
 
+            # bug here
+            return
             self.uncertainty_model.fit(dmd_test.values, is_correct)
 
         else:

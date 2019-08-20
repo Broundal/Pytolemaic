@@ -3,12 +3,11 @@ import unittest
 import numpy
 import sklearn
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import Imputer
 
 from pytolemaic.analysis_logic.prediction_analysis.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier
 from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.general import GeneralUtils
 
 
 class TestPredictionsUncertainty(unittest.TestCase):
@@ -31,11 +30,8 @@ class TestPredictionsUncertainty(unittest.TestCase):
         else:
             estimator = RandomForestRegressor
 
-        estimators = []
-        estimators.append(('Imputer', Imputer()))
-        # estimators.append(('nn', MLPRegressor(hidden_layer_sizes=(5,), max_iter=1000)))
-        estimators.append(('Estimator', estimator(random_state=0, n_jobs=-1)))
-        model = Pipeline(estimators)
+        model = GeneralUtils.simple_imputation_pipeline(
+            estimator(random_state=0, n_jobs=-1))
 
         return model
 

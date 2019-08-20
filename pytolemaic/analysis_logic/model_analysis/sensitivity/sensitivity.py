@@ -105,8 +105,8 @@ class SensitivityAnalysis():
         report['leakge_score'] = self._leakage(**perturbed_sensitivity_meta)
         report['overfit_score'] = self._overfit(**perturbed_sensitivity_meta)
         report['imputation_score'] = self._imputation_score(
-            shuffled=self.perturbed_sensitivity,
-            missing=self.missing_sensitivity)
+            shuffled=perturbed_sensitivity,
+            missing=missing_sensitivity)
 
         return report
 
@@ -146,6 +146,9 @@ class SensitivityAnalysis():
 
         deltas = numpy.abs([shuffled[i] - missing[i] for i in shuffled])
         deltas = deltas[deltas >= max(deltas) * 1e-3]
+        if max(abs(deltas)) == 0:
+            return 0
+
         score = np.mean(deltas) / max(deltas)
         return score
 

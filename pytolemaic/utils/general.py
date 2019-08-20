@@ -1,3 +1,7 @@
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+
+
 class GeneralUtils():
 
     @classmethod
@@ -11,3 +15,10 @@ class GeneralUtils():
             return True
         except:
             return False
+
+    @classmethod
+    def simple_imputation_pipeline(cls, estimator):
+        estimators = []
+        estimators.append(('Imputer', SimpleImputer()))
+        estimators.append(('Estimator', estimator))
+        return Pipeline(steps=estimators)
