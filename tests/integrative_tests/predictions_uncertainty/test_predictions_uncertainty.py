@@ -5,7 +5,7 @@ import sklearn
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 from pytolemaic.analysis_logic.prediction_analysis.prediction_uncertainty.uncertainty_model import \
-    UncertaintyModelClassifier
+    UncertaintyModelClassifier, UncertaintyModelRegressor
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 
@@ -51,9 +51,107 @@ class TestPredictionsUncertainty(unittest.TestCase):
         uncertainty_model.fit(dmd_test=test)
 
         new_data = self.get_data(is_classification, seed=2)
-        yp = uncertainty_model.predict_proba(new_data)
+        yp = uncertainty_model.predict(new_data)
         uncertainty = uncertainty_model.uncertainty(new_data)
 
-        print(sklearn.metrics.recall_score(y_true=new_data.target, y_pred=yp))
-        print(sklearn.metrics.recall_score(y_true=new_data.target, y_pred=yp,
-                                           sample_weight=uncertainty))
+        base_score = sklearn.metrics.recall_score(y_true=new_data.target,
+                                                  y_pred=yp, average='macro')
+
+        good = (uncertainty < 0.1).ravel()
+        subset_good_score = sklearn.metrics.recall_score(
+            y_true=new_data.target[good], y_pred=yp[good], average='macro')
+
+        bad = (uncertainty > 0.9).ravel()
+        subset_bad_score = sklearn.metrics.recall_score(
+            y_true=new_data.target[bad], y_pred=yp[bad], average='macro')
+
+        self.assertGreater(subset_good_score, base_score)
+        self.assertLess(subset_bad_score, base_score)
+
+        print(subset_bad_score, base_score, subset_good_score)
+
+        # subset_bad_score = []
+        # subset_good_score = []
+        # for k in range(10):
+        #     bad = (uncertainty > (k+1)/11).ravel()
+        #     subset_bad_score.append(sklearn.metrics.recall_score(
+        #         y_true=new_data.target[bad], y_pred=yp[bad], average='macro'))
+        #
+        #     good = (uncertainty < (k + 1) / 11).ravel()
+        #     subset_good_score.append(sklearn.metrics.recall_score(
+        #         y_true=new_data.target[good], y_pred=yp[good], average='macro'))
+        #
+        # from matplotlib import pyplot as plt
+        # plt.plot(range(10), subset_bad_score,'.-r',
+        #          list(reversed(range(10))), subset_good_score,'.-g')
+        # plt.show()
+
+    def test_classification_probability(self, is_classification=True,
+                                        method='probability'):
+
+        model = self.get_model(is_classification)
+
+        train = self.get_data(is_classification)
+        model.fit(train.values, train.target)
+
+        test = self.get_data(is_classification, seed=1)
+
+        uncertainty_model = UncertaintyModelClassifier(model=model,
+                                                       uncertainty_method=method)
+
+        uncertainty_model.fit(dmd_test=test)
+
+        new_data = self.get_data(is_classification, seed=2)
+        yp = uncertainty_model.predict(new_data)
+        uncertainty = uncertainty_model.uncertainty(new_data)
+
+        base_score = sklearn.metrics.recall_score(y_true=new_data.target,
+                                                  y_pred=yp, average='macro')
+
+        good = (uncertainty < 0.5).ravel()
+        subset_good_score = sklearn.metrics.recall_score(
+            y_true=new_data.target[good], y_pred=yp[good], average='macro')
+
+        bad = (uncertainty > 0.5).ravel()
+        subset_bad_score = sklearn.metrics.recall_score(
+            y_true=new_data.target[bad], y_pred=yp[bad], average='macro')
+
+        print(subset_bad_score, base_score, subset_good_score)
+
+        self.assertGreater(subset_good_score, base_score)
+        # self.assertLess(subset_bad_score, base_score)
+
+    def test_regression_mae(self, is_classification=False,
+                            method='mae'):
+
+        model = self.get_model(is_classification)
+
+        train = self.get_data(is_classification)
+        model.fit(train.values, train.target)
+
+        test = self.get_data(is_classification, seed=1)
+
+        uncertainty_model = UncertaintyModelRegressor(model=model,
+                                                      uncertainty_method=method)
+
+        uncertainty_model.fit(dmd_test=test)
+
+        new_data = self.get_data(is_classification, seed=2)
+        yp = uncertainty_model.predict(new_data)
+        uncertainty = uncertainty_model.uncertainty(new_data)
+
+        base_score = sklearn.metrics.r2_score(y_true=new_data.target,
+                                              y_pred=yp)
+
+        good = (uncertainty < 0.5).ravel()
+        subset_good_score = sklearn.metrics.r2_score(
+            y_true=new_data.target[good], y_pred=yp[good])
+
+        bad = (uncertainty > 0.5).ravel()
+        subset_bad_score = sklearn.metrics.r2_score(
+            y_true=new_data.target[bad], y_pred=yp[bad])
+
+        self.assertGreater(subset_good_score, base_score)
+        self.assertLess(subset_bad_score, base_score)
+
+        print(subset_bad_score, base_score, subset_good_score)

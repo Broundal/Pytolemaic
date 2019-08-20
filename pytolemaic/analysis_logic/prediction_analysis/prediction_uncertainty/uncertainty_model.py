@@ -74,14 +74,16 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
 
             yp = self.predict(dmd_test)
             self.uncertainty_model.fit(dmd_test.values,
-                                       numpy.abs(dmd_test.target - yp))
+                                       numpy.abs(
+                                           dmd_test.target.ravel() - yp.ravel()))
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
 
     def uncertainty(self, dmd: DMD):
         if self.uncertainty_method in ['mae']:
-            return self.uncertainty_model.predict(dmd.values)
+            out = self.uncertainty_model.predict(dmd.values)
+            return out.reshape(-1, 1)
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
@@ -121,16 +123,16 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             pass  # no fit logic required
         elif self.uncertainty_method in ['confidence']:
             estimator = RandomForestClassifier(
-                random_state=0, n_jobs=n_jobs, n_estimators=100)
+                random_state=0, n_jobs=n_jobs, n_estimators=5)
 
             self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
                 estimator)
 
             yp = self.predict(dmd_test)
-            is_correct = numpy.array(yp == dmd_test.target, dtype=int)
+            is_correct = numpy.array(yp.ravel() == dmd_test.target.ravel(),
+                                     dtype=int)
 
             # bug here
-            return
             self.uncertainty_model.fit(dmd_test.values, is_correct)
 
         else:
@@ -140,12 +142,18 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
     def uncertainty(self, dmd: DMD):
         if self.uncertainty_method in ['probability']:
             yproba = self.predict_proba(dmd)
+            yproba += 1e-10 * numpy.random.rand(*yproba.shape)
             max_probability = numpy.max(yproba, axis=1).reshape(-1, 1)
             delta = max_probability - yproba
-            delta[delta == 0] = 10
-            return numpy.min(delta, axis=1).reshape(-1, 1) / max_probability
+            yproba[delta == 0] = 0
+
+            # delta[numpy.sum(delta, axis=1)>=20,:] = 0 # i
+            out = numpy.max(yproba, axis=1).reshape(-1, 1) / max_probability
+            return out.reshape(-1, 1)
         elif self.uncertainty_method in ['confidence']:
-            return self.uncertainty_model.predict_proba(dmd.values)[:, 1]
+            # return the probability it's a mistake
+            out = self.uncertainty_model.predict_proba(dmd.values)[:, 0]
+            return out.reshape(-1, 1)
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
