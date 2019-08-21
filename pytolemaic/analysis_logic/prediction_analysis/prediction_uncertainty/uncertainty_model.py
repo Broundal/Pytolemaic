@@ -67,7 +67,8 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
 
         if self.uncertainty_method in ['mae']:
             estimator = RandomForestRegressor(
-                random_state=0, n_jobs=n_jobs, n_estimators=100)
+                random_state=0, n_jobs=n_jobs,
+                n_estimators=kwargs.pop('n_estimators', 100))
 
             self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
                 estimator)

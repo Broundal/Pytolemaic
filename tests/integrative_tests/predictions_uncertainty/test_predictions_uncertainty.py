@@ -14,7 +14,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
 
     def get_data(self, is_classification, seed=0):
         rs = numpy.random.RandomState(seed)
-        x = rs.rand(10000, 10)
+        x = rs.rand(10000, 5)
         x[:, 1] = 0
         # 1st is double importance, 2nd has no importance
         y = numpy.sum(x, axis=1) + 2 * x[:, 0]
@@ -31,7 +31,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
             estimator = RandomForestRegressor
 
         model = GeneralUtils.simple_imputation_pipeline(
-            estimator(random_state=0, n_jobs=-1))
+            estimator(random_state=0, n_jobs=-1, n_estimators=10))
 
         return model
 
@@ -57,11 +57,13 @@ class TestPredictionsUncertainty(unittest.TestCase):
         base_score = sklearn.metrics.recall_score(y_true=new_data.target,
                                                   y_pred=yp, average='macro')
 
-        good = (uncertainty < 0.1).ravel()
+        p50 = numpy.percentile(numpy.unique(uncertainty), 50)
+
+        good = (uncertainty < p50).ravel()
         subset_good_score = sklearn.metrics.recall_score(
             y_true=new_data.target[good], y_pred=yp[good], average='macro')
 
-        bad = (uncertainty > 0.9).ravel()
+        bad = (uncertainty > p50).ravel()
         subset_bad_score = sklearn.metrics.recall_score(
             y_true=new_data.target[bad], y_pred=yp[bad], average='macro')
 
@@ -108,11 +110,13 @@ class TestPredictionsUncertainty(unittest.TestCase):
         base_score = sklearn.metrics.recall_score(y_true=new_data.target,
                                                   y_pred=yp, average='macro')
 
-        good = (uncertainty < 0.5).ravel()
+        p50 = numpy.percentile(numpy.unique(uncertainty), 50)
+
+        good = (uncertainty < p50).ravel()
         subset_good_score = sklearn.metrics.recall_score(
             y_true=new_data.target[good], y_pred=yp[good], average='macro')
 
-        bad = (uncertainty > 0.5).ravel()
+        bad = (uncertainty > p50).ravel()
         subset_bad_score = sklearn.metrics.recall_score(
             y_true=new_data.target[bad], y_pred=yp[bad], average='macro')
 
@@ -134,7 +138,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
         uncertainty_model = UncertaintyModelRegressor(model=model,
                                                       uncertainty_method=method)
 
-        uncertainty_model.fit(dmd_test=test)
+        uncertainty_model.fit(dmd_test=test, n_estimators=3, n_jobs=1)
 
         new_data = self.get_data(is_classification, seed=2)
         yp = uncertainty_model.predict(new_data)
@@ -143,11 +147,12 @@ class TestPredictionsUncertainty(unittest.TestCase):
         base_score = sklearn.metrics.r2_score(y_true=new_data.target,
                                               y_pred=yp)
 
-        good = (uncertainty < 0.5).ravel()
+        p50 = numpy.percentile(numpy.unique(uncertainty), 50)
+        good = (uncertainty < p50).ravel()
         subset_good_score = sklearn.metrics.r2_score(
             y_true=new_data.target[good], y_pred=yp[good])
 
-        bad = (uncertainty > 0.5).ravel()
+        bad = (uncertainty > p50).ravel()
         subset_bad_score = sklearn.metrics.r2_score(
             y_true=new_data.target[bad], y_pred=yp[bad])
 
