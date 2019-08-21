@@ -1,5 +1,6 @@
 import functools
 
+import numpy
 import sklearn.metrics
 
 from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
@@ -59,3 +60,24 @@ class Metrics():
             return value
         else:
             return 1 - value
+
+    @classmethod
+    def confidence_interval(cls, metric: str, y_true: numpy.ndarray,
+                            y_proba: numpy.ndarray = None,
+                            y_pred: numpy.ndarray = None,
+                            low=0.25, high=0.75,
+                            n_bags=20):
+        if isinstance(metric, str):
+            metric = cls.supported_metrics()[metric]
+
+        if metric.is_proba:
+            y_pred = y_proba
+
+        rs = numpy.random.RandomState(0)
+
+        scores = []
+        for k in range(n_bags):
+            bagging = rs.randint(0, len(y_true), len(y_true))
+            scores.append(metric.function(y_true[bagging], y_pred[bagging]))
+
+        return numpy.percentile(scores, q=[low * 100, high * 100])

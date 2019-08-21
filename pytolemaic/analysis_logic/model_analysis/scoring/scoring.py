@@ -28,43 +28,43 @@ class ScoringReport():
         if is_classification:
 
             y_proba = y_proba or model.predict_proba(x_test)
-            yp = y_pred or numpy.argmax(y_proba, axis=1)
+            y_pred = y_pred or numpy.argmax(y_proba, axis=1)
 
             for metric in self.metrics:
                 if not metric.ptype == CLASSIFICATION:
                     continue
                 if metric.is_proba:
-                    score_report[metric.name] = metric.function(y_true,
-                                                                y_proba)
+                    yp = y_proba
                 else:
-                    score_report[metric.name] = metric.function(y_true, yp)
+                    yp = y_pred
+
+                score = metric.function(y_true, yp)
+                ci_low, ci_high = Metrics.confidence_interval(metric,
+                                                              y_true=y_true,
+                                                              y_pred=y_pred,
+                                                              y_proba=y_proba)
+                score_report[metric.name] = dict(score=score,
+                                                 ci_low=ci_low,
+                                                 ci_high=ci_high)
+
 
         else:
-            yp = y_pred or model.predict(x_test)
+            y_pred = y_pred or model.predict(x_test)
             for metric in self.metrics:
                 if not metric.ptype == REGRESSION:
                     continue
-                score_report[metric.name] = metric.function(y_true, yp)
+
+                score = metric.function(y_true, y_pred)
+                ci_low, ci_high = Metrics.confidence_interval(metric,
+                                                              y_true=y_true,
+                                                              y_pred=y_pred)
+                score_report[metric.name] = dict(score=score,
+                                                 ci_low=ci_low,
+                                                 ci_high=ci_high)
 
         return score_report
 
-    def _confidence_interval(self, metric: str, y_test: numpy.ndarray,
-                             y_proba: numpy.ndarray = None,
-                             y_pred: numpy.ndarray = None,
-                             low=0.25, high=0.75,
-                             n_bags=20):
-        metric = self.supported_metric[metric]
-        if metric.is_proba:
-            y_pred = y_proba
 
-        rs = numpy.random.RandomState(0)
-
-        scores = []
-        for k in range(n_bags):
-            bagging = rs.randint(0, len(y_test), len(y_test))
-            scores.append(metric.function(y_test[bagging], y_pred[bagging]))
-
-        return numpy.percentile(scores, q=[low * 100, high * 100])
 
 
 if __name__ == '__main__':
