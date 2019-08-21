@@ -56,12 +56,10 @@ class UncertaintyModelBase():
 
 class UncertaintyModelRegressor(UncertaintyModelBase):
 
-    def __init__(self, model, uncertainty_method='mae'):
-        super(UncertaintyModelRegressor, self).__init__(model=model,
-                                                        uncertainty_method=uncertainty_method,
-                                                        ptype=REGRESSION,
-                                                        supported_methods=[
-                                                            'mae'])
+    def __init__(self, model, uncertainty_method='rmse'):
+        super(UncertaintyModelRegressor, self).__init__(
+            model=model, uncertainty_method=uncertainty_method,
+            ptype=REGRESSION, supported_methods=['mae', 'rmse'])
 
     def fit_uncertainty_model(self, dmd_test, n_jobs=-1, **kwargs):
 
@@ -77,6 +75,18 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             self.uncertainty_model.fit(dmd_test.values,
                                        numpy.abs(
                                            dmd_test.target.ravel() - yp.ravel()))
+        elif self.uncertainty_method in ['rmse']:
+            estimator = RandomForestRegressor(
+                random_state=0, n_jobs=n_jobs,
+                n_estimators=kwargs.pop('n_estimators', 100))
+
+            self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
+                estimator)
+
+            yp = self.predict(dmd_test)
+            self.uncertainty_model.fit(dmd_test.values,
+                                       (
+                                                   dmd_test.target.ravel() - yp.ravel()) ** 2)
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
@@ -84,6 +94,9 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
     def uncertainty(self, dmd: DMD):
         if self.uncertainty_method in ['mae']:
             out = self.uncertainty_model.predict(dmd.values)
+            return out.reshape(-1, 1)
+        elif self.uncertainty_method in ['rmse']:
+            out = numpy.sqrt(self.uncertainty_model.predict(dmd.values))
             return out.reshape(-1, 1)
         else:
             raise NotImplementedError("Method {} is not implemented"

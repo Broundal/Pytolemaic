@@ -35,9 +35,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
 
         return model
 
-    def test_classification_confidence(self, is_classification=True,
-                                       method='confidence'):
-
+    def _test(self, is_classification, method):
         model = self.get_model(is_classification)
 
         train = self.get_data(is_classification)
@@ -45,32 +43,50 @@ class TestPredictionsUncertainty(unittest.TestCase):
 
         test = self.get_data(is_classification, seed=1)
 
-        uncertainty_model = UncertaintyModelClassifier(model=model,
-                                                       uncertainty_method=method)
+        if is_classification:
+            uncertainty_model = UncertaintyModelClassifier(model=model,
+                                                           uncertainty_method=method)
+        else:
+            uncertainty_model = UncertaintyModelRegressor(model=model,
+                                                          uncertainty_method=method)
 
-        uncertainty_model.fit(dmd_test=test)
+        uncertainty_model.fit(dmd_test=test, n_jobs=5, n_estimators=5)
 
         new_data = self.get_data(is_classification, seed=2)
         yp = uncertainty_model.predict(new_data)
         uncertainty = uncertainty_model.uncertainty(new_data)
 
-        base_score = sklearn.metrics.recall_score(y_true=new_data.target,
-                                                  y_pred=yp, average='macro')
+        metric = sklearn.metrics.recall_score if is_classification else sklearn.metrics.r2_score
+        kwargs = {'average': 'macro'} if is_classification else {}
+        base_score = metric(y_true=new_data.target,
+                            y_pred=yp, **kwargs)
 
         p50 = numpy.percentile(numpy.unique(uncertainty), 50)
 
         good = (uncertainty < p50).ravel()
-        subset_good_score = sklearn.metrics.recall_score(
-            y_true=new_data.target[good], y_pred=yp[good], average='macro')
+        subset_good_score = metric(
+            y_true=new_data.target[good], y_pred=yp[good], **kwargs)
 
         bad = (uncertainty > p50).ravel()
-        subset_bad_score = sklearn.metrics.recall_score(
-            y_true=new_data.target[bad], y_pred=yp[bad], average='macro')
+        subset_bad_score = metric(
+            y_true=new_data.target[bad], y_pred=yp[bad], **kwargs)
 
         self.assertGreater(subset_good_score, base_score)
         self.assertLess(subset_bad_score, base_score)
 
         print(subset_bad_score, base_score, subset_good_score)
+
+    def test_classification_confidence(self):
+        self._test(is_classification=True, method='confidence')
+
+    def test_classification_probability(self):
+        self._test(is_classification=True, method='probability')
+
+    def test_regression_mae(self):
+        self._test(is_classification=False, method='mae')
+
+    def test_regression_rmse(self):
+        self._test(is_classification=False, method='rmse')
 
         # subset_bad_score = []
         # subset_good_score = []
@@ -87,76 +103,3 @@ class TestPredictionsUncertainty(unittest.TestCase):
         # plt.plot(range(10), subset_bad_score,'.-r',
         #          list(reversed(range(10))), subset_good_score,'.-g')
         # plt.show()
-
-    def test_classification_probability(self, is_classification=True,
-                                        method='probability'):
-
-        model = self.get_model(is_classification)
-
-        train = self.get_data(is_classification)
-        model.fit(train.values, train.target)
-
-        test = self.get_data(is_classification, seed=1)
-
-        uncertainty_model = UncertaintyModelClassifier(model=model,
-                                                       uncertainty_method=method)
-
-        uncertainty_model.fit(dmd_test=test)
-
-        new_data = self.get_data(is_classification, seed=2)
-        yp = uncertainty_model.predict(new_data)
-        uncertainty = uncertainty_model.uncertainty(new_data)
-
-        base_score = sklearn.metrics.recall_score(y_true=new_data.target,
-                                                  y_pred=yp, average='macro')
-
-        p50 = numpy.percentile(numpy.unique(uncertainty), 50)
-
-        good = (uncertainty < p50).ravel()
-        subset_good_score = sklearn.metrics.recall_score(
-            y_true=new_data.target[good], y_pred=yp[good], average='macro')
-
-        bad = (uncertainty > p50).ravel()
-        subset_bad_score = sklearn.metrics.recall_score(
-            y_true=new_data.target[bad], y_pred=yp[bad], average='macro')
-
-        print(subset_bad_score, base_score, subset_good_score)
-
-        self.assertGreater(subset_good_score, base_score)
-        # self.assertLess(subset_bad_score, base_score)
-
-    def test_regression_mae(self, is_classification=False,
-                            method='mae'):
-
-        model = self.get_model(is_classification)
-
-        train = self.get_data(is_classification)
-        model.fit(train.values, train.target)
-
-        test = self.get_data(is_classification, seed=1)
-
-        uncertainty_model = UncertaintyModelRegressor(model=model,
-                                                      uncertainty_method=method)
-
-        uncertainty_model.fit(dmd_test=test, n_estimators=3, n_jobs=1)
-
-        new_data = self.get_data(is_classification, seed=2)
-        yp = uncertainty_model.predict(new_data)
-        uncertainty = uncertainty_model.uncertainty(new_data)
-
-        base_score = sklearn.metrics.r2_score(y_true=new_data.target,
-                                              y_pred=yp)
-
-        p50 = numpy.percentile(numpy.unique(uncertainty), 50)
-        good = (uncertainty < p50).ravel()
-        subset_good_score = sklearn.metrics.r2_score(
-            y_true=new_data.target[good], y_pred=yp[good])
-
-        bad = (uncertainty > p50).ravel()
-        subset_bad_score = sklearn.metrics.r2_score(
-            y_true=new_data.target[bad], y_pred=yp[bad])
-
-        self.assertGreater(subset_good_score, base_score)
-        self.assertLess(subset_bad_score, base_score)
-
-        print(subset_bad_score, base_score, subset_good_score)

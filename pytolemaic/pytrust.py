@@ -2,6 +2,8 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
     ScoringReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
+from pytolemaic.analysis_logic.prediction_analysis.prediction_uncertainty.uncertainty_model import \
+    UncertaintyModelClassifier, UncertaintyModelRegressor
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
@@ -102,3 +104,15 @@ class SklearnTrustBase():
         self.scoring = ScoringReport(metrics=metrics)
 
         return self.scoring.score_report(model=self.model, dmd_test=self.test)
+
+    def fit_uncertainty_model(self, method='auto'):
+        if self.is_classification:
+            self.uncertainty_model = UncertaintyModelClassifier(
+                model=self.model,
+                uncertainty_method='confidence' if method == 'auto' else method)
+            self.uncertainty_model.fit(dmd_test=self.test)
+        else:
+            self.uncertainty_model = UncertaintyModelRegressor(
+                model=self.model,
+                uncertainty_method='rmse' if method == 'auto' else method)
+            self.uncertainty_model.fit(dmd_test=self.test)
