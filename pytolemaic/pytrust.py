@@ -6,7 +6,7 @@ from pytolemaic.analysis_logic.prediction_analysis.prediction_uncertainty.uncert
     UncertaintyModelClassifier, UncertaintyModelRegressor
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
-from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.metrics import Metrics, Metric
 
 
 class SklearnTrustBase():
@@ -19,7 +19,7 @@ class SklearnTrustBase():
                  sample_meta_test=None,
 
                  columns_meta=None,
-                 metric: str = None,
+                 metric: [str, Metric] = None,
                  splitter='shuffled'):
         self.model = model
 
@@ -46,7 +46,7 @@ class SklearnTrustBase():
                                 columns_meta=columns_meta,
                                 splitter=splitter)
 
-        self.metric = metric
+        self.metric = metric.name if isinstance(metric, Metric) else metric
 
         # todo
         self._validate_input()
@@ -57,6 +57,7 @@ class SklearnTrustBase():
         self._model_support_dmd = None
         self._y_pred_test = None
         self._y_proba_test = None
+        self._uncertainty_models = {}
 
 
     def _validate_input(self):
@@ -109,14 +110,24 @@ class SklearnTrustBase():
 
         return self.scoring.score_report(model=self.model, dmd_test=self.test)
 
-    def fit_uncertainty_model(self, method='auto'):
-        if self.is_classification:
-            self.uncertainty_model = UncertaintyModelClassifier(
-                model=self.model,
-                uncertainty_method='confidence' if method == 'auto' else method)
-            self.uncertainty_model.fit(dmd_test=self.test)
-        else:
-            self.uncertainty_model = UncertaintyModelRegressor(
-                model=self.model,
-                uncertainty_method='rmse' if method == 'auto' else method)
-            self.uncertainty_model.fit(dmd_test=self.test)
+    def create_uncertainty_model(self, method='auto'):
+        if method not in self._uncertainty_models:
+
+            if self.is_classification:
+                method = 'confidence' if method == 'auto' else method
+                uncertainty_model = UncertaintyModelClassifier(
+                    model=self.model,
+                    uncertainty_method=method)
+            else:
+                method = 'rmse' if method == 'auto' else method
+                uncertainty_model = UncertaintyModelRegressor(
+                    model=self.model,
+                    uncertainty_method=method)
+
+            uncertainty_model.fit(dmd_test=self.test)
+            self._uncertainty_models[method] = uncertainty_model
+
+        return self._uncertainty_models[method]
+
+
+
