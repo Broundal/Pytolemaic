@@ -103,7 +103,7 @@ class TestSensitivity(unittest.TestCase):
         print(scores)
         self.assertTrue(isinstance(scores, dict))
         self.assertEqual(len(scores), test.n_features)
-        self.assertEqual(numpy.round(sum([v for v in scores.values()]), 6), 1)
+        self.assertGreaterEqual(numpy.round(sum([v for v in scores.values()]), 6), 1-1e-5)
         self.assertEqual(scores['f_1'], 0)
         self.assertGreaterEqual(scores['f_0'], 2 / len(scores))
 
@@ -129,7 +129,7 @@ class TestSensitivity(unittest.TestCase):
         print(scores)
         self.assertTrue(isinstance(scores, dict))
         self.assertEqual(len(scores), test.n_features)
-        self.assertEqual(numpy.round(sum([v for v in scores.values()]), 6), 1)
+        self.assertGreaterEqual(numpy.round(sum([v for v in scores.values()]), 6), 1-1e-5)
         self.assertEqual(scores['f_1'], 0)
         self.assertGreaterEqual(scores['f_0'], 2 / len(scores))
 

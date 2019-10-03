@@ -69,8 +69,12 @@ class SensitivityAnalysis():
             shuffled_pred = predict_function(shuffled_x)
             scores[name] = score_function(y_pred, shuffled_pred) - base_score
 
+
         if raw_scores:
+            # description = "The raw scores of how each feature affects the model's predictions."
             return scores
+
+
 
         # higher score / lower loss means the shuffled feature did less impact
         if self.metrics[metric].is_loss:
@@ -83,7 +87,11 @@ class SensitivityAnalysis():
                   name, score in impact.items()}
         impact = GeneralUtils.round_values(impact)
 
+        # description="The impact of each feature on model's predictions. "
+        #             "Higher value mean larger impact (0 means no impact at all). "
+        #             "Values are normalized to 1.")
         return impact
+
 
     def _sensitivity_meta(self, sensitivity):
         if not sensitivity:

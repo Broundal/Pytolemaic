@@ -11,6 +11,7 @@ from pytolemaic.pytrust import SklearnTrustBase
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 def run():
@@ -28,7 +29,8 @@ def run():
 
 
      ## Let's train a regressor
-    regressor = RandomForestRegressor(random_state=0, n_estimators=3)
+    regressor = GeneralUtils.simple_imputation_pipeline(
+        RandomForestRegressor(random_state=0, n_estimators=3))
     regressor.fit(xtrain, ytrain)
 
     ## set metric

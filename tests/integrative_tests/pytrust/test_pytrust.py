@@ -113,7 +113,7 @@ class TestSensitivity(unittest.TestCase):
                 self.assertIn(metric.name, report)
                 self.assertEqual(len(report[metric.name]), 3)
                 low, score, high = report[metric.name]['ci_low'], \
-                                   report[metric.name]['score'], \
+                                   report[metric.name]['value'], \
                                    report[metric.name]['ci_high'],
                 self.assertTrue(low < score < high)
 
@@ -125,6 +125,6 @@ class TestSensitivity(unittest.TestCase):
                 self.assertIn(metric.name, report)
                 self.assertEqual(len(report[metric.name]), 3)
                 low, score, high = report[metric.name]['ci_low'], \
-                                   report[metric.name]['score'], \
+                                   report[metric.name]['value'], \
                                    report[metric.name]['ci_high'],
                 self.assertTrue(low < score < high)
