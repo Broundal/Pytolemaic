@@ -51,7 +51,6 @@ def run():
     uncertainty_model = pytrust.create_uncertainty_model(method='confidence')
 
 
-
     # create another test set, this time to test uncertainty
     x_new_test = numpy.random.rand(10000, 3)
     y_new_test = 0 * x_new_test[:, 0] + 1 * x_new_test[:, 1] + 3 * x_new_test[:, 2]
@@ -77,10 +76,10 @@ def run():
     subset_bad_score = metric.function(
         y_true=y_new_test[bad], y_pred=yp[bad])
 
-    print('general score is {:2f}'.format(base_score))
-    print('score for samples with high confidence is {:2f}'.format(subset_good_score))
-    print('score for samples with low confidence is {:2f}'.format(subset_bad_score))
-    print('low_conf_score < base_score < high_conf_score = {}'.format(subset_bad_score<base_score<subset_good_score))
+    print('general score is {:0.3f}'.format(base_score))
+    print('score for samples with high confidence is {:0.3f}'.format(subset_good_score))
+    print('score for samples with low confidence is {:0.3f}'.format(subset_bad_score))
+    print('{:0.3f} < {:0.3f} < {:0.3f} = {}'.format(subset_bad_score, base_score, subset_good_score, subset_bad_score<base_score<subset_good_score))
 
 if __name__ == '__main__':
     run()
