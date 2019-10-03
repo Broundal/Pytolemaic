@@ -19,10 +19,14 @@ class SklearnTrustBase():
                  sample_meta_test=None,
 
                  columns_meta=None,
-                 metric: str = None):
+                 metric: str = None,
+                 splitter='shuffled'):
         self.model = model
 
-        splitter = ShuffleSplitter  # todo support stratified
+        if splitter == 'shuffled':
+            splitter = ShuffleSplitter  # todo support stratified
+        else:
+            raise NotImplementedError
 
         if Xtrain is not None:
             if isinstance(Xtrain, DMD):

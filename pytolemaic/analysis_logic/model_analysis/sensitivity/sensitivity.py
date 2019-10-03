@@ -62,12 +62,12 @@ class SensitivityAnalysis():
             metric].is_proba \
             else model.predict
 
-        pred_func = lambda i: predict_function(
-            self.get_shuffled_x(dmd_test, i, method=method,
-                                model_support_dmd=self.model_support_dmd))
-
-        scores = {name: score_function(y_pred, pred_func(i)) - base_score
-                  for i, name in enumerate(dmd_test.feature_names)}
+        scores = {}
+        for i, name in enumerate(dmd_test.feature_names):
+            shuffled_x = self.get_shuffled_x(dmd_test, i, method=method,
+                                             model_support_dmd=self.model_support_dmd)
+            shuffled_pred = predict_function(shuffled_x)
+            scores[name] = score_function(y_pred, shuffled_pred) - base_score
 
         if raw_scores:
             return scores
@@ -79,8 +79,9 @@ class SensitivityAnalysis():
             impact = {name: 1 - score for name, score in scores.items()}
 
         total_impact = sum([score for score in impact.values()])
-        impact = {name: float(numpy.round(score / total_impact, 8)) for
+        impact = {name: float(score / total_impact) for
                   name, score in impact.items()}
+        impact = GeneralUtils.round_values(impact)
 
         return impact
 
@@ -108,6 +109,7 @@ class SensitivityAnalysis():
             shuffled=perturbed_sensitivity,
             missing=missing_sensitivity)
 
+        report  = GeneralUtils.round_values(report)
         return report
 
     def _leakage(self, n_features, n_zero, **kwargs):
@@ -168,8 +170,9 @@ class SensitivityAnalysis():
                 method='missing',
                 raw_scores=False)
         except:
-            logging.exception(
-                "Failed to calculate sensitivity with 'missing' method. Does you model support imputation?")
+            logging.error(
+                "Failed to calculate sensitivity with 'missing' method... Does your model handle missing values?")
+
             self.missing_sensitivity = {}
 
     def sensitivity_report(self):

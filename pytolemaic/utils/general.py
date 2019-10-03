@@ -1,3 +1,4 @@
+import numpy
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 
@@ -22,3 +23,13 @@ class GeneralUtils():
         estimators.append(('Imputer', SimpleImputer()))
         estimators.append(('Estimator', estimator))
         return Pipeline(steps=estimators)
+
+    @classmethod
+    def round_values(cls, d: dict, digits=5):
+        for k, v in d.items():
+            try:
+                d[k] = numpy.round(v, digits)
+            except:
+                pass
+
+        return d

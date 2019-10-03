@@ -43,7 +43,7 @@ class ScoringReport():
                                                               y_true=y_true,
                                                               y_pred=y_pred,
                                                               y_proba=y_proba)
-                score_report[metric.name] = dict(score=score,
+                score_report[metric.name] = dict(value=score,
                                                  ci_low=ci_low,
                                                  ci_high=ci_high)
 
@@ -58,9 +58,13 @@ class ScoringReport():
                 ci_low, ci_high = Metrics.confidence_interval(metric,
                                                               y_true=y_true,
                                                               y_pred=y_pred)
-                score_report[metric.name] = dict(score=score,
+                score_report[metric.name] = dict(value=score,
                                                  ci_low=ci_low,
                                                  ci_high=ci_high)
+
+
+        for metric in score_report:
+            score_report[metric] = GeneralUtils.round_values(score_report[metric])
 
         return score_report
 
