@@ -8,6 +8,8 @@ from pytolemaic.utils.metrics import Metrics
 
 def run():
 
+    #Let's define dataset and label
+
     xtrain = numpy.random.rand(10000, 3)
     columns_names = ['zero importance', 'regular importance', 'triple importance']
 
@@ -27,28 +29,16 @@ def run():
     ## set metric
     metric = Metrics.recall
 
-    ## set splitting strategy
-    splitter = 'shuffled' # todo: support stratified
-
-    ## sample meta data (e.g. sample weight) - empty in this example
-    sample_meta_train = None
-    sample_meta_test = None
-
-    # set the feature names names
-    columns_meta = {DMD.FEATURE_NAMES: [name for name in columns_names]}
-
-
 
     pytrust = SklearnTrustBase(
         model=classifier,
         Xtrain=xtrain, Ytrain=ytrain,
         Xtest=xtest, Ytest=ytest,
-        sample_meta_train=sample_meta_train, sample_meta_test=sample_meta_test,
-        columns_meta=columns_meta,
-        metric=metric,
-        splitter=splitter)
+        metric=metric)
 
-    uncertainty_model = pytrust.create_uncertainty_model(method='confidence')
+    # method = 'confidence'
+    method = 'probability'
+    uncertainty_model = pytrust.create_uncertainty_model(method=method)
 
 
     # create another test set, this time to test uncertainty
@@ -76,9 +66,10 @@ def run():
     subset_bad_score = metric.function(
         y_true=y_new_test[bad], y_pred=yp[bad])
 
-    print('general score is {:0.3f}'.format(base_score))
-    print('score for samples with high confidence is {:0.3f}'.format(subset_good_score))
-    print('score for samples with low confidence is {:0.3f}'.format(subset_bad_score))
+    print("performance for method {}".format(method))
+    print('{} score is {:0.3f}'.format(metric.name, base_score))
+    print('{} score for samples with high confidence is {:0.3f}'.format(metric.name, subset_good_score))
+    print('{} score for samples with low confidence is {:0.3f}'.format(metric.name, subset_bad_score))
     print('{:0.3f} < {:0.3f} < {:0.3f} = {}'.format(subset_bad_score, base_score, subset_good_score, subset_bad_score<base_score<subset_good_score))
 
 if __name__ == '__main__':

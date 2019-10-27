@@ -55,6 +55,8 @@ def run():
         splitter=splitter)
 
     scoring_report = pytrust.scoring_report()
+    print('{} score is {:0.3f}'.format(metric, scoring_report[metric]['value']))
+    print('Confidence interval is [{:0.3f}, {:0.3f}]'.format(scoring_report[metric]['ci_low'], scoring_report[metric]['ci_high']))
     print(pprint(scoring_report))
 
 if __name__ == '__main__':
