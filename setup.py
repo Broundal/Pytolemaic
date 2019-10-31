@@ -11,6 +11,8 @@ with open(os.path.join(this_dir, 'requirements.txt'), 'r') as fp:
 
 from pytolemaic.version import version
 
+print("Installing the following pytolemaic packages: {}".format(find_packages(exclude=['tests', 'scripts', 'examples']))
+
 setup(
     name='pytolemaic',
     author='Orion Talmi',
