@@ -47,8 +47,8 @@ def run():
 
     pytrust = SklearnTrustBase(
         model=classifier,
-        Xtrain=xtrain, Ytrain=ytrain,
-        Xtest=xtest, Ytest=ytest,
+        xtrain=xtrain, ytrain=ytrain,
+        xtest=xtest, ytest=ytest,
         sample_meta_train=sample_meta_train, sample_meta_test=sample_meta_test,
         columns_meta=columns_meta,
         metric=metric,

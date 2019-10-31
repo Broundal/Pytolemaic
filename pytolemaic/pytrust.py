@@ -12,10 +12,10 @@ from pytolemaic.utils.metrics import Metrics, Metric
 class SklearnTrustBase():
 
     def __init__(self, model,
-                 Xtrain=None, Ytrain=None,
+                 xtrain=None, ytrain=None,
                  sample_meta_train=None,
 
-                 Xtest=None, Ytest=None,
+                 xtest=None, ytest=None,
                  sample_meta_test=None,
 
                  columns_meta=None,
@@ -28,20 +28,20 @@ class SklearnTrustBase():
         else:
             raise NotImplementedError
 
-        if Xtrain is not None:
-            if isinstance(Xtrain, DMD):
-                self.train = Xtrain
+        if xtrain is not None:
+            if isinstance(xtrain, DMD):
+                self.train = xtrain
             else:
-                self.train = DMD(x=Xtrain, y=Ytrain,
+                self.train = DMD(x=xtrain, y=ytrain,
                                  samples_meta=sample_meta_train,
                                  columns_meta=columns_meta,
                                  splitter=splitter)
 
-        if Xtest is not None:
-            if isinstance(Xtest, DMD):
-                self.test = Xtest
+        if xtest is not None:
+            if isinstance(xtest, DMD):
+                self.test = xtest
             else:
-                self.test = DMD(x=Xtest, y=Ytest,
+                self.test = DMD(x=xtest, y=ytest,
                                 samples_meta=sample_meta_test,
                                 columns_meta=columns_meta,
                                 splitter=splitter)

@@ -50,8 +50,8 @@ class TestSensitivity(unittest.TestCase):
         test = self.get_data(is_classification, seed=1)
         pytrust = SklearnTrustBase(
             model=model,
-            Xtrain=train.values, Ytrain=train.target,
-            Xtest=test.values, Ytest=test.target,
+            xtrain=train.values, ytrain=train.target,
+            xtest=test.values, ytest=test.target,
             sample_meta_train=None, sample_meta_test=None,
             columns_meta={DMD.FEATURE_NAMES: ['f' + str(k) for k in
                                               range(train.n_features)]},
@@ -71,8 +71,8 @@ class TestSensitivity(unittest.TestCase):
         test = self.get_data(is_classification, seed=1)
         pytrust = SklearnTrustBase(
             model=model,
-            Xtrain=train.values, Ytrain=train.target,
-            Xtest=test.values, Ytest=test.target,
+            xtrain=train.values, ytrain=train.target,
+            xtest=test.values, ytest=test.target,
             sample_meta_train=None, sample_meta_test=None,
             columns_meta={DMD.FEATURE_NAMES: ['f' + str(k) for k in
                                               range(train.n_features)]},
@@ -89,10 +89,10 @@ class TestSensitivity(unittest.TestCase):
 
         pytrust = SklearnTrustBase(
             model=model,
-            Xtrain=pandas.DataFrame(train.values),
-            Ytrain=pandas.DataFrame(train.target),
-            Xtest=pandas.DataFrame(test.values),
-            Ytest=pandas.DataFrame(test.target),
+            xtrain=pandas.DataFrame(train.values),
+            ytrain=pandas.DataFrame(train.target),
+            xtest=pandas.DataFrame(test.values),
+            ytest=pandas.DataFrame(test.target),
             sample_meta_train=None, sample_meta_test=None,
             columns_meta={DMD.FEATURE_NAMES: ['f' + str(k) for k in
                                               range(train.n_features)]},

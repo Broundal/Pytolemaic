@@ -40,18 +40,28 @@ class UncertaintyModelBase():
         return self
 
     def predict(self, dmd: DMD):
-        if not self.dmd_supported:
-            x = dmd.values
-            return self.model.predict(x)
-        else:
+        if self.dmd_supported:
+            if not isinstance(dmd, DMD):
+                dmd = DMD(x=dmd)
             return self.model.predict(dmd)
+        else:
+            if isinstance(dmd, DMD):
+                x = dmd.values
+            else:
+                x = dmd
+            return self.model.predict(x)
 
     def predict_proba(self, dmd: DMD):
-        if not self.dmd_supported:
-            x = dmd.values
-            return self.model.predict_proba(x)
-        else:
+        if self.dmd_supported:
+            if not isinstance(dmd, DMD):
+                raise ValueError("DMD supported but input is not dmd")
             return self.model.predict_proba(dmd)
+        else:
+            if isinstance(dmd, DMD):
+                x = dmd.values
+            else:
+                x = dmd
+            return self.model.predict_proba(x)
 
 
 class UncertaintyModelRegressor(UncertaintyModelBase):
@@ -92,11 +102,16 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
                                       .format(self.uncertainty_method))
 
     def uncertainty(self, dmd: DMD):
+        if isinstance(dmd, DMD):
+            x = dmd.values
+        else:
+            x = dmd
+
         if self.uncertainty_method in ['mae']:
-            out = self.uncertainty_model.predict(dmd.values)
+            out = self.uncertainty_model.predict(x)
             return out.reshape(-1, 1)
         elif self.uncertainty_method in ['rmse']:
-            out = numpy.sqrt(self.uncertainty_model.predict(dmd.values))
+            out = numpy.sqrt(self.uncertainty_model.predict(x))
             return out.reshape(-1, 1)
         else:
             raise NotImplementedError("Method {} is not implemented"
@@ -154,6 +169,8 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                       .format(self.uncertainty_method))
 
     def uncertainty(self, dmd: DMD):
+
+
         if self.uncertainty_method in ['probability']:
             yproba = self.predict_proba(dmd)
             yproba += 1e-10 * numpy.random.rand(*yproba.shape)
@@ -165,8 +182,12 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             out = numpy.max(yproba, axis=1).reshape(-1, 1) / max_probability
             return out.reshape(-1, 1)
         elif self.uncertainty_method in ['confidence']:
+            if isinstance(dmd, DMD):
+                x = dmd.values
+            else:
+                x = dmd
             # return the probability it's a mistake
-            out = self.uncertainty_model.predict_proba(dmd.values)[:, 0]
+            out = self.uncertainty_model.predict_proba(x)[:, 0]
             return out.reshape(-1, 1)
         else:
             raise NotImplementedError("Method {} is not implemented"

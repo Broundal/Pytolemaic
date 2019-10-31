@@ -32,8 +32,7 @@ def run():
 
     pytrust = SklearnTrustBase(
         model=classifier,
-        Xtrain=xtrain, Ytrain=ytrain,
-        Xtest=xtest, Ytest=ytest,
+        xtest=xtest, ytest=ytest,
         metric=metric)
 
     # method = 'confidence'

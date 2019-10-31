@@ -122,7 +122,7 @@ class SensitivityAnalysis():
 
     def _leakage(self, n_features, n_zero, **kwargs):
         """
-        measure the chance for data leakage
+        measure the chance for data leakage - strong data leakage cause only few features to contribute to the model.
         :param perturbed_sensitivity:
         :return:
         """
@@ -136,6 +136,7 @@ class SensitivityAnalysis():
 
     def _overfit(self, n_features, n_low, n_zero, **kwargs):
         """
+        Many features with low sensitivity indicate the model relies on non-informative feature. This may cause overfit.
         higher value when there are many features with low contribution
         :param perturbed_sensitivity:
         :return:
