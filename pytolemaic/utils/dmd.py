@@ -32,6 +32,14 @@ class DMD():
         self._samples_meta = self._create_samples_meta(samples_meta, self._x)
         self._splitter = splitter
 
+    def __deepcopy__(self, memodict={}):
+        return type(self)(x=copy.deepcopy(self._x),
+                          y=copy.deepcopy(self._y),
+                          columns_meta=copy.deepcopy(self._columns_meta),
+                          samples_meta=copy.deepcopy(self._samples_meta),
+                          splitter=copy.deepcopy(self._splitter),
+                          )
+
     @classmethod
     def _create_columns_meta(cls, columns_meta, df):
         if columns_meta is None:
@@ -72,6 +80,32 @@ class DMD():
         right = list(sorted(right))
 
         return self.split_by_indices(left), self.split_by_indices(right),
+
+    def append(self, other, axis=0):
+        if axis == 0:
+            if other.feature_names != self.feature_names:
+                raise ValueError("Cannot concat DMDs due to feature names difference")
+            if any(self._samples_meta.columns != other._samples_meta.columns):
+                raise ValueError("Cannot concat DMDs due to samples meta difference")
+
+            self._x = pandas.concat([self._x, other._x], axis=axis, ignore_index=True, copy=True)
+            self._y = pandas.concat([self._y, other._y], axis=axis, ignore_index=True, copy=True)
+            self._samples_meta = pandas.concat([self._samples_meta, other._samples_meta], axis=axis, ignore_index=True, copy=True)
+            self._samples_meta[self.INDEX] = np.arange(self.n_samples)
+
+        else:
+            raise NotImplementedError("not implemented yet")
+
+    @classmethod
+    def concat(cls, dmds, axis=0):
+        dmd = None
+        for dmd_item in dmds:
+            if dmd is None:
+                dmd = copy.deepcopy(dmd_item)
+            else:
+                dmd.append(dmd_item, axis=axis)
+
+        return dmd
 
     @property
     def feature_names(self):
