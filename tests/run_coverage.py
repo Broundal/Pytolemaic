@@ -3,6 +3,8 @@ import os
 
 
 # this creates coverage report
+# pip install coverage first
+
 if __name__ == '__main__':
     os.system('pwd')
     parser = argparse.ArgumentParser()
