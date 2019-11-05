@@ -2,7 +2,7 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
     ScoringReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
-from pytolemaic.analysis_logic.prediction_analysis.prediction_uncertainty.uncertainty_model import \
+from pytolemaic.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier, UncertaintyModelRegressor
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
