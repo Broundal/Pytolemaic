@@ -107,7 +107,7 @@ class TestSensitivity(unittest.TestCase):
 
         pytrust = self.get_pytrust(is_classification=True)
 
-        report = pytrust.scoring_report()
+        report = pytrust.scoring_report()['Score']
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == CLASSIFICATION:
                 self.assertIn(metric.name, report)
@@ -119,7 +119,7 @@ class TestSensitivity(unittest.TestCase):
 
         pytrust = self.get_pytrust(is_classification=False)
 
-        report = pytrust.scoring_report()
+        report = pytrust.scoring_report()['Score']
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == REGRESSION:
                 self.assertIn(metric.name, report)

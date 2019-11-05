@@ -107,7 +107,7 @@ class ScoringReport():
                                                               dmd_test=dmd_test)
 
         classifier = RandomForestClassifier(n_estimators=100, n_jobs=10)
-        classifier.fit(train.values, train.target)
+        classifier.fit(train.values, train.target.ravel())
 
         yp = classifier.predict_proba(test.values)
         # todo: support auc in Metrics # auc = Metrics.auc()

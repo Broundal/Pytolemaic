@@ -16,7 +16,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.test == 'all':
-        args.test = 'discover -s ../tests/unittests ../tests/integrative_tests'
+        args.test = 'discover -s ../tests/'
 
     call_args = ['coverage', 'run', '--source={}'.format(args.source), '-m unittest', args.test]
 
