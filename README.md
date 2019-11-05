@@ -62,8 +62,14 @@ For given metric, the score and confidence intervals (ci) is calculated
  'recall': 
     {'ci_high': 0.95513, 
      'ci_low': 0.95171, 
-     'value': 0.95343}}'
+     'value': 0.95343}}'    
  ```
+ 
+ Additionally, score quality measures the quality of the score based on the separability between train and test sets.
+ ```
+ 'Quality': 0.987         
+ ```
+  
  
 #### prediction uncertainty
 

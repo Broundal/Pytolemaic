@@ -1,4 +1,6 @@
 import numpy
+import sklearn
+from sklearn.ensemble import RandomForestClassifier
 
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
@@ -17,7 +19,14 @@ class ScoringReport():
     def score_report(self, model, dmd_test: DMD,
                      y_proba: numpy.ndarray = None,
                      y_pred: numpy.ndarray = None):
+        '''
 
+        :param model: model of interest
+        :param dmd_test: test set
+        :param y_proba: pre-calculated predicted probabilities for test set, if available
+        :param y_pred: pre-calculated models' predictions for test set, if available
+        :return: scoring report
+        '''
         score_report = {}
 
         model_support_dmd = GeneralUtils.dmd_supported(model, dmd_test)
@@ -68,6 +77,43 @@ class ScoringReport():
 
         return score_report
 
+
+    def _prepare_dataset_for_score_quality(self, dmd_train: DMD, dmd_test: DMD):
+        '''
+
+        :param dmd_train: train set
+        :param dmd_test: test set
+        :return: dataset with target of test/train
+        '''
+
+
+        dmd = DMD.concat([dmd_train, dmd_test])
+        new_label = [0] * dmd_train.n_samples + [1] * dmd_test.n_samples
+        dmd.set_target(new_label)
+
+        train, test = dmd.split(ratio=0.5)
+        return train, test
+
+
+    def score_quality(self, dmd_train: DMD, dmd_test: DMD):
+        '''
+
+        :param dmd_train: train set
+        :param dmd_test: test set
+        :return: estimation of score quality based on similarity between train and test sets
+        '''
+
+        train, test = self._prepare_dataset_for_score_quality(dmd_train=dmd_train,
+                                                              dmd_test=dmd_test)
+
+        classifier = RandomForestClassifier(n_estimators=100, n_jobs=10)
+        classifier.fit(train.values, train.target)
+
+        yp = classifier.predict_proba(test.values)
+        # todo: support auc in Metrics # auc = Metrics.auc()
+        auc = sklearn.metrics.roc_auc_score(y_true=test.target, y_score=yp[:,1])
+
+        return numpy.clip(numpy.round(2*(1-auc), 5),0,1)
 
 
 

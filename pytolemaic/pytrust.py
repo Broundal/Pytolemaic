@@ -108,7 +108,10 @@ class SklearnTrustBase():
 
         self.scoring = ScoringReport(metrics=metrics)
 
-        return self.scoring.score_report(model=self.model, dmd_test=self.test)
+        score_values = self.scoring.score_report(model=self.model, dmd_test=self.test)
+        score_quality = self.scoring.score_quality(dmd_train=self.train, dmd_test=self.test)
+        return {'Score': score_values,
+                'Quality':score_quality}
 
     def create_uncertainty_model(self, method='auto'):
         if method not in self._uncertainty_models:

@@ -96,6 +96,14 @@ class DMD():
         else:
             raise NotImplementedError("not implemented yet")
 
+    def set_target(self, new_y):
+        if new_y is None:
+            self._y = None
+        elif len(new_y) != self.n_samples:
+            raise ValueError("Mismatch in number of samples")
+
+        self._y = pandas.DataFrame(new_y)
+
     @classmethod
     def concat(cls, dmds, axis=0):
         dmd = None
