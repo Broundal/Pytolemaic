@@ -110,8 +110,8 @@ class ScoringReport():
         classifier.fit(train.values, train.target.ravel())
 
         yp = classifier.predict_proba(test.values)
-        # todo: support auc in Metrics # auc = Metrics.auc()
-        auc = sklearn.metrics.roc_auc_score(y_true=test.target, y_score=yp[:,1])
+
+        auc = Metrics.auc.function(y_true=test.target, y_pred=yp)
 
         return numpy.clip(numpy.round(2*(1-auc), 5),0,1)
 

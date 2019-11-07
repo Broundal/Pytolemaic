@@ -28,7 +28,7 @@ def run():
 
      ## Let's train a regressor
     classifier = RandomForestClassifier(random_state=0, n_estimators=3)
-    classifier.fit(xtrain, ytrain)
+    classifier.fit(xtrain, ytrain.ravel())
 
     ## set metric
     metric = Metrics.recall.name

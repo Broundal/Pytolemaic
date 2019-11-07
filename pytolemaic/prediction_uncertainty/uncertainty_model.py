@@ -162,7 +162,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                      dtype=int)
 
             # bug here
-            self.uncertainty_model.fit(dmd_test.values, is_correct)
+            self.uncertainty_model.fit(dmd_test.values, is_correct.ravel())
 
         else:
             raise NotImplementedError("Method {} is not implemented"

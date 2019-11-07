@@ -39,7 +39,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
         model = self.get_model(is_classification)
 
         train = self.get_data(is_classification)
-        model.fit(train.values, train.target)
+        model.fit(train.values, train.target.ravel())
 
         test = self.get_data(is_classification, seed=1)
 

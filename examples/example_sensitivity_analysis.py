@@ -31,7 +31,7 @@ def run():
      ## Let's train a regressor
     regressor = GeneralUtils.simple_imputation_pipeline(
         RandomForestRegressor(random_state=0, n_estimators=3))
-    regressor.fit(xtrain, ytrain)
+    regressor.fit(xtrain, ytrain.ravel())
 
     ## set metric
     metric = Metrics.mae.name
