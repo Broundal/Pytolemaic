@@ -7,7 +7,7 @@ from pytolemaic.prediction_uncertainty.uncertainty_model import \
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
-from pytolemaic.utils.reports import ReportScoring
+from pytolemaic.utils.reports import ReportScoring, ReportSensitivity
 
 
 class SklearnTrustBase():
@@ -129,9 +129,13 @@ class SklearnTrustBase():
         test_set_quality = max(test_set_quality, 0)
 
         #train set quality
-        sensitivity_report = self.sensitivity_report()['perturbed_sensitivity_scores']
+        sensitivity_report = self.sensitivity_report()
+
         train_set_quality = 1.0
-        train_set_quality = train_set_quality - sensitivity_report['leakge_score'] - sensitivity_report['imputation_score'] - sensitivity_report['overfit_score']
+        train_set_quality = train_set_quality \
+                            - sensitivity_report.get(ReportSensitivity.LEAKAGE) \
+                            - sensitivity_report.get(ReportSensitivity.IMPUTATION)\
+                            - sensitivity_report.get(ReportSensitivity.OVERFIIT)
         train_set_quality = max(train_set_quality, 0)
 
         quality_report = dict(test_set_quality=test_set_quality, train_set_quality=train_set_quality)

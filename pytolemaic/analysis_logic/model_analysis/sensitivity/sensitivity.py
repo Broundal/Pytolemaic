@@ -206,9 +206,9 @@ class SensitivityAnalysis():
         report[ReportSensitivity.MISSING][ReportSensitivity.META]= self._sensitivity_meta(
             self.missing_sensitivity)
 
-        report.update(self._sensitivity_scores(
+        report[ReportSensitivity.QUALITY] = self._sensitivity_scores(
             perturbed_sensitivity=self.perturbed_sensitivity,
             missing_sensitivity=self.missing_sensitivity,
-            perturbed_sensitivity_meta=perturb_meta))
+            perturbed_sensitivity_meta=perturb_meta)
 
         return Report(report)

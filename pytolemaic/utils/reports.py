@@ -33,9 +33,12 @@ class ReportSensitivity(EnumBase):
     MISSING = 2
     SENSITIVITY = 6
     META = 7
+
+    QUALITY = 12
     LEAKAGE = 3
     IMPUTATION = 4
     OVERFIIT = 5
+
 
     N_FEATURES = 8
     N_LOW = 9
@@ -74,7 +77,7 @@ class Report(object):
 
         return get_from_report(self.report, lookup_key=key)
 
-    def __repr__(self):
+    def simplified_keys(self):
         def recursive_replace(report):
             keys = list(report.keys())
             for k in keys:
@@ -86,10 +89,10 @@ class Report(object):
 
         report = copy.deepcopy(self.report)
         recursive_replace(report)
-        return report.__repr__()
+        return report
 
-    def __str__(self):
-        return self.__repr__()
+    def __repr__(self):
+        return self.simplified_keys().__repr__()
 
 
 

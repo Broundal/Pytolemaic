@@ -67,7 +67,7 @@ def run():
     print('Score quality is {:0.3f}'.format(quality))
     print('Confidence interval is [{:0.3f}, {:0.3f}]'.format(ci_low, ci_high))
 
-    print(pprint(scoring_report))
+    pprint(scoring_report.simplified_keys())
 
 
 
