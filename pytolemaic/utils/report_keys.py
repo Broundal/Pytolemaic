@@ -32,7 +32,7 @@ class ReportSensitivity(EnumBase):
     SENSITIVITY = 6
     META = 7
 
-    QUALITY = 12
+    VULNERABILITY = 12
     LEAKAGE = 3
     IMPUTATION = 4
     OVERFIIT = 5
