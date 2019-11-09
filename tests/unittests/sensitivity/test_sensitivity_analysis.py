@@ -2,7 +2,7 @@ import unittest
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
-from pytolemaic.utils.reports import ReportSensitivity
+from pytolemaic.utils.report_keys import ReportSensitivity
 
 
 class TestSensitivity(unittest.TestCase):

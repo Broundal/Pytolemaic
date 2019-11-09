@@ -6,7 +6,7 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.reports import ReportScoring, Report
+from pytolemaic.utils.report_keys import ReportScoring, Report
 
 
 class Scoring():

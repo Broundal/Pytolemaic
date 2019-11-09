@@ -1,6 +1,6 @@
 import unittest
 
-from pytolemaic.utils.reports import Report
+from pytolemaic.utils.report_keys import Report
 
 
 class TestMetrics(unittest.TestCase):

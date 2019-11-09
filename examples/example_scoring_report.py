@@ -11,7 +11,7 @@ from pytolemaic.pytrust import SklearnTrustBase
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.reports import ReportScoring
+from pytolemaic.utils.report_keys import ReportScoring
 
 
 def run():
