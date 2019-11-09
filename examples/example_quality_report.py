@@ -27,6 +27,8 @@ def run():
     # 1st has no importance, while 3rd has double importance
     ytest = 0 * xtest[:, 0] + 1 * xtest[:, 1] + 3 * xtest[:, 2]
 
+    xtrain = GeneralUtils.add_nans(xtrain)
+    xtest = GeneralUtils.add_nans(xtest)
 
      ## Let's train a regressor
     regressor = GeneralUtils.simple_imputation_pipeline(

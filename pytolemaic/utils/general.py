@@ -33,3 +33,13 @@ class GeneralUtils():
                 pass
 
         return d
+
+    @classmethod
+    def add_nans(cls, x, ratio=0.1):
+        rs = numpy.random.RandomState(0)
+        # let's add some missing values
+        nan_locs = numpy.ones(numpy.prod(x.shape))
+        nan_locs[rs.permutation(len(nan_locs))[:int(ratio*len(nan_locs))]] = numpy.nan
+        nan_locs = nan_locs.reshape(x.shape)
+        x = x * nan_locs
+        return x

@@ -2,6 +2,7 @@ from pprint import pprint
 
 import numpy
 import pandas
+from pytolemaic.utils.general import GeneralUtils
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 from pytolemaic.pytrust import SklearnTrustBase
@@ -28,8 +29,14 @@ def run():
     ytest = 0 * xtest[:, 0] + 1 * xtest[:, 1] + 3 * xtest[:, 2]
     ytest = ytest.astype(int)
 
-     ## Let's train a regressor
-    classifier = RandomForestClassifier(random_state=0, n_estimators=3)
+    xtrain = GeneralUtils.add_nans(xtrain)
+    xtest = GeneralUtils.add_nans(xtest)
+
+    ## Let's train a classifier
+    classifier = GeneralUtils.simple_imputation_pipeline(
+        RandomForestClassifier(random_state=0, n_estimators=3))
+
+
     classifier.fit(xtrain, ytrain.ravel())
 
     ## set metric
