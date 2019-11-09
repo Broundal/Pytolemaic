@@ -16,9 +16,9 @@ class ScoringReport():
                         self.metrics
                         if metric in self.supported_metric]
 
-    def score_report(self, model, dmd_test: DMD,
-                     y_proba: numpy.ndarray = None,
-                     y_pred: numpy.ndarray = None):
+    def score_value_report(self, model, dmd_test: DMD,
+                           y_proba: numpy.ndarray = None,
+                           y_pred: numpy.ndarray = None):
         '''
 
         :param model: model of interest
@@ -95,7 +95,7 @@ class ScoringReport():
         return train, test
 
 
-    def score_quality(self, dmd_train: DMD, dmd_test: DMD):
+    def score_quality_report(self, dmd_train: DMD, dmd_test: DMD):
         '''
 
         :param dmd_train: train set

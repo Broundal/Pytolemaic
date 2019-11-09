@@ -108,10 +108,31 @@ class SklearnTrustBase():
 
         self.scoring = ScoringReport(metrics=metrics)
 
-        score_values = self.scoring.score_report(model=self.model, dmd_test=self.test)
-        score_quality = self.scoring.score_quality(dmd_train=self.train, dmd_test=self.test)
+        score_values = self.scoring.score_value_report(model=self.model, dmd_test=self.test)
+        score_quality = self.scoring.score_quality_report(dmd_train=self.train, dmd_test=self.test)
         return {'Score': score_values,
                 'Quality':score_quality}
+
+    def quality_report(self):
+        scoring_report = self.scoring_report()
+        score_values = self.scoring_report()['Score'][self.metric]
+        # test set quality
+        test_set_quality = 1.0
+        ci_ratio = ((1-score_values['ci_low'])-(1-score_values['ci_high']))/(score_values['value'])
+
+        test_set_quality = test_set_quality - ci_ratio -(1-scoring_report['Quality'])
+        test_set_quality = max(test_set_quality, 0)
+
+        #train set quality
+        sensitivity_report = self.sensitivity_report()['perturbed_sensitivity_scores']
+        train_set_quality = 1.0
+        train_set_quality = train_set_quality - sensitivity_report['leakge_score'] - sensitivity_report['imputation_score'] - sensitivity_report['overfit_score']
+        train_set_quality = max(train_set_quality, 0)
+
+        quality_report = dict(test_set_quality=test_set_quality, train_set_quality=train_set_quality)
+        quality_report = GeneralUtils.round_values(quality_report)
+        return quality_report
+
 
     def create_uncertainty_model(self, method='auto'):
         if method not in self._uncertainty_models:

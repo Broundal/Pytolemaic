@@ -110,6 +110,7 @@ class SensitivityAnalysis():
 
     def _sensitivity_scores(self, perturbed_sensitivity, missing_sensitivity,
                             perturbed_sensitivity_meta):
+        # lower is better
         report = {}
         report['leakge_score'] = self._leakage(**perturbed_sensitivity_meta)
         report['overfit_score'] = self._overfit(**perturbed_sensitivity_meta)
