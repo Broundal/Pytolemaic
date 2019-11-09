@@ -132,14 +132,21 @@ class SklearnTrustBase():
         sensitivity_report = self.sensitivity_report()
 
         train_set_quality = 1.0
-        train_set_quality = train_set_quality \
-                            - sensitivity_report.get(ReportSensitivity.LEAKAGE) \
-                            - sensitivity_report.get(ReportSensitivity.IMPUTATION)\
-                            - sensitivity_report.get(ReportSensitivity.OVERFIIT)
+        leakage = sensitivity_report.get(ReportSensitivity.LEAKAGE)
+        imputation = sensitivity_report.get(ReportSensitivity.IMPUTATION)
+        overfit = sensitivity_report.get(ReportSensitivity.OVERFIIT)
+        train_set_quality = train_set_quality - leakage - imputation - overfit
         train_set_quality = max(train_set_quality, 0)
 
-        quality_report = dict(test_set_quality=test_set_quality, train_set_quality=train_set_quality)
+        quality_report = dict(test_set_quality=dict(overall=test_set_quality,
+                                                    ci_ratio=ci_ratio,
+                                                    separation_quality=(1-quality)),
+                              train_set_quality=dict(overall=train_set_quality,
+                                                     leakage=leakage,
+                                                     overfit=overfit,
+                                                     imputation=imputation))
         quality_report = GeneralUtils.round_values(quality_report)
+
         return Report(quality_report)
 
 
