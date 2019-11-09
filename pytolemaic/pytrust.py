@@ -139,12 +139,12 @@ class SklearnTrustBase():
         train_set_quality = max(train_set_quality, 0)
 
         quality_report = dict(test_set_quality=dict(overall=test_set_quality,
-                                                    ci_ratio=ci_ratio,
-                                                    separation_quality=(1-quality)),
+                                                    components=dict(ci_ratio=1-ci_ratio,
+                                                                    separation_quality=quality)),
                               train_set_quality=dict(overall=train_set_quality,
-                                                     leakage=leakage,
-                                                     overfit=overfit,
-                                                     imputation=imputation))
+                                                     components=dict(leakage=1-leakage,
+                                                                     overfit=1-overfit,
+                                                                     imputation=1-imputation)))
         quality_report = GeneralUtils.round_values(quality_report)
 
         return Report(quality_report)

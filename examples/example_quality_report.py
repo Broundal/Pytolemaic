@@ -58,6 +58,7 @@ def run():
         splitter=splitter)
 
     sensitivity_report = pytrust.quality_report()
+    print("Quality report - higher is better")
     pprint(sensitivity_report.simplified_keys())
 
 if __name__ == '__main__':
