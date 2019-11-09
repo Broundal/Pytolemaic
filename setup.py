@@ -17,12 +17,11 @@ setup(
     name='pytolemaic',
     author='Orion Talmi',
     author_email='otalmi@gmail.com',
-    description='',
+    description='Package for ML model analysis',
     version=str(version),
     packages=find_packages(exclude=['tests', 'scripts', 'examples']),
     setup_requires=setup_reqs,
     install_requires=install_reqs,
-    # test_suite='nose.collector', #TODO: replace nose with unittest
     include_package_data=True,
     platforms=['Linux'],
     python_requires='>=3.6.*',
