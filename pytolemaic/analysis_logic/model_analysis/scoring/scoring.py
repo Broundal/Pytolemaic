@@ -108,7 +108,8 @@ class Scoring():
         train, test = self._prepare_dataset_for_score_quality(dmd_train=dmd_train,
                                                               dmd_test=dmd_test)
 
-        classifier = RandomForestClassifier(n_estimators=100, n_jobs=10)
+        classifier = GeneralUtils.simple_imputation_pipeline(
+            estimator=RandomForestClassifier(n_estimators=100, n_jobs=10))
         classifier.fit(train.values, train.target.ravel())
 
         yp = classifier.predict_proba(test.values)
