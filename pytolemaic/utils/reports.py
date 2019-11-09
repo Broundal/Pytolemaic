@@ -1,4 +1,6 @@
+import copy
 from enum import Enum
+from pprint import pprint
 
 
 class EnumBase(Enum):
@@ -73,6 +75,22 @@ class Report(object):
         return get_from_report(self.report, lookup_key=key)
 
     def __repr__(self):
-        return self.report.__repr__()
+        def recursive_replace(report):
+            keys = list(report.keys())
+            for k in keys:
+                v = report[k]
+                if str(type(k)).startswith('<enum'):
+                    report[k.name] = report.pop(k)
+                if isinstance(v, dict):
+                    recursive_replace(v)
+
+        report = copy.deepcopy(self.report)
+        recursive_replace(report)
+        return report.__repr__()
+
+    def __str__(self):
+        return self.__repr__()
+
+
 
 
