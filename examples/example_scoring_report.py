@@ -11,6 +11,8 @@ from pytolemaic.pytrust import SklearnTrustBase
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.reports import ReportScoring
+
 
 def run():
 
@@ -55,9 +57,15 @@ def run():
         splitter=splitter)
 
     scoring_report = pytrust.scoring_report()
-    print('{} score is {:0.3f}'.format(metric, scoring_report['Score'][metric]['value']))
-    print('Score quality is {:0.3f}'.format(scoring_report['Quality']))
-    print('Confidence interval is [{:0.3f}, {:0.3f}]'.format(scoring_report['Score'][metric]['ci_low'], scoring_report['Score'][metric]['ci_high']))
+
+    score_value = scoring_report.get(metric).get(ReportScoring.SCORE_VALUE)
+    ci_low = scoring_report.get(metric).get(ReportScoring.CI_LOW)
+    ci_high = scoring_report.get(metric).get(ReportScoring.CI_HIGH)
+    quality = scoring_report.get(ReportScoring.QUALITY)
+
+    print('{} score is {:0.3f}'.format(metric, score_value))
+    print('Score quality is {:0.3f}'.format(quality))
+    print('Confidence interval is [{:0.3f}, {:0.3f}]'.format(ci_low, ci_high))
 
     print(pprint(scoring_report))
 

@@ -9,6 +9,7 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.reports import Report, ReportSensitivity, ReportScoring
 
 
 class TestSensitivity(unittest.TestCase):
@@ -80,12 +81,10 @@ class TestSensitivity(unittest.TestCase):
 
         sensitivity_report = pytrust.sensitivity_report()
         print(sensitivity_report)
-        self.assertTrue(isinstance(sensitivity_report, dict))
-        for key in ['perturbed_sensitivity', 'missing_sensitivity',
-                    'perturbed_sensitivity_meta', 'missing_sensitivity_meta',
-                    'perturbed_sensitivity_scores']:
-            self.assertIn(key, sensitivity_report)
-            self.assertTrue(sensitivity_report.get(key, None))
+        self.assertTrue(isinstance(sensitivity_report, Report))
+        for key in ReportSensitivity.keys(members=True):
+            print(key)
+            self.assertTrue(sensitivity_report.get(key) is not None)
 
         pytrust = SklearnTrustBase(
             model=model,
@@ -101,30 +100,31 @@ class TestSensitivity(unittest.TestCase):
         sensitivity_report2 = pytrust.sensitivity_report()
         print(sensitivity_report)
         self.maxDiff = None
-        self.assertEqual(sensitivity_report2, sensitivity_report)
+        self.assertEqual(sensitivity_report2.report, sensitivity_report.report)
 
     def test_pytrust_scoring_report(self):
 
         pytrust = self.get_pytrust(is_classification=True)
 
-        report = pytrust.scoring_report()['Score']
+        scoring_report = pytrust.scoring_report()
+
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == CLASSIFICATION:
-                self.assertIn(metric.name, report)
-                self.assertEqual(len(report[metric.name]), 3)
-                low, score, high = report[metric.name]['ci_low'], \
-                                   report[metric.name]['value'], \
-                                   report[metric.name]['ci_high'],
-                self.assertTrue(low < score < high)
+                metric_report = scoring_report.get(metric.name)
+                score_value = metric_report.get(ReportScoring.SCORE_VALUE)
+                ci_low = metric_report.get(ReportScoring.CI_LOW)
+                ci_high = metric_report.get(ReportScoring.CI_HIGH)
+
+                self.assertTrue(ci_low < score_value < ci_high)
 
         pytrust = self.get_pytrust(is_classification=False)
 
-        report = pytrust.scoring_report()['Score']
+        scoring_report = pytrust.scoring_report()
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == REGRESSION:
-                self.assertIn(metric.name, report)
-                self.assertEqual(len(report[metric.name]), 3)
-                low, score, high = report[metric.name]['ci_low'], \
-                                   report[metric.name]['value'], \
-                                   report[metric.name]['ci_high'],
-                self.assertTrue(low < score < high)
+                metric_report = scoring_report.get(metric.name)
+                score_value = metric_report.get(ReportScoring.SCORE_VALUE)
+                ci_low = metric_report.get(ReportScoring.CI_LOW)
+                ci_high = metric_report.get(ReportScoring.CI_HIGH)
+
+                self.assertTrue(ci_low < score_value < ci_high)

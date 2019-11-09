@@ -2,6 +2,7 @@ import unittest
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
+from pytolemaic.utils.reports import ReportSensitivity
 
 
 class TestSensitivity(unittest.TestCase):
@@ -12,11 +13,12 @@ class TestSensitivity(unittest.TestCase):
         sensitivity = SensitivityAnalysis()
         meta = sensitivity._sensitivity_meta(mock)
         print(meta)
-        self.assertEqual(meta['n_features'], 10)
-        self.assertEqual(meta['n_zero'], 1)
-        self.assertEqual(meta['n_non_zero'],
-                         meta['n_features'] - meta['n_zero'])
-        self.assertEqual(meta['n_low'], 1)
+
+        self.assertEqual(meta[ReportSensitivity.N_FEATURES], 10)
+        self.assertEqual(meta[ReportSensitivity.N_ZERO], 1)
+        self.assertEqual(meta[ReportSensitivity.N_NON_ZERO],
+                         meta[ReportSensitivity.N_FEATURES] - meta[ReportSensitivity.N_ZERO])
+        self.assertEqual(meta[ReportSensitivity.N_LOW], 1)
 
     def test_leakage(self):
         sensitivity = SensitivityAnalysis()

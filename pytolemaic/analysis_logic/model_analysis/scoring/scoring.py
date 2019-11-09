@@ -6,9 +6,10 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.reports import ReportScoring, Report
 
 
-class ScoringReport():
+class Scoring():
     def __init__(self, metrics: list = None):
         self.supported_metric = Metrics.supported_metrics()
         self.metrics = metrics or self.supported_metric
@@ -52,9 +53,9 @@ class ScoringReport():
                                                               y_true=y_true,
                                                               y_pred=y_pred,
                                                               y_proba=y_proba)
-                score_report[metric.name] = dict(value=score,
-                                                 ci_low=ci_low,
-                                                 ci_high=ci_high)
+                score_report[metric.name] = {ReportScoring.SCORE_VALUE : score,
+                                             ReportScoring.CI_LOW : ci_low,
+                                             ReportScoring.CI_HIGH : ci_high}
 
 
         else:
@@ -67,15 +68,15 @@ class ScoringReport():
                 ci_low, ci_high = Metrics.confidence_interval(metric,
                                                               y_true=y_true,
                                                               y_pred=y_pred)
-                score_report[metric.name] = dict(value=score,
-                                                 ci_low=ci_low,
-                                                 ci_high=ci_high)
+                score_report[metric.name] = {ReportScoring.SCORE_VALUE : score,
+                                             ReportScoring.CI_LOW : ci_low,
+                                             ReportScoring.CI_HIGH : ci_high}
 
 
         for metric in score_report:
             score_report[metric] = GeneralUtils.round_values(score_report[metric])
 
-        return score_report
+        return Report(score_report)
 
 
     def _prepare_dataset_for_score_quality(self, dmd_train: DMD, dmd_test: DMD):
@@ -118,7 +119,7 @@ class ScoringReport():
 
 
 if __name__ == '__main__':
-    sr = ScoringReport()
+    sr = Scoring()
     yt = numpy.random.rand(10)
     d = numpy.random.rand(10)
     print(Metrics.call('mae', yt, yt + 0.1 * d),

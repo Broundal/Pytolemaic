@@ -8,6 +8,7 @@ from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.reports import ReportSensitivity
 
 
 class TestSensitivity(unittest.TestCase):
@@ -159,13 +160,25 @@ class TestSensitivity(unittest.TestCase):
                                                    raw_scores=False)
 
         perturbed_sensitivity_meta = sensitivity._sensitivity_meta(perturb)
+        n_features = perturbed_sensitivity_meta[ReportSensitivity.N_FEATURES]
+        n_zero = perturbed_sensitivity_meta[ReportSensitivity.N_ZERO]
+        n_low = perturbed_sensitivity_meta[ReportSensitivity.N_LOW]
+
         self.assertTrue(len(perturbed_sensitivity_meta) > 0)
 
-        leakge_score = sensitivity._leakage(**perturbed_sensitivity_meta)
-        self.assertGreater(leakge_score, 0)
-        self.assertLessEqual(leakge_score, 1)
+        leakage_score = sensitivity._leakage(
+            n_features=n_features,
+            n_zero=n_zero)
 
-        overfit_score = sensitivity._overfit(**perturbed_sensitivity_meta)
+        self.assertGreater(leakage_score, 0)
+        self.assertLessEqual(leakage_score, 1)
+
+
+        overfit_score = sensitivity._overfit(
+            n_features=n_features,
+            n_low=n_low,
+            n_zero=n_zero)
+
         self.assertGreater(overfit_score, 0)
         self.assertLessEqual(overfit_score, 1)
 

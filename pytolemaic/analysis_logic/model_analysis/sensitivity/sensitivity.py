@@ -6,6 +6,7 @@ import numpy as np
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.reports import ReportSensitivity, Report
 
 
 class SensitivityAnalysis():
@@ -102,19 +103,26 @@ class SensitivityAnalysis():
         n_zero = np.sum(sensitivity < min(1e-4, 1 / n_features))
         n_low = np.sum(sensitivity < max(sensitivity) * 0.05)
         return {
-            'n_features': n_features,
-            'n_zero': n_zero,
-            'n_non_zero': n_features - n_zero,
-            'n_low': n_low
+            ReportSensitivity.N_FEATURES: n_features,
+            ReportSensitivity.N_ZERO: n_zero,
+            ReportSensitivity.N_NON_ZERO: n_features - n_zero,
+            ReportSensitivity.N_LOW: n_low
         }
 
     def _sensitivity_scores(self, perturbed_sensitivity, missing_sensitivity,
                             perturbed_sensitivity_meta):
         # lower is better
+        n_features = perturbed_sensitivity_meta[ReportSensitivity.N_FEATURES]
+        n_zero = perturbed_sensitivity_meta[ReportSensitivity.N_ZERO]
+        n_low = perturbed_sensitivity_meta[ReportSensitivity.N_LOW]
+
         report = {}
-        report['leakge_score'] = self._leakage(**perturbed_sensitivity_meta)
-        report['overfit_score'] = self._overfit(**perturbed_sensitivity_meta)
-        report['imputation_score'] = self._imputation_score(
+        report[ReportSensitivity.LEAKAGE] = self._leakage(n_features=n_features,
+                                                          n_zero=n_zero)
+        report[ReportSensitivity.OVERFIIT] = self._overfit(n_features=n_features,
+                                                           n_low=n_low,
+                                                           n_zero=n_zero)
+        report[ReportSensitivity.IMPUTATION] = self._imputation_score(
             shuffled=perturbed_sensitivity,
             missing=missing_sensitivity)
 
@@ -188,18 +196,19 @@ class SensitivityAnalysis():
     def sensitivity_report(self):
         report = {}
 
-        report['perturbed_sensitivity'] = self.perturbed_sensitivity
+        report[ReportSensitivity.SHUFFLE] = {}
+        report[ReportSensitivity.SHUFFLE][ReportSensitivity.SENSITIVITY] = self.perturbed_sensitivity
+        perturb_meta = self._sensitivity_meta(self.perturbed_sensitivity)
+        report[ReportSensitivity.SHUFFLE][ReportSensitivity.META] = perturb_meta
 
-        report['missing_sensitivity'] = self.missing_sensitivity
-
-        report['perturbed_sensitivity_meta'] = self._sensitivity_meta(
-            self.perturbed_sensitivity)
-        report['missing_sensitivity_meta'] = self._sensitivity_meta(
+        report[ReportSensitivity.MISSING]  = {}
+        report[ReportSensitivity.MISSING][ReportSensitivity.SENSITIVITY]= self.missing_sensitivity
+        report[ReportSensitivity.MISSING][ReportSensitivity.META]= self._sensitivity_meta(
             self.missing_sensitivity)
 
-        report['perturbed_sensitivity_scores'] = self._sensitivity_scores(
+        report.update(self._sensitivity_scores(
             perturbed_sensitivity=self.perturbed_sensitivity,
             missing_sensitivity=self.missing_sensitivity,
-            perturbed_sensitivity_meta=report['perturbed_sensitivity_meta'])
+            perturbed_sensitivity_meta=perturb_meta))
 
-        return report
+        return Report(report)

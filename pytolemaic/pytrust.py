@@ -1,5 +1,5 @@
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
-    ScoringReport
+    Scoring
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
@@ -7,6 +7,7 @@ from pytolemaic.prediction_uncertainty.uncertainty_model import \
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
+from pytolemaic.utils.reports import ReportScoring
 
 
 class SklearnTrustBase():
@@ -106,21 +107,25 @@ class SklearnTrustBase():
     def scoring_report(self):
         metrics = Metrics.supported_metrics()
 
-        self.scoring = ScoringReport(metrics=metrics)
+        self.scoring = Scoring(metrics=metrics)
 
-        score_values = self.scoring.score_value_report(model=self.model, dmd_test=self.test)
+        score_values_report = self.scoring.score_value_report(model=self.model, dmd_test=self.test)
         score_quality = self.scoring.score_quality_report(dmd_train=self.train, dmd_test=self.test)
-        return {'Score': score_values,
-                'Quality':score_quality}
+        score_values_report.report[ReportScoring.QUALITY] = score_quality
+        return score_values_report
 
     def quality_report(self):
         scoring_report = self.scoring_report()
-        score_values = self.scoring_report()['Score'][self.metric]
+        score_values = scoring_report.get(self.metric)
         # test set quality
         test_set_quality = 1.0
-        ci_ratio = ((1-score_values['ci_low'])-(1-score_values['ci_high']))/(score_values['value'])
+        ci_low = score_values.get(ReportScoring.CI_LOW)
+        ci_high = score_values.get(ReportScoring.CI_HIGH)
+        score_value = score_values.get(ReportScoring.SCORE_VALUE)
+        quality = scoring_report.get(ReportScoring.QUALITY)
+        ci_ratio = ((1-ci_low) - (1-ci_high))/score_value
 
-        test_set_quality = test_set_quality - ci_ratio -(1-scoring_report['Quality'])
+        test_set_quality = test_set_quality - ci_ratio - (1-quality)
         test_set_quality = max(test_set_quality, 0)
 
         #train set quality
