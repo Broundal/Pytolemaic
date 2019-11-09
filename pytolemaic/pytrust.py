@@ -7,7 +7,7 @@ from pytolemaic.prediction_uncertainty.uncertainty_model import \
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
-from pytolemaic.utils.reports import ReportScoring, ReportSensitivity
+from pytolemaic.utils.reports import ReportScoring, ReportSensitivity, Report
 
 
 class SklearnTrustBase():
@@ -140,7 +140,7 @@ class SklearnTrustBase():
 
         quality_report = dict(test_set_quality=test_set_quality, train_set_quality=train_set_quality)
         quality_report = GeneralUtils.round_values(quality_report)
-        return quality_report
+        return Report(quality_report)
 
 
     def create_uncertainty_model(self, method='auto'):

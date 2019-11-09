@@ -1,5 +1,7 @@
 import unittest
-from examples import example_scoring_report, example_sensitivity_analysis, example_prediction_uncertainty
+from examples import example_scoring_report, example_sensitivity_analysis, \
+    example_prediction_uncertainty, example_quality_report
+
 
 class TestExamples(unittest.TestCase):
 
@@ -11,3 +13,6 @@ class TestExamples(unittest.TestCase):
 
     def test_example_prediction_uncertainty(self):
         example_prediction_uncertainty.run()
+
+    def test_example_quality_report(self):
+        example_quality_report.run()
