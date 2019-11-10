@@ -93,7 +93,7 @@ class Scoring():
         new_label = [0] * dmd_train.n_samples + [1] * dmd_test.n_samples
         dmd.set_target(new_label)
 
-        train, test = dmd.split(ratio=0.5)
+        train, test = dmd.split(ratio=dmd_test.n_samples/(dmd_train.n_samples + dmd_test.n_samples))
         return train, test
 
 

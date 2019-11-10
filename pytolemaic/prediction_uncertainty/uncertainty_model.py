@@ -129,21 +129,6 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                                              'confidence']
                                                          )
 
-    @classmethod
-    def _get_confidence_estimator(cls, n_jobs=-1):
-
-        estimator = RandomForestClassifier(
-            random_state=0, n_jobs=n_jobs, n_estimators=100)
-
-        return GeneralUtils.simple_imputation_pipeline(estimator)
-
-    @classmethod
-    def _get_probability_estimator(cls, n_jobs=-1):
-
-        estimator = RandomForestClassifier(
-            random_state=0, n_jobs=n_jobs, n_estimators=100)
-
-        return GeneralUtils.simple_imputation_pipeline(estimator)
 
     def fit_uncertainty_model(self, dmd_test, estimator=None, n_jobs=-1,
                               **kwargs):
