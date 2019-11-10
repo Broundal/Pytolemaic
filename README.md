@@ -1,3 +1,5 @@
+# Pytolemaic
+
 ## What is Pytolemaic 
 Pytolemaic package aims to help you analyze your models to check their quality. 
 
@@ -43,7 +45,7 @@ Examples can be found in examples directory.
  }
  ```
  
- - Naive quality scores based on my experience:
+ - Naive quality scores:
 
    - *imputation score*: sensitivity of the model ot missing values.
    - *leakge score*: chance of the model to have leaking features.
@@ -60,7 +62,7 @@ Examples can be found in examples directory.
 
 #### scoring report
 
-For given metric, the score and confidence intervals (ci) is calculated
+For given metric, the score and confidence intervals (CI) is calculated
  ```
  'recall': {
     'CI_HIGH': 0.95513, 
@@ -69,7 +71,7 @@ For given metric, the score and confidence intervals (ci) is calculated
  }'    
  ```
  
- Additionally, score quality measures the quality of the score based on the separability between train and test sets.
+ Additionally, score quality measures the quality of the score based on the separability (auc score) between train and test sets.
  ```
  'QUALITY': 0.987         
  ```
