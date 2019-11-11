@@ -6,8 +6,8 @@ import numpy as np
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.report_keys import ReportSensitivity
 from pytolemaic.utils.report import Report
+from pytolemaic.utils.report_keys import ReportSensitivity
 
 
 class SensitivityAnalysis():
