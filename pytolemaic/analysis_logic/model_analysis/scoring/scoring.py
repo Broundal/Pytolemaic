@@ -115,8 +115,9 @@ class Scoring():
         yp = classifier.predict_proba(test.values)
 
         auc = Metrics.auc.function(y_true=test.target, y_pred=yp)
+        auc = numpy.clip(auc, 0.5, 1)
 
-        return numpy.clip(numpy.round(2*(1-auc), 5),0,1)
+        return numpy.round(2*(1-auc), 5)
 
 
 

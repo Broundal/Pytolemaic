@@ -27,10 +27,13 @@ class GeneralUtils():
     @classmethod
     def round_values(cls, d: dict, digits=5):
         for k, v in d.items():
-            try:
-                d[k] = numpy.round(v, digits)
-            except:
-                pass
+            if isinstance(v, dict):
+                cls.round_values(v, digits=digits)
+            else:
+                try:
+                    d[k] = numpy.round(v, digits)
+                except:
+                    pass
 
         return d
 
