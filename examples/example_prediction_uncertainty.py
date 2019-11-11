@@ -2,7 +2,7 @@ import numpy
 from pytolemaic.utils.general import GeneralUtils
 from sklearn.ensemble import RandomForestClassifier
 
-from pytolemaic.pytrust import SklearnTrustBase
+from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
 
@@ -37,7 +37,7 @@ def run():
     metric = Metrics.recall
 
 
-    pytrust = SklearnTrustBase(
+    pytrust = PyTrust(
         model=classifier,
         xtest=xtest, ytest=ytest,
         metric=metric)

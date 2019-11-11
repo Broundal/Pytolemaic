@@ -5,7 +5,7 @@ import numpy
 import pandas
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from pytolemaic.pytrust import SklearnTrustBase
+from pytolemaic.pytrust import PyTrust
 
 
 ## For this example we create train/test data representing a linear function
@@ -50,7 +50,7 @@ def run():
 
 
 
-    pytrust = SklearnTrustBase(
+    pytrust = PyTrust(
         model=regressor,
         xtrain=xtrain, ytrain=ytrain,
         xtest=xtest, ytest=ytest,

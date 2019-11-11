@@ -11,7 +11,7 @@ from pytolemaic.utils.report_keys import ReportScoring, ReportSensitivity
 from pytolemaic.utils.report import Report
 
 
-class SklearnTrustBase():
+class PyTrust():
 
     def __init__(self, model,
                  xtrain=None, ytrain=None,

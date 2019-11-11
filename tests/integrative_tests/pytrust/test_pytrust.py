@@ -4,7 +4,7 @@ import numpy
 import pandas
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from pytolemaic.pytrust import SklearnTrustBase
+from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
@@ -50,7 +50,7 @@ class TestSensitivity(unittest.TestCase):
         model.fit(train.values, train.target.ravel())
 
         test = self.get_data(is_classification, seed=1)
-        pytrust = SklearnTrustBase(
+        pytrust = PyTrust(
             model=model,
             xtrain=train.values, ytrain=train.target,
             xtest=test.values, ytest=test.target,
@@ -71,7 +71,7 @@ class TestSensitivity(unittest.TestCase):
         model.fit(train.values, train.target.ravel())
 
         test = self.get_data(is_classification, seed=1)
-        pytrust = SklearnTrustBase(
+        pytrust = PyTrust(
             model=model,
             xtrain=train.values, ytrain=train.target,
             xtest=test.values, ytest=test.target,
@@ -87,7 +87,7 @@ class TestSensitivity(unittest.TestCase):
             print(key)
             self.assertTrue(sensitivity_report.get(key) is not None)
 
-        pytrust = SklearnTrustBase(
+        pytrust = PyTrust(
             model=model,
             xtrain=pandas.DataFrame(train.values),
             ytrain=pandas.DataFrame(train.target),
