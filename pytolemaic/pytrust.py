@@ -61,7 +61,6 @@ class PyTrust():
         self._y_proba_test = None
         self._uncertainty_models = {}
 
-
     def _validate_input(self):
         if not hasattr(self.model, 'predict'):
             raise ValueError("Model must support predict() function")
@@ -104,7 +103,6 @@ class PyTrust():
 
         return self._y_proba_test
 
-
     def scoring_report(self):
         metrics = Metrics.supported_metrics()
 
@@ -124,12 +122,12 @@ class PyTrust():
         ci_high = score_values.get(ReportScoring.CI_HIGH)
         score_value = score_values.get(ReportScoring.SCORE_VALUE)
         quality = scoring_report.get(ReportScoring.QUALITY)
-        ci_ratio = ((1-ci_low) - (1-ci_high))/score_value
+        ci_ratio = ((1 - ci_low) - (1 - ci_high)) / score_value
 
-        test_set_quality = test_set_quality - ci_ratio - (1-quality)
+        test_set_quality = test_set_quality - ci_ratio - (1 - quality)
         test_set_quality = max(test_set_quality, 0)
 
-        #train set quality
+        # train set quality
         sensitivity_report = self.sensitivity_report()
 
         train_set_quality = 1.0
@@ -140,16 +138,15 @@ class PyTrust():
         train_set_quality = max(train_set_quality, 0)
 
         quality_report = dict(test_set=dict(overall_quality=test_set_quality,
-                                            quality_components=dict(ci_ratio=1-ci_ratio,
+                                            quality_components=dict(ci_ratio=1 - ci_ratio,
                                                                     separation_quality=quality)),
                               train_set=dict(overall_quality=train_set_quality,
-                                             quality_components=dict(leakage=1-leakage,
-                                                                     overfit=1-overfit,
-                                                                     imputation=1-imputation)))
+                                             quality_components=dict(leakage=1 - leakage,
+                                                                     overfit=1 - overfit,
+                                                                     imputation=1 - imputation)))
         quality_report = GeneralUtils.round_values(quality_report)
 
         return Report(quality_report)
-
 
     def create_uncertainty_model(self, method='auto'):
         if method not in self._uncertainty_models:
@@ -169,6 +166,3 @@ class PyTrust():
             self._uncertainty_models[method] = uncertainty_model
 
         return self._uncertainty_models[method]
-
-
-

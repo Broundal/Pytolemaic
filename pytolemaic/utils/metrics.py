@@ -14,17 +14,17 @@ class Metric():
         self.is_proba = is_proba
         self.is_loss = is_loss
 
+
 class CustomMetrics:
     @classmethod
     def auc(cls, y_true, y_pred):
         if y_pred.shape[1] == 1:
             return sklearn.metrics.roc_auc_score(y_true=y_true, y_score=y_pred)
         else:
-            auc_list = [sklearn.metrics.roc_auc_score(y_true=y_true==i,
+            auc_list = [sklearn.metrics.roc_auc_score(y_true=y_true == i,
                                                       y_score=y_pred[:, i])
                         for i in range(y_pred.shape[1])]
             return float(numpy.mean(auc_list))
-
 
 
 class Metrics():
@@ -39,9 +39,9 @@ class Metrics():
 
     # sklearn's auc does not support multiclass
     auc = Metric(name='auc',
-                  function=CustomMetrics.auc,
-                  ptype=CLASSIFICATION,
-                  is_proba=True)
+                 function=CustomMetrics.auc,
+                 ptype=CLASSIFICATION,
+                 is_proba=True)
 
     recall = Metric(name='recall',
                     function=functools.partial(sklearn.metrics.recall_score,

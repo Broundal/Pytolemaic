@@ -71,12 +71,9 @@ class SensitivityAnalysis():
             shuffled_pred = predict_function(shuffled_x)
             scores[name] = score_function(y_pred, shuffled_pred) - base_score
 
-
         if raw_scores:
             # description = "The raw scores of how each feature affects the model's predictions."
             return scores
-
-
 
         # higher score / lower loss means the shuffled feature did less impact
         if self.metrics[metric].is_loss:
@@ -93,7 +90,6 @@ class SensitivityAnalysis():
         #             "Higher value mean larger impact (0 means no impact at all). "
         #             "Values are normalized to 1.")
         return impact
-
 
     def _sensitivity_meta(self, sensitivity):
         if not sensitivity:
@@ -127,7 +123,7 @@ class SensitivityAnalysis():
             shuffled=perturbed_sensitivity,
             missing=missing_sensitivity)
 
-        report  = GeneralUtils.round_values(report)
+        report = GeneralUtils.round_values(report)
         return report
 
     def _leakage(self, n_features, n_zero, **kwargs):

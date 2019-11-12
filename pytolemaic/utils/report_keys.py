@@ -14,7 +14,6 @@ class EnumBase(Enum):
     def values(cls):
         return [item.value for item in cls]
 
-
     @classmethod
     def asdict(cls):
         return {item.name: item.value for item in cls}
@@ -25,6 +24,7 @@ class ReportScoring(EnumBase):
     CI_HIGH = 2
     SCORE_VALUE = 3
     QUALITY = 4
+
 
 class ReportSensitivity(EnumBase):
     SHUFFLE = 1
@@ -37,12 +37,7 @@ class ReportSensitivity(EnumBase):
     IMPUTATION = 4
     OVERFIIT = 5
 
-
     N_FEATURES = 8
     N_LOW = 9
     N_ZERO = 10
     N_NON_ZERO = 11
-
-
-
-

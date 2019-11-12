@@ -95,8 +95,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
 
             yp = self.predict(dmd_test)
             self.uncertainty_model.fit(dmd_test.values,
-                                       (
-                                                   dmd_test.target.ravel() - yp.ravel()) ** 2)
+                                       (dmd_test.target.ravel() - yp.ravel()) ** 2)
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
@@ -129,7 +128,6 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                                              'confidence']
                                                          )
 
-
     def fit_uncertainty_model(self, dmd_test, estimator=None, n_jobs=-1,
                               **kwargs):
 
@@ -154,7 +152,6 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                       .format(self.uncertainty_method))
 
     def uncertainty(self, dmd: DMD):
-
 
         if self.uncertainty_method in ['probability']:
             yproba = self.predict_proba(dmd)

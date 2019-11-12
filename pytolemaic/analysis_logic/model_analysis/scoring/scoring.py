@@ -53,9 +53,9 @@ class Scoring():
                                                               y_true=y_true,
                                                               y_pred=y_pred,
                                                               y_proba=y_proba)
-                score_report[metric.name] = {ReportScoring.SCORE_VALUE : score,
-                                             ReportScoring.CI_LOW : ci_low,
-                                             ReportScoring.CI_HIGH : ci_high}
+                score_report[metric.name] = {ReportScoring.SCORE_VALUE: score,
+                                             ReportScoring.CI_LOW: ci_low,
+                                             ReportScoring.CI_HIGH: ci_high}
 
 
         else:
@@ -68,18 +68,17 @@ class Scoring():
                 ci_low, ci_high = Metrics.confidence_interval(metric,
                                                               y_true=y_true,
                                                               y_pred=y_pred)
-                score_report[metric.name] = {ReportScoring.SCORE_VALUE : score,
-                                             ReportScoring.CI_LOW : ci_low,
-                                             ReportScoring.CI_HIGH : ci_high}
-
+                score_report[metric.name] = {ReportScoring.SCORE_VALUE: score,
+                                             ReportScoring.CI_LOW: ci_low,
+                                             ReportScoring.CI_HIGH: ci_high}
 
         for metric in score_report:
             score_report[metric] = GeneralUtils.round_values(score_report[metric])
 
         return Report(score_report)
 
-
-    def _prepare_dataset_for_score_quality(self, dmd_train: DMD, dmd_test: DMD):
+    def _prepare_dataset_for_score_quality(self, dmd_train: DMD,
+                                           dmd_test: DMD):
         '''
 
         :param dmd_train: train set
@@ -87,14 +86,12 @@ class Scoring():
         :return: dataset with target of test/train
         '''
 
-
         dmd = DMD.concat([dmd_train, dmd_test])
         new_label = [0] * dmd_train.n_samples + [1] * dmd_test.n_samples
         dmd.set_target(new_label)
 
         train, test = dmd.split(ratio=dmd_test.n_samples/(dmd_train.n_samples + dmd_test.n_samples))
         return train, test
-
 
     def score_quality_report(self, dmd_train: DMD, dmd_test: DMD):
         '''
@@ -116,8 +113,7 @@ class Scoring():
         auc = Metrics.auc.function(y_true=test.target, y_pred=yp)
         auc = numpy.clip(auc, 0.5, 1)
 
-        return numpy.round(2*(1-auc), 5)
-
+        return numpy.round(2 * (1 - auc), 5)
 
 
 if __name__ == '__main__':
