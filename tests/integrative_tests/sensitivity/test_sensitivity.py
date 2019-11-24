@@ -5,6 +5,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
@@ -52,6 +53,7 @@ class TestSensitivity(unittest.TestCase):
                                                       method='perturb',
                                                       raw_scores=True)
 
+        raw_scores = raw_scores.sensitivities
         self.assertTrue(isinstance(raw_scores, dict))
         self.assertEqual(len(raw_scores), test.n_features)
         self.assertLessEqual(raw_scores['f_0'], 0.5)
@@ -77,6 +79,7 @@ class TestSensitivity(unittest.TestCase):
                                                       method='missing',
                                                       raw_scores=True)
 
+        raw_scores = raw_scores.sensitivities
         self.assertTrue(isinstance(raw_scores, dict))
         self.assertEqual(len(raw_scores), test.n_features)
         self.assertEqual(raw_scores['f_1'], 0)
@@ -101,6 +104,7 @@ class TestSensitivity(unittest.TestCase):
                                                   method='missing',
                                                   raw_scores=False)
 
+        scores = scores.sensitivities
         print(scores)
         self.assertTrue(isinstance(scores, dict))
         self.assertEqual(len(scores), test.n_features)
@@ -127,6 +131,7 @@ class TestSensitivity(unittest.TestCase):
                                                   method='missing',
                                                   raw_scores=False)
 
+        scores = scores.sensitivities
         print(scores)
         self.assertTrue(isinstance(scores, dict))
         self.assertEqual(len(scores), test.n_features)
@@ -159,12 +164,11 @@ class TestSensitivity(unittest.TestCase):
                                                    method='missing',
                                                    raw_scores=False)
 
-        perturbed_sensitivity_meta = sensitivity._sensitivity_meta(perturb)
-        n_features = perturbed_sensitivity_meta[ReportSensitivity.N_FEATURES]
-        n_zero = perturbed_sensitivity_meta[ReportSensitivity.N_ZERO]
-        n_low = perturbed_sensitivity_meta[ReportSensitivity.N_LOW]
+        stats = sensitivity._sensitivity_stats(perturb)
+        n_features = stats.n_features
+        n_zero = stats.n_zero
+        n_low = stats.n_low
 
-        self.assertTrue(len(perturbed_sensitivity_meta) > 0)
 
         leakage_score = sensitivity._leakage(
             n_features=n_features,
@@ -174,7 +178,7 @@ class TestSensitivity(unittest.TestCase):
         self.assertLessEqual(leakage_score, 1)
 
 
-        overfit_score = sensitivity._overfit(
+        overfit_score = sensitivity._too_many_features(
             n_features=n_features,
             n_low=n_low,
             n_zero=n_zero)
@@ -187,8 +191,10 @@ class TestSensitivity(unittest.TestCase):
         self.assertGreaterEqual(imputation_score, 0)
         self.assertLessEqual(imputation_score, 1)
 
-        scores = sensitivity._sensitivity_scores(
+        report = sensitivity._vulnerability_report(
             perturbed_sensitivity=perturb,
-            perturbed_sensitivity_meta=perturbed_sensitivity_meta,
+            shuffled_sensitivity_stats=stats,
             missing_sensitivity=missing)
-        self.assertTrue(len(scores) >= 3)
+        self.assertTrue(0 <= report.imputation <= 1)
+        self.assertTrue(0 <= report.leakage <= 1)
+        self.assertTrue(0 <= report.too_many_features <= 1)

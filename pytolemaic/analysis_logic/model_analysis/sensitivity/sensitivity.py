@@ -3,11 +3,14 @@ import logging
 import numpy
 import numpy as np
 
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport, \
+    SensitivityStatsReport, SensitivityVulnerabilityReport, SensitivityFullReport
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 from pytolemaic.utils.report import Report
 from pytolemaic.utils.report_keys import ReportSensitivity
+
 
 
 class SensitivityAnalysis():
@@ -73,7 +76,7 @@ class SensitivityAnalysis():
 
         if raw_scores:
             # description = "The raw scores of how each feature affects the model's predictions."
-            return scores
+            return SensitivityOfFeaturesReport(method=method, sensitivities=scores)
 
         # higher score / lower loss means the shuffled feature did less impact
         if self.metrics[metric].is_loss:
@@ -89,42 +92,39 @@ class SensitivityAnalysis():
         # description="The impact of each feature on model's predictions. "
         #             "Higher value mean larger impact (0 means no impact at all). "
         #             "Values are normalized to 1.")
-        return impact
+        return SensitivityOfFeaturesReport(method=method, sensitivities=impact)
 
-    def _sensitivity_meta(self, sensitivity):
+    def _sensitivity_stats(self, sensitivity: SensitivityOfFeaturesReport):
         if not sensitivity:
             return {}
 
-        sensitivity = np.array(list(sensitivity.values()))
+        sensitivity = np.array(list(sensitivity.sensitivities.values()))
         n_features = len(sensitivity)
-        n_zero = np.sum(sensitivity < min(1e-4, 1 / n_features))
-        n_low = np.sum(sensitivity < max(sensitivity) * 0.05)
-        return {
-            ReportSensitivity.N_FEATURES: n_features,
-            ReportSensitivity.N_ZERO: n_zero,
-            ReportSensitivity.N_NON_ZERO: n_features - n_zero,
-            ReportSensitivity.N_LOW: n_low
-        }
+        n_zero = int(np.sum(sensitivity < min(1e-4, 1 / n_features)))
+        n_low = int(np.sum(sensitivity < max(sensitivity) * 0.05))
+        return SensitivityStatsReport(n_features=n_features,
+                                      n_low=n_low,
+                                      n_zero=n_zero,
+                                      n_non_zero=n_features - n_zero)
+            
 
-    def _sensitivity_scores(self, perturbed_sensitivity, missing_sensitivity,
-                            perturbed_sensitivity_meta):
+    def _vulnerability_report(self, perturbed_sensitivity: SensitivityOfFeaturesReport,
+                              missing_sensitivity: SensitivityOfFeaturesReport,
+                              shuffled_sensitivity_stats: SensitivityStatsReport):
         # lower is better
-        n_features = perturbed_sensitivity_meta[ReportSensitivity.N_FEATURES]
-        n_zero = perturbed_sensitivity_meta[ReportSensitivity.N_ZERO]
-        n_low = perturbed_sensitivity_meta[ReportSensitivity.N_LOW]
-
-        report = {}
-        report[ReportSensitivity.LEAKAGE] = self._leakage(n_features=n_features,
-                                                          n_zero=n_zero)
-        report[ReportSensitivity.OVERFIIT] = self._overfit(n_features=n_features,
-                                                           n_low=n_low,
-                                                           n_zero=n_zero)
-        report[ReportSensitivity.IMPUTATION] = self._imputation_score(
+        stats = shuffled_sensitivity_stats
+        
+        
+        leakage = self._leakage(n_features=stats.n_features,
+                                                          n_zero=stats.n_zero)
+        too_many_features = self._too_many_features(n_features=stats.n_features,
+                                                                     n_low=stats.n_low,
+                                                                     n_zero=stats.n_zero)
+        imputation = self._imputation_score(
             shuffled=perturbed_sensitivity,
             missing=missing_sensitivity)
 
-        report = GeneralUtils.round_values(report)
-        return report
+        return SensitivityVulnerabilityReport(imputation=imputation, too_many_features=too_many_features, leakage=leakage)
 
     def _leakage(self, n_features, n_zero, **kwargs):
         """
@@ -140,7 +140,7 @@ class SensitivityAnalysis():
 
         return np.power(n_zero / n_features, n_non_zero - 1)
 
-    def _overfit(self, n_features, n_low, n_zero, **kwargs):
+    def _too_many_features(self, n_features, n_low, n_zero, **kwargs):
         """
         Many features with low sensitivity indicate the model relies on non-informative feature. This may cause overfit.
         higher value when there are many features with low contribution
@@ -150,7 +150,7 @@ class SensitivityAnalysis():
 
         return max(n_low / n_features, np.sqrt(n_zero / n_features))
 
-    def _imputation_score(self, shuffled, missing):
+    def _imputation_score(self, shuffled: SensitivityOfFeaturesReport, missing: SensitivityOfFeaturesReport):
         """
         missing sensitivity should (more or less) match shuffled in impact.
         If it does not match, it may mean there is an issue with imputation
@@ -161,7 +161,7 @@ class SensitivityAnalysis():
         if not missing:
             return 0
 
-        deltas = numpy.abs([shuffled[i] - missing[i] for i in shuffled])
+        deltas = numpy.abs([shuffled.sensitivities[i] - missing.sensitivities[i] for i in shuffled.sensitivities])
         deltas = deltas[deltas >= max(deltas) * 1e-3]
         if max(abs(deltas)) == 0:
             return 0
@@ -170,7 +170,7 @@ class SensitivityAnalysis():
         return score
 
     def calculate_sensitivity(self, model, dmd_test: DMD, metric: str):
-        self.perturbed_sensitivity = self.sensitivity_analysis(
+        self.shuffled_sensitivity = self.sensitivity_analysis(
             model=model,
             dmd_test=dmd_test,
             metric=metric,
@@ -188,24 +188,21 @@ class SensitivityAnalysis():
             logging.error(
                 "Failed to calculate sensitivity with 'missing' method... Does your model handle missing values?")
 
-            self.missing_sensitivity = {}
+            self.missing_sensitivity = None
 
-    def sensitivity_report(self):
-        report = {}
+    def sensitivity_report(self)-> SensitivityFullReport:
 
-        report[ReportSensitivity.SHUFFLE] = {}
-        report[ReportSensitivity.SHUFFLE][ReportSensitivity.SENSITIVITY] = self.perturbed_sensitivity
-        perturb_meta = self._sensitivity_meta(self.perturbed_sensitivity)
-        report[ReportSensitivity.SHUFFLE][ReportSensitivity.META] = perturb_meta
-
-        report[ReportSensitivity.MISSING]  = {}
-        report[ReportSensitivity.MISSING][ReportSensitivity.SENSITIVITY]= self.missing_sensitivity
-        report[ReportSensitivity.MISSING][ReportSensitivity.META]= self._sensitivity_meta(
-            self.missing_sensitivity)
-
-        report[ReportSensitivity.VULNERABILITY] = self._sensitivity_scores(
-            perturbed_sensitivity=self.perturbed_sensitivity,
+        shuffle_stats_report = self._sensitivity_stats(self.shuffled_sensitivity)
+        missing_stats_report = self._sensitivity_stats(self.missing_sensitivity)
+        vulnerability_report = self._vulnerability_report(
+            perturbed_sensitivity=self.shuffled_sensitivity,
             missing_sensitivity=self.missing_sensitivity,
-            perturbed_sensitivity_meta=perturb_meta)
+            shuffled_sensitivity_stats=missing_stats_report)
 
-        return Report(report)
+        return SensitivityFullReport(
+            shuffle_report=self.shuffled_sensitivity,
+            shuffle_stats_report=shuffle_stats_report,
+            missing_report=self.missing_sensitivity,
+            missing_stats_report=missing_stats_report,
+            vulnerability_report=vulnerability_report
+        )

@@ -131,10 +131,11 @@ class PyTrust():
         sensitivity_report = self.sensitivity_report()
 
         train_set_quality = 1.0
-        leakage = sensitivity_report.get(ReportSensitivity.LEAKAGE)
-        imputation = sensitivity_report.get(ReportSensitivity.IMPUTATION)
-        overfit = sensitivity_report.get(ReportSensitivity.OVERFIIT)
-        train_set_quality = train_set_quality - leakage - imputation - overfit
+        leakage = sensitivity_report.vulnerability_report.leakage
+
+        too_many_features = sensitivity_report.vulnerability_report.too_many_features
+        imputation = sensitivity_report.vulnerability_report.imputation
+        train_set_quality = train_set_quality - leakage - too_many_features - imputation
         train_set_quality = max(train_set_quality, 0)
 
         quality_report = dict(test_set=dict(overall_quality=test_set_quality,
@@ -142,7 +143,7 @@ class PyTrust():
                                                                     separation_quality=quality)),
                               train_set=dict(overall_quality=train_set_quality,
                                              quality_components=dict(leakage=1 - leakage,
-                                                                     overfit=1 - overfit,
+                                                                     overfit=1 - too_many_features,
                                                                      imputation=1 - imputation)))
         quality_report = GeneralUtils.round_values(quality_report)
 

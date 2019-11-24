@@ -4,6 +4,7 @@ import numpy
 import pandas
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityFullReport
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
@@ -82,10 +83,12 @@ class TestSensitivity(unittest.TestCase):
 
         sensitivity_report = pytrust.sensitivity_report()
         print(sensitivity_report)
-        self.assertTrue(isinstance(sensitivity_report, Report))
-        for key in ReportSensitivity.keys(members=True):
+        self.assertTrue(isinstance(sensitivity_report, SensitivityFullReport))
+        for key, value in ReportSensitivity.__dict__.items():
+            if key.startswith('_'):
+                continue
             print(key)
-            self.assertTrue(sensitivity_report.get(key) is not None)
+            self.assertTrue(value is not None)
 
         pytrust = PyTrust(
             model=model,
@@ -101,7 +104,8 @@ class TestSensitivity(unittest.TestCase):
         sensitivity_report2 = pytrust.sensitivity_report()
         print(sensitivity_report)
         self.maxDiff = None
-        self.assertEqual(sensitivity_report2.report, sensitivity_report.report)
+        self.assertEqual(sensitivity_report2.shuffle_report.sensitivities, sensitivity_report.shuffle_report.sensitivities)
+        self.assertEqual(sensitivity_report2.missing_report.sensitivities, sensitivity_report.missing_report.sensitivities)
 
     def test_pytrust_scoring_report(self):
 
