@@ -1,5 +1,6 @@
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
     Scoring
+from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
@@ -110,18 +111,17 @@ class PyTrust():
 
         score_values_report = self.scoring.score_value_report(model=self.model, dmd_test=self.test)
         score_quality = self.scoring.score_quality_report(dmd_train=self.train, dmd_test=self.test)
-        score_values_report.report[ReportScoring.QUALITY] = score_quality
-        return score_values_report
+        return ScoringFullReport(metric_reports=score_values_report, quality=score_quality)
 
     def quality_report(self):
         scoring_report = self.scoring_report()
-        score_values = scoring_report.get(self.metric)
+        score_values = scoring_report.metric_scores[self.metric]
         # test set quality
         test_set_quality = 1.0
-        ci_low = score_values.get(ReportScoring.CI_LOW)
-        ci_high = score_values.get(ReportScoring.CI_HIGH)
-        score_value = score_values.get(ReportScoring.SCORE_VALUE)
-        quality = scoring_report.get(ReportScoring.QUALITY)
+        ci_low = score_values.ci_low
+        ci_high = score_values.ci_high
+        score_value = score_values.value
+        quality = scoring_report.quality
         ci_ratio = ((1 - ci_low) - (1 - ci_high)) / score_value
 
         test_set_quality = test_set_quality - ci_ratio - (1 - quality)

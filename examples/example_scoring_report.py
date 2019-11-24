@@ -65,16 +65,16 @@ def run():
 
     scoring_report = pytrust.scoring_report()
 
-    score_value = scoring_report.get(metric).get(ReportScoring.SCORE_VALUE)
-    ci_low = scoring_report.get(metric).get(ReportScoring.CI_LOW)
-    ci_high = scoring_report.get(metric).get(ReportScoring.CI_HIGH)
-    quality = scoring_report.get(ReportScoring.QUALITY)
+    score_value = scoring_report.metric_scores[metric].value
+    ci_low = scoring_report.metric_scores[metric].ci_low
+    ci_high = scoring_report.metric_scores[metric].ci_high
+    quality = scoring_report.quality
 
     print('{} score is {:0.3f}'.format(metric, score_value))
     print('Score quality is {:0.3f}'.format(quality))
     print('Confidence interval is [{:0.3f}, {:0.3f}]'.format(ci_low, ci_high))
 
-    pprint(scoring_report.simplified_keys())
+    pprint(scoring_report)
 
 
 

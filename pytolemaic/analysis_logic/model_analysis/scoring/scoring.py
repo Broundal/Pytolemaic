@@ -1,6 +1,7 @@
 import numpy
 from sklearn.ensemble import RandomForestClassifier
 
+from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringMetricReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
@@ -19,7 +20,7 @@ class Scoring():
 
     def score_value_report(self, model, dmd_test: DMD,
                            y_proba: numpy.ndarray = None,
-                           y_pred: numpy.ndarray = None):
+                           y_pred: numpy.ndarray = None)->[ScoringMetricReport]:
         '''
 
         :param model: model of interest
@@ -28,7 +29,7 @@ class Scoring():
         :param y_pred: pre-calculated models' predictions for test set, if available
         :return: scoring report
         '''
-        score_report = {}
+        score_report = []
 
         model_support_dmd = GeneralUtils.dmd_supported(model, dmd_test)
         x_test = dmd_test if model_support_dmd else dmd_test.values
@@ -53,9 +54,11 @@ class Scoring():
                                                               y_true=y_true,
                                                               y_pred=y_pred,
                                                               y_proba=y_proba)
-                score_report[metric.name] = {ReportScoring.SCORE_VALUE: score,
-                                             ReportScoring.CI_LOW: ci_low,
-                                             ReportScoring.CI_HIGH: ci_high}
+                score_report.append(ScoringMetricReport(
+                    metric=metric.name,
+                    value=score,
+                    ci_low=ci_low,
+                    ci_high=ci_high))
 
 
         else:
@@ -68,14 +71,14 @@ class Scoring():
                 ci_low, ci_high = Metrics.confidence_interval(metric,
                                                               y_true=y_true,
                                                               y_pred=y_pred)
-                score_report[metric.name] = {ReportScoring.SCORE_VALUE: score,
-                                             ReportScoring.CI_LOW: ci_low,
-                                             ReportScoring.CI_HIGH: ci_high}
+                score_report.append(ScoringMetricReport(
+                    metric=metric.name,
+                    value=score,
+                    ci_low=ci_low,
+                    ci_high=ci_high))
 
-        for metric in score_report:
-            score_report[metric] = GeneralUtils.round_values(score_report[metric])
 
-        return Report(score_report)
+        return score_report
 
     def _prepare_dataset_for_score_quality(self, dmd_train: DMD,
                                            dmd_test: DMD):

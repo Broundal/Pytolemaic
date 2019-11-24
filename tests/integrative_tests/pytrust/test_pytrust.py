@@ -115,10 +115,10 @@ class TestSensitivity(unittest.TestCase):
 
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == CLASSIFICATION:
-                metric_report = scoring_report.get(metric.name)
-                score_value = metric_report.get(ReportScoring.SCORE_VALUE)
-                ci_low = metric_report.get(ReportScoring.CI_LOW)
-                ci_high = metric_report.get(ReportScoring.CI_HIGH)
+                metric_report = scoring_report.metric_scores[metric.name]
+                score_value = metric_report.value
+                ci_low = metric_report.ci_low
+                ci_high = metric_report.ci_high
 
                 self.assertTrue(ci_low < score_value < ci_high)
 
@@ -127,9 +127,9 @@ class TestSensitivity(unittest.TestCase):
         scoring_report = pytrust.scoring_report()
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == REGRESSION:
-                metric_report = scoring_report.get(metric.name)
-                score_value = metric_report.get(ReportScoring.SCORE_VALUE)
-                ci_low = metric_report.get(ReportScoring.CI_LOW)
-                ci_high = metric_report.get(ReportScoring.CI_HIGH)
+                metric_report = scoring_report.metric_scores[metric.name]
+                score_value = metric_report.value
+                ci_low = metric_report.ci_low
+                ci_high = metric_report.ci_high
 
                 self.assertTrue(ci_low < score_value < ci_high)
