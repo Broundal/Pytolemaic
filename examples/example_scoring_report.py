@@ -12,7 +12,6 @@ from pytolemaic.pytrust import PyTrust
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.report_keys import ReportScoring
 
 
 def run():

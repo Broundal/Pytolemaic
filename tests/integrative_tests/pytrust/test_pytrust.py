@@ -10,7 +10,6 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.report_keys import ReportSensitivity, ReportScoring
 from pytolemaic.utils.report import Report
 
 
@@ -84,7 +83,7 @@ class TestSensitivity(unittest.TestCase):
         sensitivity_report = pytrust.sensitivity_report()
         print(sensitivity_report)
         self.assertTrue(isinstance(sensitivity_report, SensitivityFullReport))
-        for key, value in ReportSensitivity.__dict__.items():
+        for key, value in sensitivity_report.__dict__.items():
             if key.startswith('_'):
                 continue
             print(key)

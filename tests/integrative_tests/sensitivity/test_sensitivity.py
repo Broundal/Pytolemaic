@@ -9,7 +9,6 @@ from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports im
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.report_keys import ReportSensitivity
 
 
 class TestSensitivity(unittest.TestCase):
