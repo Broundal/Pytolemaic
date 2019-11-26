@@ -74,7 +74,7 @@ class ConfusionMatrixReport():
 
         plt.tight_layout()
 
-        plt.show()
+        # plt.show()
 
 
 
@@ -95,6 +95,15 @@ class ScatterReport():
         return dict(y_true=self.y_true,
                     y_pred=self.y_pred)
 
+    def plot(self):
+        plt.figure()
+        plt.plot(self.y_true, self.y_pred, '.b')
+        plt.xlabel('Y true')
+        plt.ylabel('Y predicted')
+        plt.title('Scatter plot')
+        plt.draw()
+        # plt.show()
+
 
 class ScoringMetricReport():
     def __init__(self, metric, value, ci_low, ci_high):
@@ -111,6 +120,7 @@ class ScoringMetricReport():
             ci_high=self.ci_high,
             ci_ratio=self.ci_ratio,
         )
+
 
     @property
     def metric(self):
