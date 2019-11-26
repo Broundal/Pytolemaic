@@ -24,7 +24,7 @@ Examples can be found in examples directory.
 
 #### Sensitivity Analysis:
 
- - The sensitivity of each feature (normalized to 1):
+ - The sensitivity of each feature (normalized to sum of 1):
  
 ```
  'SHUFFLE': {

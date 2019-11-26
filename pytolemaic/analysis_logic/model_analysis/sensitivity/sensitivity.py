@@ -6,10 +6,14 @@ import numpy as np
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport, \
     SensitivityStatsReport, SensitivityVulnerabilityReport, SensitivityFullReport
 from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.enum_base import EnumBase
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 from pytolemaic.utils.report import Report
 
+class SensitivityTypes():
+    shuffled = 'shuffled'
+    missing = 'missing'
 
 class SensitivityAnalysis():
     def __init__(self):
@@ -24,15 +28,15 @@ class SensitivityAnalysis():
         return x
 
     @classmethod
-    def get_shuffled_x(cls, dmdx: DMD, index=None, method='perturb', seed=0,
+    def get_shuffled_x(cls, dmdx: DMD, index=None, method=SensitivityTypes.shuffled, seed=0,
                        model_support_dmd=False):
         if index is None:
             return dmdx.values
 
         x_copy = numpy.copy(dmdx.values)
-        if method == 'perturb':
+        if method == SensitivityTypes.shuffled:
             x_copy = cls.shuffle_x(x_copy, index=index, seed=index + seed)
-        if method == 'missing':
+        if method == SensitivityTypes.missing:
             x_copy[:, index] = np.nan
 
         if model_support_dmd:
@@ -44,7 +48,7 @@ class SensitivityAnalysis():
             return x_copy
 
     def sensitivity_analysis(self, model, dmd_test: DMD, metric,
-                             method='perturb', raw_scores=False,
+                             method=SensitivityTypes.shuffled, raw_scores=False,
                              y_pred=None):
 
         self.model_support_dmd = GeneralUtils.dmd_supported(model, dmd_test)
@@ -106,7 +110,7 @@ class SensitivityAnalysis():
                                       n_non_zero=n_features - n_zero)
             
 
-    def _vulnerability_report(self, perturbed_sensitivity: SensitivityOfFeaturesReport,
+    def _vulnerability_report(self, shuffled_sensitivity: SensitivityOfFeaturesReport,
                               missing_sensitivity: SensitivityOfFeaturesReport,
                               shuffled_sensitivity_stats: SensitivityStatsReport):
         # lower is better
@@ -119,7 +123,7 @@ class SensitivityAnalysis():
                                                                      n_low=stats.n_low,
                                                                      n_zero=stats.n_zero)
         imputation = self._imputation_score(
-            shuffled=perturbed_sensitivity,
+            shuffled=shuffled_sensitivity,
             missing=missing_sensitivity)
 
         return SensitivityVulnerabilityReport(imputation=imputation, too_many_features=too_many_features, leakage=leakage)
@@ -127,7 +131,7 @@ class SensitivityAnalysis():
     def _leakage(self, n_features, n_zero, **kwargs):
         """
         measure the chance for data leakage - strong data leakage cause only few features to contribute to the model.
-        :param perturbed_sensitivity:
+        :param shuffled_sensitivity:
         :return:
         """
 
@@ -142,7 +146,7 @@ class SensitivityAnalysis():
         """
         Many features with low sensitivity indicate the model relies on non-informative feature. This may cause overfit.
         higher value when there are many features with low contribution
-        :param perturbed_sensitivity:
+        :param shuffled_sensitivity:
         :return:
         """
 
@@ -172,7 +176,7 @@ class SensitivityAnalysis():
             model=model,
             dmd_test=dmd_test,
             metric=metric,
-            method='perturb',
+            method=SensitivityTypes.shuffled,
             raw_scores=False)
 
         try:
@@ -180,11 +184,11 @@ class SensitivityAnalysis():
                 model=model,
                 dmd_test=dmd_test,
                 metric=metric,
-                method='missing',
+                method=SensitivityTypes.missing,
                 raw_scores=False)
         except:
             logging.error(
-                "Failed to calculate sensitivity with 'missing' method... Does your model handle missing values?")
+                "Failed to calculate sensitivity with {} method... Does your model handle missing values?".format(SensitivityTypes.missing))
 
             self.missing_sensitivity = None
 
@@ -193,7 +197,7 @@ class SensitivityAnalysis():
         shuffle_stats_report = self._sensitivity_stats(self.shuffled_sensitivity)
         missing_stats_report = self._sensitivity_stats(self.missing_sensitivity)
         vulnerability_report = self._vulnerability_report(
-            perturbed_sensitivity=self.shuffled_sensitivity,
+            shuffled_sensitivity=self.shuffled_sensitivity,
             missing_sensitivity=self.missing_sensitivity,
             shuffled_sensitivity_stats=missing_stats_report)
 

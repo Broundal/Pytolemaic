@@ -4,7 +4,7 @@ import numpy
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
-    SensitivityAnalysis
+    SensitivityAnalysis, SensitivityTypes
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
@@ -36,8 +36,8 @@ class TestSensitivity(unittest.TestCase):
 
         return model
 
-    def test_sensitivity_raw_perturb_classification(self,
-                                                    is_classification=True):
+    def test_sensitivity_raw_shuffled_classification(self,
+                                                     is_classification=True):
         sensitivity = SensitivityAnalysis()
         model = self.get_model(is_classification)
 
@@ -49,7 +49,7 @@ class TestSensitivity(unittest.TestCase):
         raw_scores = sensitivity.sensitivity_analysis(model=model,
                                                       metric=Metrics.recall.name,
                                                       dmd_test=test,
-                                                      method='perturb',
+                                                      method=SensitivityTypes.shuffled,
                                                       raw_scores=True)
 
         raw_scores = raw_scores.sensitivities
@@ -75,7 +75,7 @@ class TestSensitivity(unittest.TestCase):
         raw_scores = sensitivity.sensitivity_analysis(model=model,
                                                       metric=Metrics.mae.name,
                                                       dmd_test=test,
-                                                      method='missing',
+                                                      method=SensitivityTypes.missing,
                                                       raw_scores=True)
 
         raw_scores = raw_scores.sensitivities
@@ -100,7 +100,7 @@ class TestSensitivity(unittest.TestCase):
         scores = sensitivity.sensitivity_analysis(model=model,
                                                   metric=Metrics.mae.name,
                                                   dmd_test=test,
-                                                  method='missing',
+                                                  method=SensitivityTypes.missing,
                                                   raw_scores=False)
 
         scores = scores.sensitivities
@@ -127,7 +127,7 @@ class TestSensitivity(unittest.TestCase):
         scores = sensitivity.sensitivity_analysis(model=model,
                                                   metric=Metrics.mae.name,
                                                   dmd_test=test,
-                                                  method='missing',
+                                                  method=SensitivityTypes.missing,
                                                   raw_scores=False)
 
         scores = scores.sensitivities
@@ -151,19 +151,19 @@ class TestSensitivity(unittest.TestCase):
 
         test = self.get_data(is_classification, seed=1)
 
-        perturb = sensitivity.sensitivity_analysis(model=model,
+        shuffled = sensitivity.sensitivity_analysis(model=model,
                                                    metric=Metrics.mae.name,
                                                    dmd_test=test,
-                                                   method='perturb',
+                                                   method=SensitivityTypes.shuffled,
                                                    raw_scores=False)
 
         missing = sensitivity.sensitivity_analysis(model=model,
                                                    metric=Metrics.mae.name,
                                                    dmd_test=test,
-                                                   method='missing',
+                                                   method=SensitivityTypes.missing,
                                                    raw_scores=False)
 
-        stats = sensitivity._sensitivity_stats(perturb)
+        stats = sensitivity._sensitivity_stats(shuffled)
         n_features = stats.n_features
         n_zero = stats.n_zero
         n_low = stats.n_low
@@ -185,13 +185,13 @@ class TestSensitivity(unittest.TestCase):
         self.assertGreater(overfit_score, 0)
         self.assertLessEqual(overfit_score, 1)
 
-        imputation_score = sensitivity._imputation_score(shuffled=perturb,
+        imputation_score = sensitivity._imputation_score(shuffled=shuffled,
                                                          missing=missing)
         self.assertGreaterEqual(imputation_score, 0)
         self.assertLessEqual(imputation_score, 1)
 
         report = sensitivity._vulnerability_report(
-            perturbed_sensitivity=perturb,
+            shuffled_sensitivity=shuffled,
             shuffled_sensitivity_stats=stats,
             missing_sensitivity=missing)
         self.assertTrue(0 <= report.imputation <= 1)
