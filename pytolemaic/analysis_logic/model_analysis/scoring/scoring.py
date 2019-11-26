@@ -1,5 +1,7 @@
 import numpy
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils.multiclass import unique_labels
+
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringMetricReport, ConfusionMatrixReport, \
     ScatterReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
@@ -41,7 +43,7 @@ class Scoring():
             y_proba = y_proba or model.predict_proba(x_test)
             y_pred = y_pred or numpy.argmax(y_proba, axis=1)
 
-            confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred, labels=numpy.unique(y_true))
+            confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred, labels=unique_labels(y_true, y_pred))
 
             for metric in self.metrics:
                 if not metric.ptype == CLASSIFICATION:

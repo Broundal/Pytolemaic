@@ -75,6 +75,8 @@ def run():
 
     pprint(scoring_report.to_dict())
 
+    scoring_report.confusion_matrix.plot()
+
 
 
 if __name__ == '__main__':
