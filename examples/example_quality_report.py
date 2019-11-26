@@ -59,9 +59,9 @@ def run():
         metric=metric,
         splitter=splitter)
 
-    sensitivity_report = pytrust.quality_report()
+    quality_report = pytrust.quality_report()
     print("Quality report - higher is better")
-    pprint(sensitivity_report.simplified_keys())
+    print(quality_report)
 
 if __name__ == '__main__':
     run()

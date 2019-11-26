@@ -94,7 +94,7 @@ class Scoring():
         train, test = dmd.split(ratio=dmd_test.n_samples/(dmd_train.n_samples + dmd_test.n_samples))
         return train, test
 
-    def score_quality_report(self, dmd_train: DMD, dmd_test: DMD):
+    def separation_quality(self, dmd_train: DMD, dmd_test: DMD):
         '''
 
         :param dmd_train: train set

@@ -67,7 +67,7 @@ def run():
     score_value = scoring_report.metric_scores[metric].value
     ci_low = scoring_report.metric_scores[metric].ci_low
     ci_high = scoring_report.metric_scores[metric].ci_high
-    quality = scoring_report.quality
+    quality = scoring_report.separation_quality
 
     print('{} score is {:0.3f}'.format(metric, score_value))
     print('Score quality is {:0.3f}'.format(quality))
