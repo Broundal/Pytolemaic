@@ -1,7 +1,7 @@
 import numpy
 from sklearn.ensemble import RandomForestClassifier
-
-from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringMetricReport
+from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringMetricReport, ConfusionMatrixReport, \
+    ScatterReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
@@ -34,10 +34,14 @@ class Scoring():
         y_true = dmd_test.target
 
         is_classification = GeneralUtils.is_classification(model)
+
+        confusion_matrix, scatter = None, None
         if is_classification:
 
             y_proba = y_proba or model.predict_proba(x_test)
             y_pred = y_pred or numpy.argmax(y_proba, axis=1)
+
+            confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred, labels=numpy.unique(y_true))
 
             for metric in self.metrics:
                 if not metric.ptype == CLASSIFICATION:
@@ -61,6 +65,7 @@ class Scoring():
 
         else:
             y_pred = y_pred or model.predict(x_test)
+            scatter = ScatterReport(y_true=y_true, y_pred=y_pred)
             for metric in self.metrics:
                 if not metric.ptype == REGRESSION:
                     continue
@@ -76,7 +81,7 @@ class Scoring():
                     ci_high=ci_high))
 
 
-        return score_report
+        return score_report, confusion_matrix, scatter
 
     def _prepare_dataset_for_score_quality(self, dmd_train: DMD,
                                            dmd_test: DMD):

@@ -1,4 +1,41 @@
+from sklearn.metrics.classification import confusion_matrix
+
 from pytolemaic.utils.metrics import Metrics
+
+class ConfusionMatrixReport():
+    def __init__(self, y_true, y_pred, labels=None):
+        self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred, labels=labels).tolist()
+        self._labels = labels
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
+    def confusion_matrix(self):
+        return self._confusion_matrix
+
+    def to_dict(self):
+        return dict(confusion_matrix=self.confusion_matrix,
+                    labels=self.labels)
+
+
+class ScatterReport():
+    def __init__(self, y_true, y_pred):
+        self._y_true = y_true
+        self._y_pred = y_pred
+
+    @property
+    def y_true(self):
+        return self._y_true
+
+    @property
+    def y_pred(self):
+        return self._y_pred
+
+    def to_dict(self):
+        return dict(y_true=self.y_true,
+                    y_pred=self.y_pred)
 
 
 class ScoringMetricReport():
@@ -45,14 +82,23 @@ class ScoringMetricReport():
 
 
 class ScoringFullReport():
-    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float):
+    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float, confusion_matrix=None, scatter=None):
         self._separation_quality = separation_quality
         self._metric_scores_dict = {r.metric: r for r in metric_reports}
+        self._confusion_matrix = confusion_matrix
+        self._scatter = scatter
+
 
     def to_dict(self):
+        metric_scores = {k: v.to_dict() for k, v in self.metric_scores.items()}
+        for v in metric_scores.values():
+            v.pop('metric', None)
+
         return dict(
-            metric_scores={k:v.to_dict() for k,v in self.metric_scores.items()},
+            metric_scores=metric_scores,
             separation_quality=self.separation_quality,
+            scatter=None if self.scatter is None else self.scatter.to_dict(),
+            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict()
         )
 
     @property
@@ -62,3 +108,11 @@ class ScoringFullReport():
     @property
     def metric_scores(self) -> dict:
         return self._metric_scores_dict
+
+    @property
+    def confusion_matrix(self)->ConfusionMatrixReport:
+        return self._confusion_matrix
+
+    @property
+    def scatter(self)->ScatterReport:
+        return self._scatter

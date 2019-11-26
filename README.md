@@ -18,7 +18,7 @@ The package contains the following functionality:
 
 
 ## How to use: 
-Examples can be found in examples directory.
+Examples can be found in /examples.
 
 ## Output examples:
 
