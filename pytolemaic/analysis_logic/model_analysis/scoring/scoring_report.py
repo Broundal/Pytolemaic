@@ -8,6 +8,14 @@ class ScoringMetricReport():
         self._ci_low = ci_low
         self._ci_high = ci_high
 
+    def to_dict(self):
+        return dict(
+            metric=self.metric,
+            value=self.value,
+            ci_low=self.ci_low,
+            ci_high=self.ci_high,
+        )
+
     @property
     def metric(self):
         return self._metric
@@ -36,8 +44,13 @@ class ScoringMetricReport():
 class ScoringFullReport():
     def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float):
         self._separation_quality = separation_quality
-        self._metric_scores = metric_reports
-        self._metric_scores_dict = {r.metric: r for r in self._metric_scores}
+        self._metric_scores_dict = {r.metric: r for r in metric_reports}
+
+    def to_dict(self):
+        return dict(
+            metric_scores=self.metric_scores,
+            separation_quality=self.separation_quality,
+        )
 
     @property
     def separation_quality(self):

@@ -8,6 +8,14 @@ class SensitivityStatsReport():
         if not n_zero + n_non_zero == n_features:
             raise ValueError(" n_zero + n_non_zero != n_features")
 
+    def to_dict(self):
+        return dict(
+            n_features=self.n_features,
+            n_low=self.n_low,
+            n_zero=self.n_zero,
+            n_non_zero=self.n_non_zero,
+                    )
+
     @property
     def n_features(self):
         return self._n_features
@@ -25,11 +33,19 @@ class SensitivityStatsReport():
         return self._n_non_zero
 
 
+
 class SensitivityVulnerabilityReport():
     def __init__(self, imputation: float, leakage: float, too_many_features: float):
         self._too_many_features = too_many_features
         self._imputation = imputation
         self._leakage = leakage
+
+    def to_dict(self):
+        return dict(
+            too_many_features=self.too_many_features,
+            imputation=self.imputation,
+            leakage=self.leakage
+        )
 
     @property
     def imputation(self):
@@ -49,6 +65,11 @@ class SensitivityOfFeaturesReport():
         self._method = method
         self._sensitivities = sensitivities
 
+    def to_dict(self):
+        return dict(
+            method=self.method,
+            sensitivities=self.sensitivities,
+        )
 
     @property
     def method(self):
@@ -74,22 +95,32 @@ class SensitivityFullReport():
         self._missing_stats_report = missing_stats_report
         self._vulnerability_report = vulnerability_report
 
+
+    def to_dict(self):
+        return dict(
+            shuffle_report=self.shuffle_report.to_dict(),
+            shuffle_stats_report=self.shuffle_stats_report.to_dict(),
+            missing_report=self.missing_report.to_dict(),
+            missing_stats_report=self.missing_stats_report.to_dict(),
+            vulnerability_report=self.vulnerability_report.to_dict(),
+        )
+
     @property
-    def shuffle_report(self):
+    def shuffle_report(self)->SensitivityOfFeaturesReport:
         return self._shuffle_report
 
     @property
-    def shuffle_stats_report(self):
+    def shuffle_stats_report(self)->SensitivityStatsReport:
         return self._shuffle_stats_report
 
     @property
-    def missing_report(self):
+    def missing_report(self)->SensitivityOfFeaturesReport:
         return self._missing_report
 
     @property
-    def missing_stats_report(self):
+    def missing_stats_report(self)->SensitivityStatsReport:
         return self._missing_stats_report
 
     @property
-    def vulnerability_report(self):
+    def vulnerability_report(self)->SensitivityVulnerabilityReport:
         return self._vulnerability_report

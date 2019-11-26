@@ -60,7 +60,7 @@ def run():
         splitter=splitter)
 
     sensitivity_report = pytrust.sensitivity_report()
-    pprint(sensitivity_report.__dict__)
+    pprint(sensitivity_report.to_dict())
 
 if __name__ == '__main__':
     run()

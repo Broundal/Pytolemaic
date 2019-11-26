@@ -1,4 +1,5 @@
 import unittest
+from pprint import pprint
 
 import numpy
 import pandas
@@ -81,7 +82,7 @@ class TestSensitivity(unittest.TestCase):
             metric=metric)
 
         sensitivity_report = pytrust.sensitivity_report()
-        print(sensitivity_report)
+        print(sensitivity_report.to_dict())
         self.assertTrue(isinstance(sensitivity_report, SensitivityFullReport))
         for key, value in sensitivity_report.__dict__.items():
             if key.startswith('_'):
@@ -101,7 +102,7 @@ class TestSensitivity(unittest.TestCase):
             metric=metric)
 
         sensitivity_report2 = pytrust.sensitivity_report()
-        print(sensitivity_report)
+        pprint(sensitivity_report.to_dict())
         self.maxDiff = None
         self.assertEqual(sensitivity_report2.shuffle_report.sensitivities, sensitivity_report.shuffle_report.sensitivities)
         self.assertEqual(sensitivity_report2.missing_report.sensitivities, sensitivity_report.missing_report.sensitivities)

@@ -1,4 +1,5 @@
 import unittest
+from pprint import pprint
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
@@ -12,7 +13,7 @@ class TestSensitivity(unittest.TestCase):
 
         sensitivity = SensitivityAnalysis()
         stats = sensitivity._sensitivity_stats(mock)
-        print(stats)
+        pprint(stats.to_dict())
 
         self.assertEqual(stats.n_features, 10)
         self.assertEqual(stats.n_zero, 1)
