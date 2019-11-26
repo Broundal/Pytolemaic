@@ -73,27 +73,43 @@ Examples can be found in examples directory.
 For given metric, the score and confidence intervals (CI) is calculated
  ```
  'auc': {
-     'ci_high': 0.947,
-     'ci_low': 0.944,
+     'ci_high': 0.949,
+     'ci_low': 0.947,
+     'ci_ratio': 0.057,
      'metric': 'auc',
-     'value': 0.945
+     'value': 0.948,
  },
  'recall': {
-     'ci_high': 0.858,
-     'ci_low': 0.852,
+     'ci_high': 0.870,
+     'ci_low': 0.866,
+     'ci_ratio': 0.022,
      'metric': 'recall',
-     'value': 0.856
+     'value': 0.868
 }    
  ```
  
  Additionally, score quality measures the quality of the score based on the separability (auc score) between train and test sets.
  ```
- 'separation_quality': 0.987         
+ 'separation_quality': 0.969         
  ```
   
-Combining the above measures into a single number we provide the overall quality of the model/dataset:
+Combining the above measures into a single number we provide the overall quality of the model/dataset.
+
+Higher quality value (\[0,1\]) means better dataset/model.
  ```
- 'separation_quality': 0.987         
+ 
+{'test_quality_report': {
+    'test_set_quality': 0.930,
+    'ci_ratio': 0.039,
+    'separation_quality': 0.969,
+    
+},
+ 'train_quality_report': {
+    'train_set_quality': 0.333,
+    'vulnerability_report': {
+        'imputation': 0.666,
+        'leakage': 0.0,
+        'too_many_features': 0.0}}}         
  ```
 
  

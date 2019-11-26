@@ -14,6 +14,7 @@ class ScoringMetricReport():
             value=self.value,
             ci_low=self.ci_low,
             ci_high=self.ci_high,
+            ci_ratio=self.ci_ratio,
         )
 
     @property
@@ -35,8 +36,10 @@ class ScoringMetricReport():
     @property
     def ci_ratio(self):
         # large ci difference is more of a concern if score is high
-        score = Metrics.metric_as_loss(value=self.value, metric=self.metric)
-        ci_ratio = (self.ci_high - self.ci_low) / score
+        ci_low = Metrics.metric_as_loss(value=self.ci_low, metric=self.metric)
+        ci_high = Metrics.metric_as_loss(value=self.ci_high, metric=self.metric)
+
+        ci_ratio = abs(ci_high - ci_low) / (ci_high + ci_low) * 2
         return ci_ratio
 
 
