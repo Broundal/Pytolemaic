@@ -24,58 +24,78 @@ Examples can be found in examples directory.
 
 #### Sensitivity Analysis:
 
- - The sensitivity of each feature (normalized to sum of 1):
+ - The sensitivity of each feature (\[0,1\], normalized to sum of 1):
  
 ```
- 'SHUFFLE': {
-     'no importance feature': 0.00281,
-     'regular feature': 0.25153,
-     'triple importance feature': 0.74566
- }
-  
+ 'sensitivity_report': {
+    'method': 'shuffled',
+     'sensitivities': {
+          'f0': 0.18533,
+          'f1': 0.0,
+          'f2': 0.09715,
+          'f3': 0.10528,
+          'f4': 0.09941,
+          'f5': 0.10491,
+          'f6': 0.10788,
+          'f7': 0.1063,
+          'f8': 0.09109,
+          'f9': 0.10264
+      }
+  }
 ```
                                                         
  - Simple statistics on the feature sensitivity:
  ```
- 'META': {
-      'N_FEATURES': 3,
-      'N_LOW': 1,
-      'n_NON_ZERO': 3,
-      'N_ZERO': 0
+ 'shuffle_stats_report': {
+      'n_features': 10,
+      'n_low': 1,
+      'n_non_zero': 9,
+      'n_zero': 1
  }
  ```
  
- - Naive quality scores:
+ - Naive vulnerability scores (\[0,1\], lower is better):
 
-   - *imputation score*: sensitivity of the model ot missing values.
-   - *leakge score*: chance of the model to have leaking features.
-   - *overfit score*: chance of the model is overfitted on the data.
+   - **Imputation**: sensitivity of the model to missing values.
+   - **Leakge**: chance of the model to have leaking features.
+   - **Too many features**: Whether the model is based on too many features.
  
  ```
- 'QUALITY': {
-     'IMPUTATION': 0.66667,
-     'LEAKAGE': 0.0,
-     'OVERFIT': 0.33333
- }
+ 'vulnerability_report': {
+      'imputation': 0.569,
+      'leakage': 0,
+      'too_many_features': 0.316
+ }  
  ```
-
 
 #### scoring report
 
 For given metric, the score and confidence intervals (CI) is calculated
  ```
+ 'auc': {
+     'ci_high': 0.947,
+     'ci_low': 0.944,
+     'metric': 'auc',
+     'value': 0.945
+ },
  'recall': {
-    'CI_HIGH': 0.95513, 
-    'SCORE_VALUE': 0.95343
-    'CI_LOW': 0.95171, 
- }'    
+     'ci_high': 0.858,
+     'ci_low': 0.852,
+     'metric': 'recall',
+     'value': 0.856
+}    
  ```
  
  Additionally, score quality measures the quality of the score based on the separability (auc score) between train and test sets.
  ```
- 'QUALITY': 0.987         
+ 'separation_quality': 0.987         
  ```
   
+Combining the above measures into a single number we provide the overall quality of the model/dataset:
+ ```
+ 'separation_quality': 0.987         
+ ```
+
  
 #### prediction uncertainty
 

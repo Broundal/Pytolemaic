@@ -48,7 +48,7 @@ class ScoringFullReport():
 
     def to_dict(self):
         return dict(
-            metric_scores=self.metric_scores,
+            metric_scores={k:v.to_dict() for k,v in self.metric_scores.items()},
             separation_quality=self.separation_quality,
         )
 

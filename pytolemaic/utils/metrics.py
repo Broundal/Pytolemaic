@@ -21,9 +21,16 @@ class CustomMetrics:
         if y_pred.shape[1] == 1:
             return sklearn.metrics.roc_auc_score(y_true=y_true, y_score=y_pred)
         else:
-            auc_list = [sklearn.metrics.roc_auc_score(y_true=y_true == i,
-                                                      y_score=y_pred[:, i])
-                        for i in range(y_pred.shape[1])]
+            auc_list = []
+            for i in range(y_pred.shape[1]):
+                y_true_i = y_true == i
+                y_pred_i = y_pred[:, i]
+                if all(y_true_i) or all(~y_true_i):
+                    auc_list.append(0)
+                else:
+                    auc_list.append(sklearn.metrics.roc_auc_score(y_true=y_true_i,
+                                                                  y_score=y_pred_i))
+
             return float(numpy.mean(auc_list))
 
 
@@ -57,7 +64,7 @@ class Metrics():
     @classmethod
     def supported_metrics(cls):
         return {m.name: m for m in
-                [Metrics.r2, Metrics.recall, Metrics.mae]}
+                [Metrics.r2, Metrics.recall, Metrics.mae, Metrics.auc]}
 
     @classmethod
     def metric_as_loss(cls, value, metric):
