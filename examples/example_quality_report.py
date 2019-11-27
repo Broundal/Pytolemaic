@@ -61,7 +61,8 @@ def run():
 
     quality_report = pytrust.quality_report()
     print("Quality report - higher is better")
-    pprint(quality_report.to_dict())
+    pprint(quality_report.to_dict(), width=120)
+    pprint(quality_report.to_dict_meaning(), width=120)
 
 if __name__ == '__main__':
     run()

@@ -1,6 +1,8 @@
+from pytolemaic.utils.general import GeneralUtils
+
 from pytolemaic.utils.metrics import Metrics
 
-from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
+from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
 
 
@@ -13,9 +15,18 @@ class TestSetQualityReport():
 
     def to_dict(self):
         return dict(
-            ci_ratio=self.ci_ratio,
-            separation_quality=self.separation_quality,
-            test_set_quality=self.test_set_quality,
+            ci_ratio=GeneralUtils.f5(self.ci_ratio),
+            separation_quality=GeneralUtils.f5(self.separation_quality),
+            test_set_quality=GeneralUtils.f5(self.test_set_quality),
+        )
+
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            ci_ratio=ScoringMetricReport.to_dict_meaning()['ci_ratio'],
+            separation_quality=ScoringFullReport.to_dict_meaning()['separation_quality'],
+            test_set_quality="Overall test set quality - higher is better",
         )
 
     def _calculate_test_set_quality(self):
@@ -67,6 +78,12 @@ class TrainSetQualityReport():
             train_set_quality=self.train_set_quality,
         )
 
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(vulnerability_report=SensitivityVulnerabilityReport.to_dict_meaning(),
+                    train_set_quality="Overall train set quality - higher is better")
+
     @property
     def vulnerability_report(self)->SensitivityVulnerabilityReport:
         return self._vulnerability_report
@@ -85,6 +102,13 @@ class QualityReport():
         return dict(
             test_quality_report=self.test_quality_report.to_dict(),
             train_quality_report=self.train_quality_report.to_dict(),
+        )
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            test_quality_report=TestSetQualityReport.to_dict_meaning(),
+            train_quality_report=TrainSetQualityReport.to_dict_meaning(),
         )
 
     @property

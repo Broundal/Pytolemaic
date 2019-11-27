@@ -187,11 +187,11 @@ class SensitivityFullReport():
     @classmethod
     def to_dict_meaning(cls):
         return dict(
-            shuffle_report="{} for {} method".format(SensitivityOfFeaturesReport.__name__, SensitivityTypes.shuffled),
-            shuffle_stats_report="{} for {} method".format(SensitivityStatsReport.__name__, SensitivityTypes.shuffled),
-            missing_report="{} for {} method".format(SensitivityOfFeaturesReport.__name__, SensitivityTypes.missing),
-            missing_stats_report="{} for {} method".format(SensitivityStatsReport.__name__, SensitivityTypes.missing),
-            vulnerability_report="Vulnerability report",
+            shuffle_report=SensitivityOfFeaturesReport.to_dict_meaning(),
+            shuffle_stats_report=SensitivityStatsReport.to_dict_meaning(),
+            missing_report=SensitivityOfFeaturesReport.to_dict_meaning(),
+            missing_stats_report=SensitivityStatsReport.to_dict_meaning(),
+            vulnerability_report=SensitivityVulnerabilityReport.to_dict_meaning(),
         )
 
 
