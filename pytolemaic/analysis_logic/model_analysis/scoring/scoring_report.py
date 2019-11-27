@@ -123,7 +123,7 @@ class ScoringMetricReport():
 
     def plot(self, ax=None):
         if ax is None:
-            fig, ax = plt.subplot(1)
+            fig, ax = plt.subplots(1)
 
         ax.plot([self.ci_low, self.ci_high], [1, 1], '-b', self.ci_low, 1, '|b', self.ci_high, 1, '|b', self.value, 1, 'or', )
 

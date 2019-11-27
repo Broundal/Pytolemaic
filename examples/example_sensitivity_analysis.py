@@ -1,4 +1,4 @@
-
+from matplotlib import pyplot as plt
 from pprint import pprint
 
 import numpy
@@ -62,5 +62,8 @@ def run():
     sensitivity_report = pytrust.sensitivity_report()
     pprint(sensitivity_report.to_dict())
 
+    sensitivity_report.shuffle_stats_report.plot()
+
 if __name__ == '__main__':
     run()
+    plt.show()

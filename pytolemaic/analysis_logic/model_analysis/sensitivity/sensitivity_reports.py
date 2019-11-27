@@ -1,3 +1,5 @@
+from matplotlib import pyplot as plt
+
 class SensitivityStatsReport():
     def __init__(self, n_features: int, n_low: int, n_zero: int, n_non_zero: int):
         self._n_features = n_features
@@ -15,6 +17,20 @@ class SensitivityStatsReport():
             n_zero=self.n_zero,
             n_non_zero=self.n_non_zero,
                     )
+
+    def plot(self, ax=None):
+        if ax is None:
+            fig, ax = plt.subplots(1)
+
+        keys, values = zip(*sorted(self.to_dict().items()))
+
+        print(self.to_dict())
+        print(keys, values)
+        ax.bar(keys, values)
+        ax.set(
+            title='Sensitivity statistics',
+            ylabel='# of features')
+        plt.draw()
 
     @property
     def n_features(self):
