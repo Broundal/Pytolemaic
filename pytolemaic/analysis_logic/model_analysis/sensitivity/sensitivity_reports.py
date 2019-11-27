@@ -63,7 +63,6 @@ class SensitivityStatsReport():
         return self._n_non_zero
 
 
-
 class SensitivityVulnerabilityReport():
     def __init__(self, imputation: float, leakage: float, too_many_features: float):
         self._too_many_features = too_many_features

@@ -23,3 +23,4 @@ class TestScoringReport(unittest.TestCase):
 
         rep4 = ScoringFullReport(metric_reports=[rep3], separation_quality=0.2, confusion_matrix=rep1, scatter=rep2)
         self.assertTrue(self.equal_to_dict_keys(rep4))
+
