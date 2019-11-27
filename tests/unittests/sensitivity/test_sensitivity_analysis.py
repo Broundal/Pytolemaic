@@ -2,8 +2,9 @@ import unittest
 from pprint import pprint
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
-    SensitivityAnalysis, SensitivityTypes
-from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport
+    SensitivityAnalysis
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport, \
+    SensitivityTypes
 
 
 class TestSensitivity(unittest.TestCase):

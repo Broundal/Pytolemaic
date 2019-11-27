@@ -1,4 +1,10 @@
 from matplotlib import pyplot as plt
+from pytolemaic.utils.general import GeneralUtils
+
+
+class SensitivityTypes():
+    shuffled = 'shuffled'
+    missing = 'missing'
 
 class SensitivityStatsReport():
     def __init__(self, n_features: int, n_low: int, n_zero: int, n_non_zero: int):
@@ -16,6 +22,15 @@ class SensitivityStatsReport():
             n_low=self.n_low,
             n_zero=self.n_zero,
             n_non_zero=self.n_non_zero,
+                    )
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            n_features="Number of features in dataset",
+            n_low="Number of feature with low sensitivity (sensitivity lower than 5% of max sensitivity)",
+            n_zero="Number of feature with zero sensitivity (sensitivity lower than 1e-4)",
+            n_non_zero="Number of feature with some sensitivity (n_features - n_zero) ",
                     )
 
     def plot(self, ax=None, method=None):
@@ -57,10 +72,20 @@ class SensitivityVulnerabilityReport():
 
     def to_dict(self):
         return dict(
-            too_many_features=self.too_many_features,
-            imputation=self.imputation,
-            leakage=self.leakage
+            too_many_features=GeneralUtils.f5(self.too_many_features),
+            imputation=GeneralUtils.f5(self.imputation),
+            leakage=GeneralUtils.f5(self.leakage)
         )
+
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            too_many_features="Using many features slow down model's training, affect data pipeline and preprocessing and may also make model more susceptible to overfit. Higher value means there are many redundant features in dataset.",
+            imputation="Sensitivity of the features should be similar in all methods. If not, this may indicate an issue with the imputation process. Higher value means the imputation process has higher impact on the model.",
+            leakage="Measure how likely the model is prone to data leakage."
+        )
+
 
     def plot(self, ax=None):
         if ax is None:
@@ -93,10 +118,18 @@ class SensitivityOfFeaturesReport():
         self._method = method
         self._sensitivities = sensitivities
 
+
     def to_dict(self):
         return dict(
             method=self.method,
-            sensitivities=self.sensitivities,
+            sensitivities={k: GeneralUtils.f5(v) for k,v in self.sensitivities.items()},
+        )
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            method="Method used to calculate sensitivity",
+            sensitivities="key-value dictionary where the key is feature name and value is feature sensitivity",
         )
 
     def plot(self, ax=None, n_features_to_plot=10):
@@ -151,7 +184,15 @@ class SensitivityFullReport():
 
         self.vulnerability_report.plot()
 
-
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            shuffle_report="{} for {} method".format(SensitivityOfFeaturesReport.__name__, SensitivityTypes.shuffled),
+            shuffle_stats_report="{} for {} method".format(SensitivityStatsReport.__name__, SensitivityTypes.shuffled),
+            missing_report="{} for {} method".format(SensitivityOfFeaturesReport.__name__, SensitivityTypes.missing),
+            missing_stats_report="{} for {} method".format(SensitivityStatsReport.__name__, SensitivityTypes.missing),
+            vulnerability_report="Vulnerability report",
+        )
 
 
     def to_dict(self):
@@ -182,3 +223,4 @@ class SensitivityFullReport():
     @property
     def vulnerability_report(self)->SensitivityVulnerabilityReport:
         return self._vulnerability_report
+

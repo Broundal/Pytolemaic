@@ -4,16 +4,11 @@ import numpy
 import numpy as np
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport, \
-    SensitivityStatsReport, SensitivityVulnerabilityReport, SensitivityFullReport
+    SensitivityStatsReport, SensitivityVulnerabilityReport, SensitivityFullReport, SensitivityTypes
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.enum_base import EnumBase
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.report import Report
 
-class SensitivityTypes():
-    shuffled = 'shuffled'
-    missing = 'missing'
 
 class SensitivityAnalysis():
     def __init__(self):
@@ -188,7 +183,8 @@ class SensitivityAnalysis():
                 raw_scores=False)
         except:
             logging.error(
-                "Failed to calculate sensitivity with {} method... Does your model handle missing values?".format(SensitivityTypes.missing))
+                "Failed to calculate sensitivity with {} method... Does your model handle missing values?".format(
+                    SensitivityTypes.missing))
 
             self.missing_sensitivity = None
 

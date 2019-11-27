@@ -60,7 +60,8 @@ def run():
         splitter=splitter)
 
     sensitivity_report = pytrust.sensitivity_report()
-    pprint(sensitivity_report.to_dict())
+    pprint(sensitivity_report.to_dict(), width=120)
+    pprint(sensitivity_report.to_dict_meaning(), width=120)
 
     sensitivity_report.plot()
 

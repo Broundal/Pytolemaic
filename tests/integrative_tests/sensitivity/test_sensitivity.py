@@ -4,8 +4,9 @@ import numpy
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
-    SensitivityAnalysis, SensitivityTypes
-from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport
+    SensitivityAnalysis
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport, \
+    SensitivityTypes
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
