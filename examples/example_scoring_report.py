@@ -1,5 +1,5 @@
 from pprint import pprint
-
+from matplotlib import pyplot as plt
 import numpy
 import pandas
 from pytolemaic.utils.general import GeneralUtils
@@ -75,9 +75,10 @@ def run():
 
     pprint(scoring_report.to_dict())
 
-    scoring_report.confusion_matrix.plot()
+    scoring_report.plot()
 
 
 
 if __name__ == '__main__':
     run()
+    plt.show()

@@ -121,6 +121,34 @@ class ScoringMetricReport():
             ci_ratio=self.ci_ratio,
         )
 
+    def plot(self, ax=None):
+        if ax is None:
+            fig, ax = plt.subplot(1)
+
+        ax.plot([self.ci_low, self.ci_high], [1, 1], '-b', self.ci_low, 1, '|b', self.ci_high, 1, '|b', self.value, 1, 'or', )
+
+        delta = (self.ci_high - self.ci_low)*1e-1
+        l_lim = max(0, self.ci_low-delta)
+        r_lim = min(1, self.ci_high+delta)
+
+        ax.set_xlim(l_lim, r_lim)
+        x = numpy.round(numpy.linspace(l_lim, r_lim, num=5),3)
+        xlabels = ["%.5g" % k for k in x]
+        ax.set(xticks=x.tolist(),
+               xticklabels=xlabels,
+               yticklabels=[''],
+               title='Confidence intervals for metric {}'.format(self.metric),
+               ylabel='',
+               xlabel='{}'.format(self.metric))
+
+        # Loop over data dimensions and create text annotations.
+        for x, label in [(self.ci_low, 'ci_low (25%)'), (self.value, '{} value'.format(self.metric)), (self.ci_high, 'ci_high  (75%)')]:
+            y = 1.01
+            ax.text(x, y, label,
+                    ha="center", va="center",)
+
+        plt.draw()
+
 
     @property
     def metric(self):
@@ -156,6 +184,18 @@ class ScoringFullReport():
         self._confusion_matrix = confusion_matrix
         self._scatter = scatter
 
+    def plot(self):
+        if self.confusion_matrix is not None:
+            self.confusion_matrix.plot()
+        if self.scatter is not None:
+            self.scatter.plot()
+
+        n = len(self.metric_scores)
+        fig, axs = plt.subplots(n)
+        for i, k in enumerate(sorted(self.metric_scores.keys())):
+            self.metric_scores[k].plot(axs[i])
+
+        plt.tight_layout()
 
     def to_dict(self):
         metric_scores = {k: v.to_dict() for k, v in self.metric_scores.items()}
@@ -184,3 +224,8 @@ class ScoringFullReport():
     @property
     def scatter(self)->ScatterReport:
         return self._scatter
+
+if __name__ == '__main__':
+    plt.figure()
+    plt.plot(1,1,'|', 3,1,'|', 1.5,1,'.', [1,3], [1,1],'-')
+    plt.show()
