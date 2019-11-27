@@ -38,6 +38,14 @@ class GeneralUtils():
         return d
 
     @classmethod
+    def f5(cls, x):
+        return numpy.round(x, 5)
+
+    @classmethod
+    def f3(cls, x):
+        return numpy.round(x, 3)
+
+    @classmethod
     def add_nans(cls, x, ratio=0.1):
         rs = numpy.random.RandomState(0)
         # let's add some missing values

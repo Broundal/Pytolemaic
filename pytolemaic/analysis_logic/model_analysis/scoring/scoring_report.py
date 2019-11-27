@@ -1,4 +1,5 @@
 import numpy
+from pytolemaic.utils.general import GeneralUtils
 from sklearn.metrics.classification import confusion_matrix
 
 from pytolemaic.utils.metrics import Metrics
@@ -17,22 +18,30 @@ class ConfusionMatrixReport():
     def confusion_matrix(self):
         return self._confusion_matrix
 
+    @property
+    def normalized_confusion_matrix(self):
+        cm = numpy.array(self.confusion_matrix)
+        cm = cm / cm.sum(axis=1)[:, numpy.newaxis]
+
+        return GeneralUtils.f3(cm).tolist()
+
     def to_dict(self):
         return dict(confusion_matrix=self.confusion_matrix,
+                    normalized_confusion_matrix=self.normalized_confusion_matrix,
                     labels=self.labels)
 
     @classmethod
-    def _plot_confusion_matrix(cls, confusion_matrix, labels,
-                               normalize, title,
-                               ax,
-                               cmap=plt.cm.Greens):
+    def to_dict_meaning(cls):
+        return dict(confusion_matrix="Confusion Matrix - rows indicate true values, columns indicate predicted value (in contrast to the convention shown in https://en.wikipedia.org/wiki/Confusion_matrix)",
+                    normalized_confusion_matrix="Normalized confusion matrix - the sum of each rows is equal to 1",
+                    labels="The class labels"
+                    )
+
+    @classmethod
+    def _plot_confusion_matrix(cls, confusion_matrix, labels, title,
+                               ax, cmap=plt.cm.Greens):
 
         cm = numpy.array(confusion_matrix)
-        if normalize:
-            cm = cm / cm.sum(axis=1)[:, numpy.newaxis]
-
-
-
         im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
 
         # ax.figure.colorbar(im, ax=ax)
@@ -49,7 +58,7 @@ class ConfusionMatrixReport():
                  rotation_mode="anchor")
 
         # Loop over data dimensions and create text annotations.
-        fmt = '.2f' if normalize else 'd'
+        fmt = '.2f' if 0<numpy.min(cm)<1 else 'd'
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -63,12 +72,10 @@ class ConfusionMatrixReport():
 
         self._plot_confusion_matrix(confusion_matrix=self.confusion_matrix,
                                     labels=self.labels,
-                                    normalize=False,
                                     title='Confusion Matrix',
                                     ax=ax1)
-        self._plot_confusion_matrix(confusion_matrix=self.confusion_matrix,
+        self._plot_confusion_matrix(confusion_matrix=self.normalized_confusion_matrix,
                                     labels=self.labels,
-                                    normalize=True,
                                     title='Normalized confusion Matrix',
                                     ax=ax2)
 
@@ -92,8 +99,14 @@ class ScatterReport():
         return self._y_pred
 
     def to_dict(self):
-        return dict(y_true=self.y_true,
-                    y_pred=self.y_pred)
+        return dict(y_true=GeneralUtils.f5(self.y_true),
+                    y_pred=GeneralUtils.f5(self.y_pred))
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(y_true="True values",
+                    y_pred="Predicted values"
+                    )
 
     def plot(self):
         plt.figure()
@@ -115,11 +128,20 @@ class ScoringMetricReport():
     def to_dict(self):
         return dict(
             metric=self.metric,
-            value=self.value,
-            ci_low=self.ci_low,
-            ci_high=self.ci_high,
-            ci_ratio=self.ci_ratio,
+            value=GeneralUtils.f5(self.value),
+            ci_low=GeneralUtils.f5(self.ci_low),
+            ci_high=GeneralUtils.f5(self.ci_high),
+            ci_ratio=GeneralUtils.f5(self.ci_ratio),
         )
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(metric="The metric which was used to calculate the score value",
+                    value="The metric value - could be a score value (e.g. auc) or a loss value (e.g. mae), depending on metric",
+                    ci_low="Lower confidence interval based on percentile 25",
+                    ci_high="Higher confidence interval based on percentile 75",
+                    ci_ratio="Measure confidence interval relative size - lower is better. Equation: (ci_high-ci_low)/(ci_low+ci_high)*2",
+                    )
 
     def plot(self, ax=None):
         if ax is None:
@@ -178,7 +200,7 @@ class ScoringMetricReport():
 
 
 class ScoringFullReport():
-    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float, confusion_matrix=None, scatter=None):
+    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float, confusion_matrix:ConfusionMatrixReport=None, scatter:ScatterReport=None):
         self._separation_quality = separation_quality
         self._metric_scores_dict = {r.metric: r for r in metric_reports}
         self._confusion_matrix = confusion_matrix
@@ -204,9 +226,18 @@ class ScoringFullReport():
 
         return dict(
             metric_scores=metric_scores,
-            separation_quality=self.separation_quality,
+            separation_quality=GeneralUtils.f5(self.separation_quality),
             scatter=None if self.scatter is None else self.scatter.to_dict(),
             confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict()
+        )
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            metric_scores="Score information for various metrics saved in a dict structure where key is the metric name and value is of type {}".format(ScoringMetricReport.__name__),
+            separation_quality="Measure whether the test and train comes from same distribution. High quality (max 1) means the test and train come from the same distribution. Low score (min 0) means the test set is problematic.",
+            scatter="Scatter information (y_true vs y_pred). Available only for regressors.",
+            confusion_matrix="Confusion matrix (y_true vs y_pred). Available only for classifiers."
         )
 
     @property
@@ -224,8 +255,3 @@ class ScoringFullReport():
     @property
     def scatter(self)->ScatterReport:
         return self._scatter
-
-if __name__ == '__main__':
-    plt.figure()
-    plt.plot(1,1,'|', 3,1,'|', 1.5,1,'.', [1,3], [1,1],'-')
-    plt.show()
