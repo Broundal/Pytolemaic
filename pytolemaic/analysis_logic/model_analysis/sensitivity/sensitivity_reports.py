@@ -18,17 +18,16 @@ class SensitivityStatsReport():
             n_non_zero=self.n_non_zero,
                     )
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, method=None):
         if ax is None:
             fig, ax = plt.subplots(1)
 
         keys, values = zip(*sorted(self.to_dict().items()))
 
-        print(self.to_dict())
-        print(keys, values)
+        title_prefix = '"{}" '.format(method) if method else ''
         ax.bar(keys, values)
         ax.set(
-            title='Sensitivity statistics',
+            title='{}Sensitivity Statistics'.format(title_prefix),
             ylabel='# of features')
         plt.draw()
 
@@ -63,6 +62,19 @@ class SensitivityVulnerabilityReport():
             leakage=self.leakage
         )
 
+    def plot(self, ax=None):
+        if ax is None:
+            fig, ax = plt.subplots(1)
+
+        keys, values = zip(*sorted(self.to_dict().items()))
+
+        ax.bar(keys, values)
+        ax.set(
+            title="Model's vulnerability metrics",
+            ylabel='Vulnerability scores',
+            ylim=[0,1])
+        plt.draw()
+
     @property
     def imputation(self):
         return self._imputation
@@ -87,6 +99,21 @@ class SensitivityOfFeaturesReport():
             sensitivities=self.sensitivities,
         )
 
+    def plot(self, ax=None, n_features_to_plot=10):
+        if ax is None:
+            fig, ax = plt.subplots(1)
+
+        sorted_features = sorted(self.sensitivities.items(), key=lambda kv: kv[1])
+        if n_features_to_plot is not None:
+            sorted_features = sorted_features[:min(n_features_to_plot, len(sorted_features))]
+
+        keys, values = zip(*sorted_features)
+        ax.barh(keys, values)
+        ax.set(
+            title='"{}" Feature Sensitivity'.format(self.method),
+            xlabel='Sensitivity value')
+        plt.draw()
+
     @property
     def method(self):
         return self._method
@@ -110,6 +137,21 @@ class SensitivityFullReport():
         self._missing_report = missing_report
         self._missing_stats_report = missing_stats_report
         self._vulnerability_report = vulnerability_report
+
+
+    def plot(self):
+        fig, ((a11,a12),(a21,a22)) = plt.subplots(2,2)
+
+        self.shuffle_report.plot(ax=a11)
+        self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
+        self.missing_report.plot(ax=a21)
+        self.missing_stats_report.plot(ax=a22, method=self.missing_report.method)
+
+        plt.tight_layout()
+
+        self.vulnerability_report.plot()
+
+
 
 
     def to_dict(self):
