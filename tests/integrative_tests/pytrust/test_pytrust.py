@@ -18,7 +18,7 @@ class TestSensitivity(unittest.TestCase):
 
     def get_data(self, is_classification, seed=0):
         rs = numpy.random.RandomState(seed)
-        x = rs.rand(10000, 10)
+        x = rs.rand(200, 3)
         x[:, 1] = 0
         # 1st is double importance, 2nd has no importance
         y = numpy.sum(x, axis=1) + 2 * x[:, 0]
