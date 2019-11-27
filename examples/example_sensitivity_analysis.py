@@ -1,27 +1,23 @@
-from matplotlib import pyplot as plt
 from pprint import pprint
 
 import numpy
-import pandas
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from matplotlib import pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
 
 from pytolemaic.pytrust import PyTrust
-
-
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
-def run():
 
+def run():
     xtrain = numpy.random.rand(10000, 3)
     columns_names = ['no importance feature', 'regular feature', 'triple importance feature']
 
     # 1st has no importance, while 3rd has double importance
     ytrain = 0 * xtrain[:, 0] + 1 * xtrain[:, 1] + 3 * xtrain[:, 2]
-
 
     xtest = numpy.random.rand(10000, 3)
     # 1st has no importance, while 3rd has double importance
@@ -30,7 +26,7 @@ def run():
     xtrain = GeneralUtils.add_nans(xtrain)
     xtest = GeneralUtils.add_nans(xtest)
 
-     ## Let's train a regressor
+    ## Let's train a regressor
     regressor = GeneralUtils.simple_imputation_pipeline(
         RandomForestRegressor(random_state=0, n_estimators=3))
     regressor.fit(xtrain, ytrain.ravel())
@@ -48,8 +44,6 @@ def run():
     # set the feature names names
     columns_meta = {DMD.FEATURE_NAMES: [name for name in columns_names]}
 
-
-
     pytrust = PyTrust(
         model=regressor,
         xtrain=xtrain, ytrain=ytrain,
@@ -64,6 +58,7 @@ def run():
     pprint(sensitivity_report.to_dict_meaning(), width=120)
 
     sensitivity_report.plot()
+
 
 if __name__ == '__main__':
     run()

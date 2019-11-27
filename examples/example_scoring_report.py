@@ -1,21 +1,18 @@
 from pprint import pprint
-from matplotlib import pyplot as plt
+
 import numpy
-import pandas
-from pytolemaic.utils.general import GeneralUtils
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from matplotlib import pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
 
 from pytolemaic.pytrust import PyTrust
-
-
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
 def run():
-
     xtrain = numpy.random.rand(10000, 3)
     columns_names = ['zero importance', 'regular importance', 'triple importance']
 
@@ -35,14 +32,13 @@ def run():
     classifier = GeneralUtils.simple_imputation_pipeline(
         RandomForestClassifier(random_state=0, n_estimators=3))
 
-
     classifier.fit(xtrain, ytrain.ravel())
 
     ## set metric
     metric = Metrics.recall.name
 
     ## set splitting strategy
-    splitter = 'shuffled' # todo: support stratified
+    splitter = 'shuffled'  # todo: support stratified
 
     ## sample meta data (e.g. sample weight) - empty in this example
     sample_meta_train = None
@@ -50,8 +46,6 @@ def run():
 
     # set the feature names names
     columns_meta = {DMD.FEATURE_NAMES: [name for name in columns_names]}
-
-
 
     pytrust = PyTrust(
         model=classifier,
@@ -77,7 +71,6 @@ def run():
     pprint(scoring_report.to_dict_meaning(), width=120)
 
     scoring_report.plot()
-
 
 
 if __name__ == '__main__':
