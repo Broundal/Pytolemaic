@@ -11,7 +11,6 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from pytolemaic.utils.report import Report
 
 
 class TestSensitivity(unittest.TestCase):

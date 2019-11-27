@@ -9,7 +9,6 @@ from pytolemaic.prediction_uncertainty.uncertainty_model import \
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
-from pytolemaic.utils.report import Report
 
 
 class PyTrust():
