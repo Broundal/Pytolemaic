@@ -103,25 +103,25 @@ class SensitivityAnalysis():
                                       n_low=n_low,
                                       n_zero=n_zero,
                                       n_non_zero=n_features - n_zero)
-            
 
     def _vulnerability_report(self, shuffled_sensitivity: SensitivityOfFeaturesReport,
                               missing_sensitivity: SensitivityOfFeaturesReport,
                               shuffled_sensitivity_stats: SensitivityStatsReport):
         # lower is better
         stats = shuffled_sensitivity_stats
-        
-        
+
         leakage = self._leakage(n_features=stats.n_features,
-                                                          n_zero=stats.n_zero)
+                                n_zero=stats.n_zero)
         too_many_features = self._too_many_features(n_features=stats.n_features,
-                                                                     n_low=stats.n_low,
-                                                                     n_zero=stats.n_zero)
+                                                    n_low=stats.n_low,
+                                                    n_zero=stats.n_zero)
         imputation = self._imputation_score(
             shuffled=shuffled_sensitivity,
             missing=missing_sensitivity)
 
-        return SensitivityVulnerabilityReport(imputation=imputation, too_many_features=too_many_features, leakage=leakage)
+        return SensitivityVulnerabilityReport(imputation=imputation,
+                                              too_many_features=too_many_features,
+                                              leakage=leakage)
 
     def _leakage(self, n_features, n_zero, **kwargs):
         """
@@ -188,7 +188,7 @@ class SensitivityAnalysis():
 
             self.missing_sensitivity = None
 
-    def sensitivity_report(self)-> SensitivityFullReport:
+    def sensitivity_report(self) -> SensitivityFullReport:
 
         shuffle_stats_report = self._sensitivity_stats(self.shuffled_sensitivity)
         missing_stats_report = self._sensitivity_stats(self.missing_sensitivity)

@@ -108,7 +108,8 @@ class PyTrust():
 
         self.scoring = Scoring(metrics=metrics)
 
-        score_values_report, confusion_matrix, scatter = self.scoring.score_value_report(model=self.model, dmd_test=self.test)
+        score_values_report, confusion_matrix, scatter = self.scoring.score_value_report(model=self.model,
+                                                                                         dmd_test=self.test)
         separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
         return ScoringFullReport(metric_reports=score_values_report,
                                  separation_quality=separation_quality,

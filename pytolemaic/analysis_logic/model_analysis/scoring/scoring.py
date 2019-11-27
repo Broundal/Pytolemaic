@@ -9,6 +9,7 @@ from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
+
 class Scoring():
     def __init__(self, metrics: list = None):
         self.supported_metric = Metrics.supported_metrics()
@@ -19,7 +20,7 @@ class Scoring():
 
     def score_value_report(self, model, dmd_test: DMD,
                            y_proba: numpy.ndarray = None,
-                           y_pred: numpy.ndarray = None)->[ScoringMetricReport]:
+                           y_pred: numpy.ndarray = None) -> [ScoringMetricReport]:
         '''
 
         :param model: model of interest
@@ -81,7 +82,6 @@ class Scoring():
                     ci_low=ci_low,
                     ci_high=ci_high))
 
-
         return score_report, confusion_matrix, scatter
 
     def _prepare_dataset_for_score_quality(self, dmd_train: DMD,
@@ -97,7 +97,7 @@ class Scoring():
         new_label = [0] * dmd_train.n_samples + [1] * dmd_test.n_samples
         dmd.set_target(new_label)
 
-        train, test = dmd.split(ratio=dmd_test.n_samples/(dmd_train.n_samples + dmd_test.n_samples))
+        train, test = dmd.split(ratio=dmd_test.n_samples / (dmd_train.n_samples + dmd_test.n_samples))
         return train, test
 
     def separation_quality(self, dmd_train: DMD, dmd_test: DMD):

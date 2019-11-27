@@ -17,4 +17,3 @@ class EnumBase(Enum):
     @classmethod
     def asdict(cls):
         return {item.name: item.value for item in cls}
-

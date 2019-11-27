@@ -1,9 +1,10 @@
 import numpy
-from pytolemaic.utils.general import GeneralUtils
+from matplotlib import pyplot as plt
 from sklearn.metrics.classification import confusion_matrix
 
+from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from matplotlib import pyplot as plt
+
 
 class ConfusionMatrixReport():
     def __init__(self, y_true, y_pred, labels=None):
@@ -32,10 +33,11 @@ class ConfusionMatrixReport():
 
     @classmethod
     def to_dict_meaning(cls):
-        return dict(confusion_matrix="Confusion Matrix - rows indicate true values, columns indicate predicted value (in contrast to the convention shown in https://en.wikipedia.org/wiki/Confusion_matrix)",
-                    normalized_confusion_matrix="Normalized confusion matrix - the sum of each rows is equal to 1",
-                    labels="The class labels"
-                    )
+        return dict(
+            confusion_matrix="Confusion Matrix - rows indicate true values, columns indicate predicted value (in contrast to the convention shown in https://en.wikipedia.org/wiki/Confusion_matrix)",
+            normalized_confusion_matrix="Normalized confusion matrix - the sum of each rows is equal to 1",
+            labels="The class labels"
+            )
 
     @classmethod
     def _plot_confusion_matrix(cls, confusion_matrix, labels, title,
@@ -46,9 +48,9 @@ class ConfusionMatrixReport():
 
         # ax.figure.colorbar(im, ax=ax)
 
-        ax.set(xticks=[-0.5]+numpy.arange(cm.shape[1]).tolist()+[cm.shape[1]-0.5],
-               yticks=[-0.5]+numpy.arange(cm.shape[0]).tolist()+[cm.shape[0]-0.5],
-               xticklabels=['']+labels.tolist(), yticklabels=['']+labels.tolist(),
+        ax.set(xticks=[-0.5] + numpy.arange(cm.shape[1]).tolist() + [cm.shape[1] - 0.5],
+               yticks=[-0.5] + numpy.arange(cm.shape[0]).tolist() + [cm.shape[0] - 0.5],
+               xticklabels=[''] + labels.tolist(), yticklabels=[''] + labels.tolist(),
                title=title,
                ylabel='True labels',
                xlabel='Predicted labels')
@@ -58,7 +60,7 @@ class ConfusionMatrixReport():
                  rotation_mode="anchor")
 
         # Loop over data dimensions and create text annotations.
-        fmt = '.2f' if 0<numpy.min(cm)<1 else 'd'
+        fmt = '.2f' if 0 < numpy.min(cm) < 1 else 'd'
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -68,7 +70,7 @@ class ConfusionMatrixReport():
         return ax
 
     def plot(self):
-        fig, (ax1, ax2) = plt.subplots(1,2)
+        fig, (ax1, ax2) = plt.subplots(1, 2)
 
         self._plot_confusion_matrix(confusion_matrix=self.confusion_matrix,
                                     labels=self.labels,
@@ -82,7 +84,6 @@ class ConfusionMatrixReport():
         plt.tight_layout()
 
         # plt.show()
-
 
 
 class ScatterReport():
@@ -147,14 +148,17 @@ class ScoringMetricReport():
         if ax is None:
             fig, ax = plt.subplots(1)
 
-        ax.plot([self.ci_low, self.ci_high], [1, 1], '-b', self.ci_low, 1, '|b', self.ci_high, 1, '|b', self.value, 1, 'or', )
+        ax.plot([self.ci_low, self.ci_high], [1, 1], '-b',
+                self.ci_low, 1, '|b',
+                self.ci_high, 1, '|b',
+                self.value, 1, 'or', )
 
-        delta = (self.ci_high - self.ci_low)*1e-1
-        l_lim = max(0, self.ci_low-delta)
-        r_lim = min(1, self.ci_high+delta)
+        delta = (self.ci_high - self.ci_low) * 1e-1
+        l_lim = max(0, self.ci_low - delta)
+        r_lim = min(1, self.ci_high + delta)
 
         ax.set_xlim(l_lim, r_lim)
-        x = numpy.round(numpy.linspace(l_lim, r_lim, num=5),3)
+        x = numpy.round(numpy.linspace(l_lim, r_lim, num=5), 3)
         xlabels = ["%.5g" % k for k in x]
         ax.set(xticks=x.tolist(),
                xticklabels=xlabels,
@@ -164,13 +168,14 @@ class ScoringMetricReport():
                xlabel='{}'.format(self.metric))
 
         # Loop over data dimensions and create text annotations.
-        for x, label in [(self.ci_low, 'ci_low (25%)'), (self.value, '{} value'.format(self.metric)), (self.ci_high, 'ci_high  (75%)')]:
+        for x, label in [(self.ci_low, 'ci_low (25%)'),
+                         (self.value, '{} value'.format(self.metric)),
+                         (self.ci_high, 'ci_high  (75%)')]:
             y = 1.01
             ax.text(x, y, label,
-                    ha="center", va="center",)
+                    ha="center", va="center", )
 
         plt.draw()
-
 
     @property
     def metric(self):
@@ -198,9 +203,9 @@ class ScoringMetricReport():
         return ci_ratio
 
 
-
 class ScoringFullReport():
-    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float, confusion_matrix:ConfusionMatrixReport=None, scatter:ScatterReport=None):
+    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float,
+                 confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None):
         self._separation_quality = separation_quality
         self._metric_scores_dict = {r.metric: r for r in metric_reports}
         self._confusion_matrix = confusion_matrix
@@ -249,9 +254,9 @@ class ScoringFullReport():
         return self._metric_scores_dict
 
     @property
-    def confusion_matrix(self)->ConfusionMatrixReport:
+    def confusion_matrix(self) -> ConfusionMatrixReport:
         return self._confusion_matrix
 
     @property
-    def scatter(self)->ScatterReport:
+    def scatter(self) -> ScatterReport:
         return self._scatter
