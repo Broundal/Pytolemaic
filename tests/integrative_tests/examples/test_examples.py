@@ -1,6 +1,7 @@
 import unittest
-from examples import example_scoring_report, example_sensitivity_analysis, \
-    example_prediction_uncertainty, example_quality_report
+
+from examples.simple_examples import example_quality_report, example_scoring_report, example_sensitivity_analysis, \
+    example_prediction_uncertainty
 
 
 class TestExamples(unittest.TestCase):
