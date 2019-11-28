@@ -1,38 +1,24 @@
 from pprint import pprint
 
-import numpy
 from matplotlib import pyplot as plt
-from sklearn.ensemble import RandomForestClassifier
 
+from examples.datasets.linear import LinearClassificationDataset
 from pytolemaic.pytrust import PyTrust
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
 def run():
-    xtrain = numpy.random.rand(10000, 3)
-    columns_names = ['zero importance', 'regular importance', 'triple importance']
+    # Obtain simple classification dataset. Use LinearRegressionDataset for regression
+    dataset = LinearClassificationDataset()
+    columns_names = dataset.column_names()
 
-    # 1st has no importance, while 3rd has double importance
-    ytrain = 0 * xtrain[:, 0] + 1 * xtrain[:, 1] + 3 * xtrain[:, 2]
-    ytrain = ytrain.astype(int)
-
-    xtest = numpy.random.rand(10000, 3)
-    # 1st has no importance, while 3rd has double importance
-    ytest = 0 * xtest[:, 0] + 1 * xtest[:, 1] + 3 * xtest[:, 2]
-    ytest = ytest.astype(int)
-
-    xtrain = GeneralUtils.add_nans(xtrain)
-    xtest = GeneralUtils.add_nans(xtest)
-
-    ## Let's train a classifier
-    classifier = GeneralUtils.simple_imputation_pipeline(
-        RandomForestClassifier(random_state=0, n_estimators=3))
-
-    classifier.fit(xtrain, ytrain.ravel())
+    # for quality report, we need for train/test sets and model
+    xtrain, ytrain = dataset.training_data
+    xtest, ytest = dataset.get_samples()
+    classifier = dataset.get_model()
 
     ## set metric
     metric = Metrics.recall.name

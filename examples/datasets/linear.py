@@ -1,8 +1,8 @@
+import numpy
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-import numpy
-
 from pytolemaic.utils.general import GeneralUtils
+
 
 class LinearBase():
     def __init__(self, model, n_samples=500, n_features=3):
@@ -27,7 +27,7 @@ class LinearBase():
                                                                     range(self.n_features - 2)]
 
     @property
-    def train_data(self):
+    def training_data(self):
         if self._xtrain is None:
             self._xtrain, self._ytrain = self.get_samples()
 
@@ -45,7 +45,7 @@ class LinearBase():
         return x, y
 
     def get_model(self):
-        x, y = self.train_data
+        x, y = self.training_data
         self.model.fit(x, y)
         return self.model
 

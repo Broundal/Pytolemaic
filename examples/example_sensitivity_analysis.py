@@ -1,35 +1,24 @@
 from pprint import pprint
 
-import numpy
 from matplotlib import pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
 
+from examples.datasets.linear import LinearRegressionDataset
 from pytolemaic.pytrust import PyTrust
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
 def run():
-    xtrain = numpy.random.rand(10000, 3)
-    columns_names = ['no importance feature', 'regular feature', 'triple importance feature']
+    # Obtain simple regression dataset. Use LinearClassificationDataset for classification
+    dataset = LinearRegressionDataset()
+    columns_names = dataset.column_names()
 
-    # 1st has no importance, while 3rd has double importance
-    ytrain = 0 * xtrain[:, 0] + 1 * xtrain[:, 1] + 3 * xtrain[:, 2]
-
-    xtest = numpy.random.rand(10000, 3)
-    # 1st has no importance, while 3rd has double importance
-    ytest = 0 * xtest[:, 0] + 1 * xtest[:, 1] + 3 * xtest[:, 2]
-
-    xtrain = GeneralUtils.add_nans(xtrain)
-    xtest = GeneralUtils.add_nans(xtest)
-
-    ## Let's train a regressor
-    regressor = GeneralUtils.simple_imputation_pipeline(
-        RandomForestRegressor(random_state=0, n_estimators=3))
-    regressor.fit(xtrain, ytrain.ravel())
+    # for quality report, we need for train/test sets and model
+    xtrain, ytrain = dataset.training_data
+    xtest, ytest = dataset.get_samples()
+    regressor = dataset.get_model()
 
     ## set metric
     metric = Metrics.mae.name
