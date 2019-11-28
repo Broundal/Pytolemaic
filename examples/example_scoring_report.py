@@ -11,6 +11,9 @@ from pytolemaic.utils.metrics import Metrics
 
 
 def run():
+    ## For this example we create train/test data representing a linear function
+    # PyTrust supports both numpy and pandas.DataFrame.
+
     # Obtain simple classification dataset. Use LinearRegressionDataset for regression
     dataset = LinearClassificationDataset()
     columns_names = dataset.column_names()

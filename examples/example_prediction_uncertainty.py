@@ -1,14 +1,13 @@
 import numpy
-from sklearn.ensemble import RandomForestClassifier
 
 from examples.datasets.linear import LinearClassificationDataset
 from pytolemaic.pytrust import PyTrust
-from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
 def run():
+    ## For this example we create train/test data representing a linear function
+    # PyTrust supports both numpy and pandas.DataFrame.
 
     # Obtain simple classification dataset. Use LinearRegressionDataset for regression
     dataset = LinearClassificationDataset()

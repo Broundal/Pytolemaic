@@ -4,13 +4,14 @@ from matplotlib import pyplot as plt
 
 from examples.datasets.linear import LinearRegressionDataset
 from pytolemaic.pytrust import PyTrust
-## For this example we create train/test data representing a linear function
-# both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
 
 
 def run():
+    ## For this example we create train/test data representing a linear function
+    # PyTrust supports both numpy and pandas.DataFrame.
+
     # Obtain simple regression dataset. Use LinearClassificationDataset for classification
     dataset = LinearRegressionDataset()
     columns_names = dataset.column_names()
