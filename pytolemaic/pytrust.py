@@ -22,7 +22,8 @@ class PyTrust():
 
                  columns_meta=None,
                  metric: [str, Metric] = None,
-                 splitter='shuffled'):
+                 splitter='shuffled',
+                 labels=None):
         self.model = model
 
         if splitter == 'shuffled':
@@ -37,7 +38,8 @@ class PyTrust():
                 self.train = DMD(x=xtrain, y=ytrain,
                                  samples_meta=sample_meta_train,
                                  columns_meta=columns_meta,
-                                 splitter=splitter)
+                                 splitter=splitter,
+                                 labels=labels)
 
         if xtest is not None:
             if isinstance(xtest, DMD):
@@ -46,7 +48,8 @@ class PyTrust():
                 self.test = DMD(x=xtest, y=ytest,
                                 samples_meta=sample_meta_test,
                                 columns_meta=columns_meta,
-                                splitter=splitter)
+                                splitter=splitter,
+                                labels=labels)
 
         self.metric = metric.name if isinstance(metric, Metric) else metric
 
@@ -109,7 +112,8 @@ class PyTrust():
         self.scoring = Scoring(metrics=metrics)
 
         score_values_report, confusion_matrix, scatter = self.scoring.score_value_report(model=self.model,
-                                                                                         dmd_test=self.test)
+                                                                                         dmd_test=self.test,
+                                                                                         labels=self.test.labels)
         separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
         return ScoringFullReport(metric_reports=score_values_report,
                                  separation_quality=separation_quality,

@@ -15,12 +15,13 @@ class ShuffleSplitter():
 
 class DMD():
     FEATURE_NAMES = '__FEATURE_NAMES__'
+    FEATURE_TYPES = '__FEATURE_TYPES__'
     INDEX = '__INDEX__'
 
     # SAMPLE_WEIGHTS = '__SAMPLE_WEIGHTS__'
 
     def __init__(self, x, y=None, columns_meta=None, samples_meta=None,
-                 splitter=ShuffleSplitter):
+                 splitter=ShuffleSplitter, labels=None):
 
         self._x = pandas.DataFrame(x)
         if y is not None:
@@ -31,6 +32,14 @@ class DMD():
         self._columns_meta = self._create_columns_meta(columns_meta, self._x)
         self._samples_meta = self._create_samples_meta(samples_meta, self._x)
         self._splitter = splitter
+
+        # meta data
+        if labels is not None:
+            if self._y.values.max() >= len(labels):
+                raise ValueError("Labels should be given to all classes")
+
+        self._labels = labels
+
 
     def __deepcopy__(self, memodict={}):
         return type(self)(x=copy.deepcopy(self._x),
@@ -149,3 +158,7 @@ class DMD():
     @property
     def splitter(self):
         return self._splitter
+
+    @property
+    def labels(self):
+        return self._labels

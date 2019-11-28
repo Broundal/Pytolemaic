@@ -134,12 +134,13 @@ class SensitivityOfFeaturesReport():
         if ax is None:
             fig, ax = plt.subplots(1)
 
-        sorted_features = sorted(self.sensitivities.items(), key=lambda kv: kv[1])
+        sorted_features = self.sorted_sensitivities  # sorted(self.sensitivities.items(), key=lambda kv: kv[1])
+        print(sorted_features)
         if n_features_to_plot is not None:
             sorted_features = sorted_features[:min(n_features_to_plot, len(sorted_features))]
 
         keys, values = zip(*sorted_features)
-        ax.barh(keys, values)
+        ax.barh(list(reversed(keys)), list(reversed(values)))
         ax.set(
             title='"{}" Feature Sensitivity'.format(self.method),
             xlabel='Sensitivity value')
@@ -152,6 +153,10 @@ class SensitivityOfFeaturesReport():
     @property
     def sensitivities(self):
         return self._sensitivities
+
+    @property
+    def sorted_sensitivities(self):
+        return [(k, v) for k, v in sorted(self._sensitivities.items(), key=lambda kv: -kv[1])]
 
 
 class SensitivityFullReport():

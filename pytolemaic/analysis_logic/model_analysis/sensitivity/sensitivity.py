@@ -54,7 +54,7 @@ class SensitivityAnalysis():
 
         score_function = self.metrics[metric].function
         if metric in ['auc', 'logloss'] and ytest is not None:
-            base_score = score_function(ytest, y_pred)
+            base_score = score_function(ytest, model.predict_proba(x))
             y_pred = ytest
         else:
             base_score = 0
@@ -69,7 +69,12 @@ class SensitivityAnalysis():
             shuffled_x = self.get_shuffled_x(dmd_test, i, method=method,
                                              model_support_dmd=self.model_support_dmd)
             shuffled_pred = predict_function(shuffled_x)
-            scores[name] = score_function(y_pred, shuffled_pred) - base_score
+
+            if base_score > 0:
+                scores[name] = 1 - abs(base_score - score_function(y_pred,
+                                                                   shuffled_pred))  # higher difference - more impact so add 1- in front
+            else:
+                scores[name] = score_function(y_pred, shuffled_pred)  # higher score - less impact
 
         if raw_scores:
             # description = "The raw scores of how each feature affects the model's predictions."

@@ -1,6 +1,7 @@
 import numpy
 from matplotlib import pyplot as plt
 from sklearn.metrics.classification import confusion_matrix
+from sklearn.utils.multiclass import unique_labels
 
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
@@ -8,8 +9,9 @@ from pytolemaic.utils.metrics import Metrics
 
 class ConfusionMatrixReport():
     def __init__(self, y_true, y_pred, labels=None):
-        self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred, labels=labels).tolist()
-        self._labels = labels
+        self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred,
+                                                  labels=unique_labels(y_true, y_pred)).tolist()
+        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
 
     @property
     def labels(self):

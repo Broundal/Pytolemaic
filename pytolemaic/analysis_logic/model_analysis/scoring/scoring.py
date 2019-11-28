@@ -19,6 +19,7 @@ class Scoring():
                         if metric in self.supported_metric]
 
     def score_value_report(self, model, dmd_test: DMD,
+                           labels=None,
                            y_proba: numpy.ndarray = None,
                            y_pred: numpy.ndarray = None) -> [ScoringMetricReport]:
         '''
@@ -43,7 +44,9 @@ class Scoring():
             y_proba = y_proba or model.predict_proba(x_test)
             y_pred = y_pred or numpy.argmax(y_proba, axis=1)
 
-            confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred, labels=unique_labels(y_true, y_pred))
+            confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred,
+                                                     labels=labels if labels is not None else unique_labels(y_true,
+                                                                                                            y_pred))
 
             for metric in self.metrics:
                 if not metric.ptype == CLASSIFICATION:
@@ -118,9 +121,9 @@ class Scoring():
         yp = classifier.predict_proba(test.values)
 
         auc = Metrics.auc.function(y_true=test.target, y_pred=yp)
-        auc = numpy.clip(auc, 0.5, 1)
+        auc = numpy.clip(auc, 0.5, 1)  # auc<0.5 --> 0.5
 
-        return numpy.round(2 * (1 - auc), 5)
+        return numpy.round(1 - (2 * auc - 1), 5)
 
 
 if __name__ == '__main__':

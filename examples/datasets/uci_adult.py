@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 
 from pytolemaic.utils.constants import FeatureTypes
+from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 
 this_file = os.path.dirname(__file__)
@@ -19,7 +20,7 @@ class UCIAdult():
         self._xtrain, self._ytrain = None, None
         self._xtest, self._ytest = None, None
         self.model = GeneralUtils.simple_imputation_pipeline(
-            RandomForestClassifier(random_state=0, n_estimators=100, n_jobs=3)),
+            RandomForestClassifier(random_state=0, n_estimators=100, n_jobs=3))
 
     def column_names(self):
         # 1st has no importance, while 3rd has double importance
@@ -39,27 +40,37 @@ class UCIAdult():
 
         nan_mask = df.replace('?', numpy.nan).isnull()
         if fit:
-            self.encoders = []
+            self.xencoders = []
             for i, col in enumerate(self.column_names()):
                 if feature_types[i] == FeatureTypes.categorical:
-                    self.encoders.append(LabelEncoder().fit(df[col]))
+                    self.xencoders.append(LabelEncoder().fit(df[col]))
                 else:
-                    self.encoders.append(None)
+                    self.xencoders.append(None)
+
+            self.yencoder = LabelEncoder().fit(df['target'])
+            self._labels = self.yencoder.classes_
 
         for i, col in enumerate(self.column_names()):
             if feature_types[i] == FeatureTypes.categorical:
-                df[col] = self.encoders[i].transform(df[col])
+                df[col] = self.xencoders[i].transform(df[col])
+
+        df['target'] = self.yencoder.transform(df['target'])
 
         df[nan_mask] = numpy.nan
 
         return df
 
     @property
+    def labels(self):
+        return self._labels
+
+    @property
     def training_data(self):
         if self._xtrain is None:
             df = pandas.read_csv(adult_train_path)
+            df = self._encode_data(df, fit=True)
             ytrain = df[['target']]
-            xtrain = self._encode_data(df.drop(['target'], axis=1), fit=True)
+            xtrain = df.drop(['target'], axis=1)
             self._xtrain, self._ytrain = xtrain, ytrain
 
         return self._xtrain, self._ytrain
@@ -68,8 +79,9 @@ class UCIAdult():
     def testing_data(self):
         if self._xtest is None:
             df = pandas.read_csv(adult_test_path)
+            df = self._encode_data(df, fit=True)
             ytest = df[['target']]
-            xtest = self._encode_data(df.drop(['target'], axis=1), fit=False)
+            xtest = df.drop(['target'], axis=1)
             self._xtest, self._ytest = xtest, ytest
 
         return self._xtest, self._ytest
@@ -78,6 +90,18 @@ class UCIAdult():
         x, y = self.training_data
         self.model.fit(x, y)
         return self.model
+
+    def as_dmd(self):
+        train = DMD(x=self.training_data[0], y=self.training_data[1],
+                    samples_meta=None, columns_meta={DMD.FEATURE_NAMES: self.column_names(),
+                                                     DMD.FEATURE_TYPES: self.feature_types()},
+                    labels=self.labels)
+
+        test = DMD(x=self.testing_data[0], y=self.testing_data[1],
+                   samples_meta=None, columns_meta={DMD.FEATURE_NAMES: self.column_names(),
+                                                    DMD.FEATURE_TYPES: self.feature_types()},
+                   labels=self.labels)
+        return train, test
 
 
 if __name__ == '__main__':
