@@ -1,6 +1,6 @@
 import unittest
 
-from examples.simple_examples import example_quality_report, example_scoring_report, example_sensitivity_analysis, \
+from examples.toy_examples import example_quality_report, example_scoring_report, example_sensitivity_analysis, \
     example_prediction_uncertainty
 
 
