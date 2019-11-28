@@ -25,19 +25,23 @@ def run():
         xtest=xtest, ytest=ytest,
         metric=metric)
 
+    # obtain more samples, never seen before, for which we want to measure uncertainty
+    x_new_test, y_new_test = dataset.get_samples()
+
+
     # uncertainty model may be based on 'confidence' or 'probability' for classification, and 'mae' or 'rmse' for regression
     for method in ['confidence', 'probability']:
+
+        # train uncertainty model
         uncertainty_model = pytrust.create_uncertainty_model(method=method)
+        yp = uncertainty_model.predict(x_new_test)  # this is same as model.predict
 
-        # create another test set, this time to test uncertainty
-        x_new_test, y_new_test = dataset.get_samples()
+        # and now it's possible to calculate uncertainty on new samples!
+        uncertainty = uncertainty_model.uncertainty(x_new_test)
 
-        new_test = DMD(x=x_new_test, y=y_new_test)
+        #let's see whether we can use this value to separate good samples and bad samples:
 
-        yp = uncertainty_model.predict(new_test)  # this is same as model.predict
-        base_score = metric.function(new_test.target, yp)
-
-        uncertainty = uncertainty_model.uncertainty(new_test)
+        base_score = metric.function(y_new_test, yp)
         p25, p50, p75 = numpy.percentile(numpy.unique(uncertainty), [25, 50, 75])
 
         # samples with low uncertainty
@@ -50,7 +54,7 @@ def run():
         subset_bad_score = metric.function(
             y_true=y_new_test[bad], y_pred=yp[bad])
 
-        print('\n\n\n#########################################333\n')
+        print('\n\n\n#########################################\n')
         print("performance for method *{}*".format(method))
         print('{} score is {:0.3f}'.format(metric.name, base_score))
         print('{} score for samples with high confidence is {:0.3f}'.format(metric.name, subset_good_score))
