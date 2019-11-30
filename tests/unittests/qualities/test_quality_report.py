@@ -3,8 +3,8 @@ import unittest
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ConfusionMatrixReport, \
     ScatterReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
-from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport
-from pytolemaic.utils.metrics import Metrics
+from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
+    ModelQualityReport
 
 
 class TestSensitivityReport(unittest.TestCase):
@@ -26,11 +26,14 @@ class TestSensitivityReport(unittest.TestCase):
 
 
     def test_to_dict_meaning(self):
-        rep1 = TestSetQualityReport(self.get_scoring_report(), metric=Metrics.mae.name)
+        rep1 = TestSetQualityReport(self.get_scoring_report())
         self.assertTrue(self.equal_to_dict_keys(rep1))
 
         rep2 = TrainSetQualityReport(self.get_vulnerability_report())
         self.assertTrue(self.equal_to_dict_keys(rep2))
 
-        rep3 = QualityReport(test_quality_report=rep1, train_quality_report=rep2)
+        rep3 = ModelQualityReport(self.get_vulnerability_report(), self.get_scoring_report())
+        self.assertTrue(self.equal_to_dict_keys(rep3))
+
+        rep4 = QualityReport(test_quality_report=rep1, train_quality_report=rep2, model_quality_report=rep3)
         self.assertTrue(self.equal_to_dict_keys(rep3))

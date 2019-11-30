@@ -3,7 +3,8 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
-from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport
+from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
+    ModelQualityReport
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier, UncertaintyModelRegressor
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter
@@ -125,12 +126,12 @@ class PyTrust():
         scoring_report = self.scoring_report()
         score_values = scoring_report.metric_scores[self.metric]
 
-        test_set_report = TestSetQualityReport(scoring_report=scoring_report,
-                                               metric=self.metric)
+        test_set_report = TestSetQualityReport(scoring_report=scoring_report)
 
         sensitivity_report = self.sensitivity_report()
         train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
-        model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
+        model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report,
+                                                  scoring_report=scoring_report)
 
         return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report,
                              model_quality_report=model_quality_report)

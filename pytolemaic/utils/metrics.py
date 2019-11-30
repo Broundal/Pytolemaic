@@ -88,7 +88,8 @@ class Metrics():
     @classmethod
     def supported_metrics(cls):
         return {m.name: m for m in
-                [Metrics.r2, Metrics.recall, Metrics.mae, Metrics.auc]}
+                [Metrics.r2, Metrics.recall, Metrics.mae, Metrics.auc,
+                 Metrics.mse, Metrics.rmse, Metrics.normalized_rmse]}
 
     @classmethod
     def metric_as_loss(cls, value, metric):

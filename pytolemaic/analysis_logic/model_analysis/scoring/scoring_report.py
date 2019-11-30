@@ -62,7 +62,7 @@ class ConfusionMatrixReport():
                  rotation_mode="anchor")
 
         # Loop over data dimensions and create text annotations.
-        fmt = '.2f' if 0 < numpy.min(cm) < 1 else 'd'
+        fmt = '.2f' if numpy.min(cm[cm > 0]) < 1 else 'd'
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):

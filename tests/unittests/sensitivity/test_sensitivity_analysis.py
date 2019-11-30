@@ -18,8 +18,6 @@ class TestSensitivity(unittest.TestCase):
 
         self.assertEqual(stats.n_features, 10)
         self.assertEqual(stats.n_zero, 1)
-        self.assertEqual(stats.n_non_zero,
-                         stats.n_features - stats.n_zero)
         self.assertEqual(stats.n_low, 1)
 
     def test_leakage(self):

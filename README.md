@@ -49,7 +49,6 @@ Examples can be found in /examples.
  'shuffle_stats_report': {
       'n_features': 10,
       'n_low': 1,
-      'n_non_zero': 9,
       'n_zero': 1
  }
  ```

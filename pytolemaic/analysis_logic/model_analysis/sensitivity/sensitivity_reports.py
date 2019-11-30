@@ -9,21 +9,16 @@ class SensitivityTypes():
 
 
 class SensitivityStatsReport():
-    def __init__(self, n_features: int, n_low: int, n_zero: int, n_non_zero: int):
+    def __init__(self, n_features: int, n_low: int, n_zero: int):
         self._n_features = n_features
         self._n_low = n_low
         self._n_zero = n_zero
-        self._n_non_zero = n_non_zero
-
-        if not n_zero + n_non_zero == n_features:
-            raise ValueError(" n_zero + n_non_zero != n_features")
 
     def to_dict(self):
         return dict(
             n_features=self.n_features,
             n_low=self.n_low,
             n_zero=self.n_zero,
-            n_non_zero=self.n_non_zero,
         )
 
     @classmethod
@@ -32,7 +27,6 @@ class SensitivityStatsReport():
             n_features="Number of features in dataset",
             n_low="Number of feature with low sensitivity (sensitivity lower than 5% of max sensitivity)",
             n_zero="Number of feature with zero sensitivity (sensitivity lower than 1e-4)",
-            n_non_zero="Number of feature with some sensitivity (n_features - n_zero) ",
         )
 
     def plot(self, ax=None, method=None):
@@ -59,10 +53,6 @@ class SensitivityStatsReport():
     @property
     def n_zero(self):
         return self._n_zero
-
-    @property
-    def n_non_zero(self):
-        return self._n_non_zero
 
 
 class SensitivityVulnerabilityReport():

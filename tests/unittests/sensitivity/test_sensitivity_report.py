@@ -12,7 +12,7 @@ class TestSensitivityReport(unittest.TestCase):
         return d1.keys() == d2.keys()
 
     def test_to_dict_meaning(self):
-        rep1 = SensitivityStatsReport(n_features=5, n_low=0, n_zero=0, n_non_zero=5)
+        rep1 = SensitivityStatsReport(n_features=5, n_low=0, n_zero=0)
         self.assertTrue(self.equal_to_dict_keys(rep1))
 
         rep2 = SensitivityVulnerabilityReport(imputation=0.5, leakage=0.5, too_many_features=0.5)

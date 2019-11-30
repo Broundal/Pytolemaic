@@ -106,8 +106,7 @@ class SensitivityAnalysis():
         n_low = int(np.sum(sensitivity < max(sensitivity) * 0.05))
         return SensitivityStatsReport(n_features=n_features,
                                       n_low=n_low,
-                                      n_zero=n_zero,
-                                      n_non_zero=n_features - n_zero)
+                                      n_zero=n_zero)
 
     def _vulnerability_report(self, shuffled_sensitivity: SensitivityOfFeaturesReport,
                               missing_sensitivity: SensitivityOfFeaturesReport,

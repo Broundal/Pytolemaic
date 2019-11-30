@@ -6,9 +6,9 @@ from pytolemaic.utils.metrics import Metrics
 
 
 class TestSetQualityReport():
-    def __init__(self, scoring_report: ScoringFullReport, metric):
+    def __init__(self, scoring_report: ScoringFullReport):
         self._scoring_report = scoring_report
-        self._metric = metric
+        self._metric = scoring_report.target_metric
 
         self._test_set_quality = self._calculate_test_set_quality()
 
@@ -100,11 +100,12 @@ class ModelQualityReport():
     def _get_model_loss(self):
         metric = Metrics.supported_metrics()[self.scoring_report.target_metric]
 
-        if metric.ptype == REGRESSION:
+        if metric.ptype == REGRESSION and Metrics.normalized_rmse.name in self.scoring_report.metric_scores:
             loss = self.scoring_report.metric_scores[Metrics.normalized_rmse.name].value
         else:
             loss = Metrics.metric_as_loss(
-                self.scoring_report.metric_scores[self.scoring_report.target_metric].value)
+                self.scoring_report.metric_scores[self.scoring_report.target_metric].value,
+                self.scoring_report.target_metric)
 
         return loss
 
