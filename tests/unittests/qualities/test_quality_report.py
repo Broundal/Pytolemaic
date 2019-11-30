@@ -3,9 +3,8 @@ import unittest
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ConfusionMatrixReport, \
     ScatterReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
-from pytolemaic.utils.metrics import Metrics
-
 from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport
+from pytolemaic.utils.metrics import Metrics
 
 
 class TestSensitivityReport(unittest.TestCase):
@@ -19,7 +18,8 @@ class TestSensitivityReport(unittest.TestCase):
         rep1 = ConfusionMatrixReport(y_true=[1, 2, 3], y_pred=[1, 2, 3])
         rep2 = ScatterReport(y_true=[1, 2, 3], y_pred=[1, 2, 3])
         rep3 = ScoringMetricReport(metric='mae', value=0.5, ci_low=0.25, ci_high=0.75)
-        return ScoringFullReport(metric_reports=[rep3], separation_quality=0.2, confusion_matrix=rep1, scatter=rep2)
+        return ScoringFullReport(target_metric='mae', metric_reports=[rep3], separation_quality=0.2,
+                                 confusion_matrix=rep1, scatter=rep2)
 
     def get_vulnerability_report(self):
         return SensitivityVulnerabilityReport(imputation=0.5, leakage=0.5, too_many_features=0.5)

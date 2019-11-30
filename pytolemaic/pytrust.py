@@ -115,7 +115,8 @@ class PyTrust():
                                                                                          dmd_test=self.test,
                                                                                          labels=self.test.labels)
         separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
-        return ScoringFullReport(metric_reports=score_values_report,
+        return ScoringFullReport(target_metric=self.metric,
+                                 metric_reports=score_values_report,
                                  separation_quality=separation_quality,
                                  confusion_matrix=confusion_matrix,
                                  scatter=scatter)
@@ -129,8 +130,10 @@ class PyTrust():
 
         sensitivity_report = self.sensitivity_report()
         train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
+        model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
 
-        return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report)
+        return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report,
+                             model_quality_report=model_quality_report)
 
     def create_uncertainty_model(self, method='auto'):
         if method not in self._uncertainty_models:

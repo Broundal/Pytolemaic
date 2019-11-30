@@ -206,8 +206,9 @@ class ScoringMetricReport():
 
 
 class ScoringFullReport():
-    def __init__(self, metric_reports: [ScoringMetricReport], separation_quality: float,
+    def __init__(self, target_metric, metric_reports: [ScoringMetricReport], separation_quality: float,
                  confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None):
+        self._target_metric = target_metric
         self._separation_quality = separation_quality
         self._metric_scores_dict = {r.metric: r for r in metric_reports}
         self._confusion_matrix = confusion_matrix
@@ -233,6 +234,7 @@ class ScoringFullReport():
 
         return dict(
             metric_scores=metric_scores,
+            target_metric=self.target_metric,
             separation_quality=GeneralUtils.f5(self.separation_quality),
             scatter=None if self.scatter is None else self.scatter.to_dict(),
             confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict()
@@ -241,6 +243,7 @@ class ScoringFullReport():
     @classmethod
     def to_dict_meaning(cls):
         return dict(
+            target_metric="Metric of interest",
             metric_scores="Score information for various metrics saved in a dict structure where key is the metric name and value is of type {}".format(ScoringMetricReport.__name__),
             separation_quality="Measure whether the test and train comes from same distribution. High quality (max 1) means the test and train come from the same distribution. Low score (min 0) means the test set is problematic.",
             scatter="Scatter information (y_true vs y_pred). Available only for regressors.",
@@ -250,6 +253,10 @@ class ScoringFullReport():
     @property
     def separation_quality(self):
         return self._separation_quality
+
+    @property
+    def target_metric(self):
+        return self._target_metric
 
     @property
     def metric_scores(self) -> dict:

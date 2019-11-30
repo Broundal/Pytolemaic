@@ -33,6 +33,15 @@ class CustomMetrics:
 
             return float(numpy.mean(auc_list))
 
+    @classmethod
+    def rmse(cls, y_true, y_pred):
+        return numpy.sqrt(sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred))
+
+    @classmethod
+    def normalized_rmse(cls, y_true, y_pred):
+        return numpy.sqrt(sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred)) / (
+                    numpy.std(y_true) + 1e-10)
+
 
 class Metrics():
     r2 = Metric(name='r2',
@@ -43,6 +52,21 @@ class Metrics():
                  function=sklearn.metrics.mean_absolute_error,
                  ptype=REGRESSION,
                  is_loss=True)
+
+    mse = Metric(name='mse',
+                 function=sklearn.metrics.mean_squared_error,
+                 ptype=REGRESSION,
+                 is_loss=True)
+
+    rmse = Metric(name='rmse',
+                  function=CustomMetrics.rmse,
+                  ptype=REGRESSION,
+                  is_loss=True)
+
+    normalized_rmse = Metric(name='normalized_rmse',
+                             function=CustomMetrics.normalized_rmse,
+                             ptype=REGRESSION,
+                             is_loss=True)
 
     # sklearn's auc does not support multiclass
     auc = Metric(name='auc',

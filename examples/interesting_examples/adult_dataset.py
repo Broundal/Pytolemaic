@@ -22,14 +22,16 @@ def run():
         metric=metric)
 
     print("We've trained a ML model (details below) on uci adult dataset. Let's see whether our model is a good one")
-    print("Model details\n", classifier)
+    print("Model details\n", classifier, '\n\n')
 
-    print("Let's calculate score report for Adult dataset ".format(metric))
+    print("First, let's calculate score report for Adult dataset ".format(metric))
     print("Calculating...")
     scoring_report = pytrust.scoring_report()
     print("Calculating... Done")
     print("\nNow let's deepdive intp the report!")
-    # scoring_report_deepdive(scoring_report, metric)
+    scoring_report_deepdive(scoring_report, metric)
+
+
 
     print("\n\nNext we'd like to check feature sensitivity")
     print("Calculating...")
@@ -37,28 +39,27 @@ def run():
     print("Calculating... Done")
 
     print("\nNow let's deepdive into the report!")
+    sensitivity_deepdive(sensitivity_report)
 
+
+def sensitivity_deepdive(sensitivity_report):
     print("\nlet's check which 3 features are most important. Does it make sense?")
     print(sensitivity_report.shuffle_report.sorted_sensitivities[:3])
     print("Looking on top 3 features in sensitivity to missing values we see there is some difference")
     print(sensitivity_report.missing_report.sorted_sensitivities[:3])
     print("This means that error caused by missing values affect the model differently than a regular mistake")
-
     print("\nThere are {} features with 0 sensitivity, and {} features with low sensitivity".format(
         sensitivity_report.shuffle_stats_report.n_zero, sensitivity_report.shuffle_stats_report.n_low))
     print("\nlet's check which 3 features are least important. Does it make sense?")
     print(sensitivity_report.shuffle_report.sorted_sensitivities[-3:])
-
     print("\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better)")
-    print(sensitivity_report.vulnerability_report)
+    pprint(sensitivity_report.vulnerability_report.to_dict(), width=120)
     print(
         "We see that the imputation measure is relatively high, which means the model is sensitive to imputation method")
     print("However, none of the values seems to be high, which is reassuring")
-
     print('*** sensitivity_report was commented out ***')
     # pprint(sensitivity_report.to_dict(), width=120)
     # pprint(sensitivity_report.to_dict_meaning(), width=120)
-
     print("\nNow let's plot some nice graphs")
     sensitivity_report.plot()
 
@@ -85,7 +86,7 @@ def scoring_report_deepdive(scoring_report, metric):
     print("Looking on matrices we see that performance is not too good")
     print("\nFinally, let's look on the separation quality")
     print('Score quality is {:0.3f} which is {}'.format(quality,
-                                                        "very bad! --> test set doesn't worth much" if quality < 0.3 else "reasonable"))
+                                                        "very bad! --> test set isn't worth much" if quality < 0.3 else "reasonable"))
     print("\nWe can see entire scoring report as well as explanation for the various fields")
 
     print('*** scoring_report was commented out ***')

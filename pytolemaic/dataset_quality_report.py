@@ -1,6 +1,8 @@
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
+from pytolemaic.utils.constants import REGRESSION
 from pytolemaic.utils.general import GeneralUtils
+from pytolemaic.utils.metrics import Metrics
 
 
 class TestSetQualityReport():
@@ -62,8 +64,7 @@ class TrainSetQualityReport():
         train_set_quality = 1.0
         train_set_quality = train_set_quality \
                             - self._vulnerability_report.leakage \
-                            - self._vulnerability_report.too_many_features \
-                            - self._vulnerability_report.imputation
+                            - self._vulnerability_report.too_many_features
         train_set_quality = max(train_set_quality, 0)
 
         return train_set_quality
@@ -88,15 +89,78 @@ class TrainSetQualityReport():
         return self._train_set_quality
 
 
+class ModelQualityReport():
+    def __init__(self, vulnerability_report: SensitivityVulnerabilityReport, scoring_report: ScoringFullReport):
+        self._vulnerability_report = vulnerability_report
+        self._scoring_report = scoring_report
+        self._model_loss = self._get_model_loss()
+
+        self._model_quality = self._calculate_model_quality()
+
+    def _get_model_loss(self):
+        metric = Metrics.supported_metrics()[self.scoring_report.target_metric]
+
+        if metric.ptype == REGRESSION:
+            loss = self.scoring_report.metric_scores[Metrics.normalized_rmse.name].value
+        else:
+            loss = Metrics.metric_as_loss(
+                self.scoring_report.metric_scores[self.scoring_report.target_metric].value)
+
+        return loss
+
+    def _calculate_model_quality(self):
+        model_quality = 1.0
+        model_quality = model_quality \
+                        - self._vulnerability_report.imputation \
+                        - self.model_loss
+        model_quality = max(model_quality, 0)
+
+        return model_quality
+
+    def to_dict(self):
+        return dict(
+            vulnerability_report=self.vulnerability_report.to_dict(),
+            model_loss=self.model_loss,
+            model_quality=self.model_quality,
+        )
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            vulnerability_report=SensitivityVulnerabilityReport.to_dict_meaning(),
+            model_loss="Error of the model - lower is better",
+            model_quality="Overall model quality - higher is better")
+
+    @property
+    def vulnerability_report(self) -> SensitivityVulnerabilityReport:
+        return self._vulnerability_report
+
+    @property
+    def model_quality(self):
+        return self._model_quality
+
+    @property
+    def scoring_report(self):
+        return self._scoring_report
+
+    @property
+    def model_loss(self):
+        return self._model_loss
+
+
+
 class QualityReport():
-    def __init__(self, train_quality_report: TrainSetQualityReport, test_quality_report: TestSetQualityReport):
+    def __init__(self, train_quality_report: TrainSetQualityReport, test_quality_report: TestSetQualityReport,
+                 model_quality_report: ModelQualityReport):
         self._train_quality_report = train_quality_report
         self._test_quality_report = test_quality_report
+        self._model_quality_report = model_quality_report
 
     def to_dict(self):
         return dict(
             test_quality_report=self.test_quality_report.to_dict(),
             train_quality_report=self.train_quality_report.to_dict(),
+            model_quality_report=self.model_quality_report.to_dict(),
         )
 
     @classmethod
@@ -104,6 +168,7 @@ class QualityReport():
         return dict(
             test_quality_report=TestSetQualityReport.to_dict_meaning(),
             train_quality_report=TrainSetQualityReport.to_dict_meaning(),
+            model_quality_report=ModelQualityReport.to_dict_meaning(),
         )
 
     @property
@@ -113,3 +178,7 @@ class QualityReport():
     @property
     def test_quality_report(self):
         return self._test_quality_report
+
+    @property
+    def model_quality_report(self):
+        return self._model_quality_report
