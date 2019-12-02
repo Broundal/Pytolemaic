@@ -72,7 +72,7 @@ class TrainSetQualityReport():
     def to_dict(self):
         return dict(
             vulnerability_report=self.vulnerability_report.to_dict(),
-            train_set_quality=self.train_set_quality,
+            train_set_quality=GeneralUtils.f5(self.train_set_quality),
         )
 
     @classmethod
@@ -121,8 +121,8 @@ class ModelQualityReport():
     def to_dict(self):
         return dict(
             vulnerability_report=self.vulnerability_report.to_dict(),
-            model_loss=self.model_loss,
-            model_quality=self.model_quality,
+            model_loss=GeneralUtils.f5(self.model_loss),
+            model_quality=GeneralUtils.f5(self.model_quality),
         )
 
     @classmethod
