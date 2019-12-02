@@ -9,6 +9,9 @@ with open(os.path.join(this_dir, 'requirements.txt'), 'r') as fp:
     install_reqs = [r.rstrip() for r in fp.readlines() if
                     not r.startswith(('#', 'git+'))]
 
+with open(os.path.join(this_dir, "README.md"), "r") as fh:
+    long_description = fh.read()
+
 from pytolemaic.version import version
 
 print("Installing the following pytolemaic packages: {}".format(find_packages(exclude=['tests', 'scripts', 'examples'])))
@@ -18,6 +21,9 @@ setup(
     author='Orion Talmi',
     author_email='otalmi@gmail.com',
     description='Package for ML model analysis',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/broundal/Pytolemaic",
     version=str(version),
     packages=find_packages(exclude=['tests', 'scripts', 'examples']),
     setup_requires=setup_reqs,
@@ -25,5 +31,4 @@ setup(
     include_package_data=True,
     platforms=['Linux'],
     python_requires='>=3.6.*',
-    url='',
 )
