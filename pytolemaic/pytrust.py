@@ -12,6 +12,16 @@ from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
 
 
+def cache(func):
+    def cache_wrapper(self, *args, **kwargs):
+        if func.__name__ not in self._cache:
+            self._cache[func.__name__] = func(self, *args, **kwargs)
+
+        return self._cache[func.__name__]
+
+    return cache_wrapper
+
+
 class PyTrust():
 
     def __init__(self, model,
@@ -59,16 +69,15 @@ class PyTrust():
 
         self.sensitivity = SensitivityAnalysis()
 
-        self._is_classification = None
-        self._model_support_dmd = None
-        self._y_pred_test = None
-        self._y_proba_test = None
         self._uncertainty_models = {}
+
+        self._cache = {}
 
     def _validate_input(self):
         if not hasattr(self.model, 'predict'):
             raise ValueError("Model must support predict() function")
 
+    @cache
     def sensitivity_report(self):
         self.sensitivity.calculate_sensitivity(
             model=self.model, dmd_test=self.test, metric=self.metric)
@@ -76,37 +85,32 @@ class PyTrust():
         return self.sensitivity.sensitivity_report()
 
     @property
+    @cache
     def is_classification(self):
-        if self._is_classification is None:
-            self._is_classification = GeneralUtils.is_classification(
-                self.model)
-
-        return self._is_classification
+        return GeneralUtils.is_classification(self.model)
 
     @property
+    @cache
     def model_support_dmd(self):
-        if self._model_support_dmd is None:
-            self._model_support_dmd = GeneralUtils.dmd_supported(self.model,
-                                                                 self.test)
-
-        return self._model_support_dmd
+        return GeneralUtils.dmd_supported(self.model, self.test)
 
     @property
+    @cache
     def y_pred_test(self):
-        if self._y_pred_test is None:
-            test = self.test if self.model_support_dmd else self.test.values
-            self._y_pred_test = self.model.predict(test)
 
-        return self._y_pred_test
+        test = self.test if self.model_support_dmd else self.test.values
+        y_pred_test = self.model.predict(test)
+        return y_pred_test
 
     @property
+    @cache
     def y_proba_test(self):
-        if self._y_proba_test is None and self.is_classification:
-            test = self.test if self.model_support_dmd else self.test.values
-            self._y_proba_test = self.model.predict_proba(test)
 
-        return self._y_proba_test
+        test = self.test if self.model_support_dmd else self.test.values
+        y_proba_test = self.model.predict_proba(test)
+        return y_proba_test
 
+    @cache
     def scoring_report(self):
         metrics = Metrics.supported_metrics()
 
@@ -122,9 +126,9 @@ class PyTrust():
                                  confusion_matrix=confusion_matrix,
                                  scatter=scatter)
 
+    @cache
     def quality_report(self):
         scoring_report = self.scoring_report()
-        score_values = scoring_report.metric_scores[self.metric]
 
         test_set_report = TestSetQualityReport(scoring_report=scoring_report)
 
