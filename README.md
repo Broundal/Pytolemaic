@@ -12,10 +12,16 @@ I hope you will find it useful. I will appreciate any feedback you have.
 ## supported features
 The package contains the following functionalities:
 
+#### On model creation
 - **Sensitivity Analysis**: Calculation of feature importance for given model, either via sensitivity to feature value or sensitivity to missing values. 
 - **Vulnerability report**: based on the feature sensitivity we measure model's vulnerability in respect to imputation, leakage, and # of features.
 - **Scoring report**: Report model's score on test data with confidence interval.
+- **separation quality**: Measure whether train and test data comes from the same distribution.
+- **Overall quality**: Provides overall quality measures
+
+### On prediction
 - **Prediction uncertainty**: Provides an uncertainty measure for given model's prediction.
+
 
 
 ## How to use: 
