@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from examples.datasets.uci_adult import UCIAdult
 from pytolemaic.pytrust import PyTrust
 ## For this example we create train/test data representing a linear function
@@ -41,6 +43,16 @@ def run():
     print("\nNow let's deepdive into the report!")
     sensitivity_deepdive(sensitivity_report)
 
+    print("\nFinally let's review overall quality score!")
+    quality_report = pytrust.quality_report()
+
+    print("Overall quality of train data: {:0.3f}".format(quality_report.train_quality_report.train_set_quality))
+    print("Overall quality of test data: {:0.3f}".format(quality_report.test_quality_report.test_set_quality))
+    print("Overall quality of model: {:0.3f}".format(quality_report.model_quality_report.model_quality))
+    print('*** quality_report was commented out ***')
+    # pprint(quality_report.to_dict(), width=120)
+    # pprint(quality_report.to_dict_meaning(), width=120)
+
 
 def sensitivity_deepdive(sensitivity_report):
     print("\nlet's check which 3 features are most important. Does it make sense?")
@@ -54,8 +66,10 @@ def sensitivity_deepdive(sensitivity_report):
     print(sensitivity_report.shuffle_report.sorted_sensitivities[-3:])
     print("\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better)")
     pprint(sensitivity_report.vulnerability_report.to_dict(), width=120)
-    print(
-        "We see that the imputation measure is relatively high, which means the model is sensitive to imputation method")
+    pprint(sensitivity_report.vulnerability_report.to_dict_meaning(), width=120)
+
+    print("We see that the imputation measure is relatively high, which means the model is sensitive "
+          "to imputation method")
     print("However, none of the values seems to be high, which is reassuring")
     print('*** sensitivity_report was commented out ***')
     # pprint(sensitivity_report.to_dict(), width=120)
@@ -91,7 +105,6 @@ def scoring_report_deepdive(scoring_report, metric):
 
     print('*** scoring_report was commented out ***')
     # pprint(scoring_report.to_dict(), width=120)
-    # print('\n')
     # pprint(scoring_report.to_dict_meaning(), width=120)
 
     print("\nAnd also plot some nice graphs")
