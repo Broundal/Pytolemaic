@@ -1,3 +1,5 @@
+import numpy
+
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
     Scoring
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
@@ -99,12 +101,17 @@ class PyTrust():
     def y_pred_test(self):
 
         test = self.test if self.model_support_dmd else self.test.values
-        y_pred_test = self.model.predict(test)
+        if self.y_proba_test is not None:  # save some time
+            y_pred_test = numpy.argmax(self.y_proba_test, axis=1)
+        else:
+            y_pred_test = self.model.predict(test)
         return y_pred_test
 
     @property
     @cache
     def y_proba_test(self):
+        if not self.is_classification:
+            return None
 
         test = self.test if self.model_support_dmd else self.test.values
         y_proba_test = self.model.predict_proba(test)
@@ -118,7 +125,9 @@ class PyTrust():
 
         score_values_report, confusion_matrix, scatter = self.scoring.score_value_report(model=self.model,
                                                                                          dmd_test=self.test,
-                                                                                         labels=self.test.labels)
+                                                                                         labels=self.test.labels,
+                                                                                         y_pred=self.y_pred_test,
+                                                                                         y_proba=self.y_proba_test)
         separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
         return ScoringFullReport(target_metric=self.metric,
                                  metric_reports=score_values_report,

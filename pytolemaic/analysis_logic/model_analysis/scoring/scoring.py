@@ -41,8 +41,8 @@ class Scoring():
         confusion_matrix, scatter = None, None
         if is_classification:
 
-            y_proba = y_proba or model.predict_proba(x_test)
-            y_pred = y_pred or numpy.argmax(y_proba, axis=1)
+            y_proba = y_proba if y_proba is not None else model.predict_proba(x_test)
+            y_pred = y_pred if y_pred is not None else numpy.argmax(y_proba, axis=1)
 
             confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred,
                                                      labels=labels if labels is not None else unique_labels(y_true,
@@ -69,7 +69,7 @@ class Scoring():
 
 
         else:
-            y_pred = y_pred or model.predict(x_test)
+            y_pred = y_pred if y_pred is not None else model.predict(x_test)
             scatter = ScatterReport(y_true=y_true, y_pred=y_pred)
             for metric in self.metrics:
                 if not metric.ptype == REGRESSION:
@@ -124,11 +124,3 @@ class Scoring():
         auc = numpy.clip(auc, 0.5, 1)  # auc<0.5 --> 0.5
 
         return numpy.round(1 - (2 * auc - 1), 5)
-
-
-if __name__ == '__main__':
-    sr = Scoring()
-    yt = numpy.random.rand(10)
-    d = numpy.random.rand(10)
-    print(Metrics.call('mae', yt, yt + 0.1 * d),
-          sr._confidence_interval('mae', y_test=yt, y_pred=yt + 0.1 * d))

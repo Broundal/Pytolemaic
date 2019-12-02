@@ -19,12 +19,10 @@ class TestExamples(unittest.TestCase):
     def test_example_quality_report(self):
         example_quality_report.run()
 
-    unittest.skip("Takes time")
-
+    @unittest.skip("adult_dataset example - Takes time")
     def test_adult_dataset(self):
         adult_dataset.run()
 
-    unittest.skip("Takes time")
-
+    @unittest.skip("california_housing_dataset example - Takes time")
     def test_california_housing(self):
         california_housing_dataset.run()
