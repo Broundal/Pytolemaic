@@ -1,0 +1,42 @@
+#update stuff:
+
+#due to issue with keyring
+pip3 install --upgrade keyrings.alt
+
+sudo python -m pip install --upgrade pip setuptools wheel
+sudo python -m pip install tqdm
+sudo python -m pip install --user --upgrade twine
+
+# cleanup
+rm -rf dist build *.egg*
+
+#create whl
+python setup.py sdist bdist_wheel
+
+
+# install locally
+python -m pip install dist/*.whl
+
+
+#upload to testpypi
+
+python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+
+# install from testPypi
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps example-pkg-YOUR-USERNAME-HERE
+
+# cleanup
+rm -rf dist build *.egg*
+
+
+#create whl
+python setup.py sdist bdist_wheel
+
+#upload to pypi
+python -m twine upload dist/*
+
+#install from pypi
+pip install
+
+
