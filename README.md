@@ -1,24 +1,26 @@
 # Pytolemaic
 
 ## What is Pytolemaic 
-Pytolemaic package aims to help you analyze your models to check their quality. 
+Pytolemaic package analyzes your model and dataset and measure their quality. 
 
-The package supports classification/regression models built for tabular datasets (mainly sklearn),
+The package supports classification/regression models built for tabular datasets (e.g. sklearn's regressors/classifiers),
  but will also support custom made models as long as they implement sklearn's API. 
 
 The package is aimed for personal use and comes with no guarantees. 
-I hope you will find it useful and appreciate feedback.
+I hope you will find it useful. I will appreciate any feedback you have.
 
 ## supported features
-The package contains the following functionality:
+The package contains the following functionalities:
 
-- Sensitivity Analysis: Calculation of feature importance for given model, either via sensitivity to feature value or sensitivity to missing values. Additionaly, the feature sensitivity is used to estimate the model's vulnerability in respect to imputation, leakage, and overfit.
-- Scoring report: Report given model's score with confidence interval.
-- Prediction uncertainty: Provides an uncertainty measure for given model's prediction.
+- **Sensitivity Analysis**: Calculation of feature importance for given model, either via sensitivity to feature value or sensitivity to missing values. 
+- **Vulnerability report**: based on the feature sensitivity we measure model's vulnerability in respect to imputation, leakage, and # of features.
+- **Scoring report**: Report model's score on test data with confidence interval.
+- **Prediction uncertainty**: Provides an uncertainty measure for given model's prediction.
 
 
 ## How to use: 
-Examples can be found in /examples.
+Examples on toy dataset can be found in [/examples/toy_examples/](./examples/toy_examples/)
+Examples on 'real-life' datasets can be found in [/examples/interesting_examples/](./examples/interesting_examples/) 
 
 ## Output examples:
 
@@ -29,17 +31,13 @@ Examples can be found in /examples.
 ```
  'sensitivity_report': {
     'method': 'shuffled',
-     'sensitivities': {
-          'f0': 0.18533,
-          'f1': 0.0,
-          'f2': 0.09715,
-          'f3': 0.10528,
-          'f4': 0.09941,
-          'f5': 0.10491,
-          'f6': 0.10788,
-          'f7': 0.1063,
-          'f8': 0.09109,
-          'f9': 0.10264
+    'sensitivities': {
+        'age': 0.12395,
+        'capital-gain': 0.06725,
+        'capital-loss': 0.02465,
+        'education': 0.05769,
+        'education-num': 0.13765,
+        ...
       }
   }
 ```
@@ -47,9 +45,9 @@ Examples can be found in /examples.
  - Simple statistics on the feature sensitivity:
  ```
  'shuffle_stats_report': {
-      'n_features': 10,
+      'n_features': 14,
       'n_low': 1,
-      'n_zero': 1
+      'n_zero': 0
  }
  ```
  
@@ -61,9 +59,9 @@ Examples can be found in /examples.
  
  ```
  'vulnerability_report': {
-      'imputation': 0.569,
+      'imputation': 0.35,
       'leakage': 0,
-      'too_many_features': 0.316
+      'too_many_features': 0.14
  }  
  ```
 
@@ -71,44 +69,48 @@ Examples can be found in /examples.
 
 For given metric, the score and confidence intervals (CI) is calculated
  ```
- 'auc': {
-     'ci_high': 0.949,
-     'ci_low': 0.947,
-     'ci_ratio': 0.057,
-     'metric': 'auc',
-     'value': 0.948,
- },
- 'recall': {
-     'ci_high': 0.870,
-     'ci_low': 0.866,
-     'ci_ratio': 0.022,
+'recall': {
+     'ci_high': 0.763,
+     'ci_low': 0.758,
+     'ci_ratio': 0.023,
      'metric': 'recall',
-     'value': 0.868
+     'value': 0.760,
+},
+'auc': {
+     'ci_high': 0.909,
+     'ci_low': 0.907,
+     'ci_ratio': 0.022,
+     'metric': 'auc',
+     'value': 0.907
 }    
  ```
  
  Additionally, score quality measures the quality of the score based on the separability (auc score) between train and test sets.
+ 
+ Value of 1 means test set has same distribution as train set. Value of 0 means test set has fundamentally different distribution. 
  ```
- 'separation_quality': 0.969         
+ 'separation_quality': 0.00611         
  ```
   
 Combining the above measures into a single number we provide the overall quality of the model/dataset.
 
 Higher quality value (\[0,1\]) means better dataset/model.
  ```
- 
-{'test_quality_report': {
-    'test_set_quality': 0.930,
-    'ci_ratio': 0.039,
-    'separation_quality': 0.969,
+quality_report : { 
+'model_quality_report': {
+    'model_loss': 0.24,
+    'model_quality': 0.41,
+    'vulnerability_report': {...}},
     
-},
- 'train_quality_report': {
-    'train_set_quality': 0.333,
-    'vulnerability_report': {
-        'imputation': 0.666,
-        'leakage': 0.0,
-        'too_many_features': 0.0}}}         
+'test_quality_report': {
+    'ci_ratio': 0.023, 
+    'separation_quality': 0.006, 
+    'test_set_quality': 0},
+    
+'train_quality_report': {
+    'train_set_quality': 0.85,
+    'vulnerability_report': {...}}
+   
  ```
 
  
