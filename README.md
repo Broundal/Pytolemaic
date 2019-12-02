@@ -19,7 +19,7 @@ The package contains the following functionalities:
 - **separation quality**: Measure whether train and test data comes from the same distribution.
 - **Overall quality**: Provides overall quality measures
 
-### On prediction
+#### On prediction
 - **Prediction uncertainty**: Provides an uncertainty measure for given model's prediction.
 
 
