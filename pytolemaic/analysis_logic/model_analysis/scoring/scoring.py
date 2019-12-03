@@ -79,6 +79,10 @@ class Scoring():
                 ci_low, ci_high = Metrics.confidence_interval(metric,
                                                               y_true=y_true,
                                                               y_pred=y_pred)
+
+                ci_low = GeneralUtils.f5(ci_low)
+                ci_high = GeneralUtils.f5(ci_high)
+                score = GeneralUtils.f5(score)
                 score_report.append(ScoringMetricReport(
                     metric=metric.name,
                     value=score,
@@ -115,7 +119,7 @@ class Scoring():
                                                               dmd_test=dmd_test)
 
         classifier = GeneralUtils.simple_imputation_pipeline(
-            estimator=RandomForestClassifier(n_estimators=100, n_jobs=10))
+            estimator=RandomForestClassifier(n_estimators=100, n_jobs=-1))
         classifier.fit(train.values, train.target.ravel())
 
         yp = classifier.predict_proba(test.values)

@@ -63,6 +63,8 @@ class ConfusionMatrixReport():
 
         # Loop over data dimensions and create text annotations.
         fmt = '.2f' if numpy.min(cm[cm > 0]) < 1 else 'd'
+        if fmt == 'd':
+            cm = cm.astype(int)
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -150,17 +152,21 @@ class ScoringMetricReport():
         if ax is None:
             fig, ax = plt.subplots(1)
 
-        ax.plot([self.ci_low, self.ci_high], [1, 1], '-b',
-                self.ci_low, 1, '|b',
-                self.ci_high, 1, '|b',
-                self.value, 1, 'or', )
+        ci_low = GeneralUtils.f5(self.ci_low)
+        ci_high = GeneralUtils.f5(self.ci_high)
+        value = GeneralUtils.f5(self.value)
 
-        delta = (self.ci_high - self.ci_low) * 1e-1
-        l_lim = max(0, self.ci_low - delta)
-        r_lim = min(1, self.ci_high + delta)
+        ax.plot([ci_low, ci_high], [1, 1], '-b',
+                ci_low, 1, '|b',
+                ci_high, 1, '|b',
+                value, 1, 'or', )
+
+        delta = (ci_high - ci_low) * 1e-1 + 1e-4
+        l_lim = max(0, ci_low - delta)
+        r_lim = min(1, ci_high + delta)
 
         ax.set_xlim(l_lim, r_lim)
-        x = numpy.round(numpy.linspace(l_lim, r_lim, num=5), 3)
+        x = numpy.linspace(l_lim, r_lim, num=5)
         xlabels = ["%.5g" % k for k in x]
         ax.set(xticks=x.tolist(),
                xticklabels=xlabels,
@@ -170,9 +176,9 @@ class ScoringMetricReport():
                xlabel='{}'.format(self.metric))
 
         # Loop over data dimensions and create text annotations.
-        for x, label in [(self.ci_low, 'ci_low (25%)'),
-                         (self.value, '{} value'.format(self.metric)),
-                         (self.ci_high, 'ci_high  (75%)')]:
+        for x, label in [(ci_low, 'ci_low (25%)'),
+                         (value, '{} value'.format(self.metric)),
+                         (ci_high, 'ci_high  (75%)')]:
             y = 1.01
             ax.text(x, y, label,
                     ha="center", va="center", )

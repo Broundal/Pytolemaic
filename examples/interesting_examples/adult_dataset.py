@@ -26,7 +26,7 @@ def run():
     print("Calculating...")
     scoring_report = pytrust.scoring_report()
     print("Calculating... Done")
-    print("\nNow let's deepdive intp the report!")
+    print("\nNow let's deepdive into the report!")
     scoring_report_deepdive(scoring_report)
 
 

@@ -1,30 +1,25 @@
 from pprint import pprint
 
-import numpy
-
-from examples.datasets.california_housing import CaliforniaHousing
+from examples.datasets.kddcup99 import KDDCup99
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.metrics import Metrics
 
 
 def run():
-    dataset = CaliforniaHousing()
-    estimator = dataset.get_model()
+    dataset = KDDCup99()
+    classifier = dataset.get_model()
     train, test = dataset.as_dmd()
 
-    metric = Metrics.rmse.name
+    metric = Metrics.recall.name
 
     pytrust = PyTrust(
-        model=estimator,
+        model=classifier,
         xtrain=train,
         xtest=test,
         metric=metric)
 
-    print("We've trained a ML model (details below) on California Housing dataset.\n"
-          "We should note that the target values are in range of [{}], which probably mean they were normalized beforehand."
-          "Let's see whether our model is a good one.".format((numpy.min(train.target), numpy.max(train.target))))
-
-    print("Model details\n", estimator, '\n\n')
+    print("We've trained a ML model (details below) on uci adult dataset. Let's see whether our model is a good one")
+    print("Model details\n", classifier, '\n\n')
 
     print("First, let's calculate score report")
     print("Calculating...")
@@ -54,34 +49,30 @@ def run():
 
 def sensitivity_deepdive(sensitivity_report):
     print("\nlet's check which 3 features are most important. Does it make sense?")
-    print(sensitivity_report.shuffle_report.sorted_sensitivities[:3], '\n')
+    print(sensitivity_report.shuffle_report.sorted_sensitivities[:3])
+    print("Looking on top 3 features in sensitivity to missing values we see there is some difference")
+    print(sensitivity_report.missing_report.sorted_sensitivities[:3])
+    print("This means that error caused by missing values affect the model differently than a regular mistake")
+    print(
+        "\nThere are {} features with low sensitivity of which {} features are with 0 sensitivity (out of {} features)".format(
+            sensitivity_report.shuffle_stats_report.n_low, sensitivity_report.shuffle_stats_report.n_zero,
+            sensitivity_report.shuffle_stats_report.n_features))
 
-    print("Compare sensitivities obtain which shuffle method and missing method")
-    print('shuffle method', sensitivity_report.shuffle_report.sorted_sensitivities[:3], '\n'
-                                                                                        'missing method',
-          sensitivity_report.missing_report.sorted_sensitivities[:3], '\n')
-
-    print("Looking on top 3 features we see similar values. "
-          "This means that error caused by missing values affect the model similarly to a regular mistake")
-
-    print("\nThe 3 least important features are:")
-    print(sensitivity_report.shuffle_report.sorted_sensitivities[-3:])
-    print("Thus there are {} features with 0 sensitivity and {} features with low sensitivity".format(
-        sensitivity_report.shuffle_stats_report.n_zero, sensitivity_report.shuffle_stats_report.n_low))
+    print("\nLet see the features w/o sensitivity. Does it make sense?")
+    print(sensitivity_report.shuffle_report.sorted_sensitivities[-sensitivity_report.shuffle_stats_report.n_zero:])
 
     print(
         "\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better). The meaning of the fields can be obtained with to_dict_meaning()")
     pprint(sensitivity_report.vulnerability_report.to_dict(), width=120)
-    print('*** vulnerability_report explanation was commented out ***')
+    print('\n\n*** vulnerability_report explanation was commented out ***')
     # pprint(sensitivity_report.vulnerability_report.to_dict_meaning(), width=120)
 
     print("We see that the imputation measure is relatively high, which means the model is sensitive "
-          "to imputation method to some extent")
-    print("However, the other values are 0 which is reassuring")
-    print('\n')
+          "to imputation method")
+    print("However, none of the values seems to be high, which is reassuring")
 
-    print(
-        "\nWe can see entire sensitivity report as well as explanation for the various fields using to_dict() and to_dict_meaning()")
+    print("\n\nWe can see entire sensitivity report as well as explanation for the various fields using"
+          " to_dict() and to_dict_meaning()")
     print('*** sensitivity_report was commented out ***')
     # pprint(sensitivity_report.to_dict(), width=120)
     # pprint(sensitivity_report.to_dict_meaning(), width=120)
@@ -97,14 +88,20 @@ def scoring_report_deepdive(scoring_report):
     ci_ratio = scoring_report.metric_scores[metric].ci_ratio
     quality = scoring_report.separation_quality
     print("\nLet's check the target score first - ")
-    print("{} score is {:0.3f} which doesn't tell us much regarding model's quality".format(metric, score_value))
-    print("So let's check {0} which is relative to std(target). {0} score is {1:0.3f} which is not very good".format(
-        Metrics.normalized_rmse.name, scoring_report.metric_scores[Metrics.normalized_rmse.name].value))
-    print('Confidence interval is [{:0.3f}, {:0.3f}] which implies a ci_ratio of {:0.3f} which is quite good'.format(
-        ci_low, ci_high, ci_ratio))
+    print('{} score is {:0.3f} which is perfect'.format(metric, score_value))
+    print(
+        'Confidence interval is [{:0.3f}, {:0.3f}] which implies a ci_ratio of {:0.3f} which is quite large. Consider increase test size..'.format(
+            ci_low, ci_high, ci_ratio))
+
+    print("\nNow check out the confusion matrix - regular and normalized version")
+    print('Regular confusion matrix:\n', scoring_report.confusion_matrix.confusion_matrix[0], '\n',
+          scoring_report.confusion_matrix.confusion_matrix[1], '\n')
+    print('Normalized Confusion matrix:\n', scoring_report.confusion_matrix.normalized_confusion_matrix[0], '\n',
+          scoring_report.confusion_matrix.normalized_confusion_matrix[1])
+    print("Looking on matrices we see that the score is very good - almost perfoct")
 
     print("\nFinally, let's look on the separation quality")
-    print("Score quality is {:0.3f} which perfect.".format(quality))
+    print("Score quality is {:0.3f} which is great!".format(quality))
     print(
         "\nWe can see entire scoring report as well as explanation for the various fields using to_dict() and to_dict_meaning()")
     print('*** scoring_report was commented out ***')

@@ -14,6 +14,7 @@ class SensitivityAnalysis():
     def __init__(self):
         self.metrics = Metrics.supported_metrics()
         self.model_support_dmd = None
+        self.max_samples_to_use = 20000
 
     @classmethod
     def shuffle_x(cls, x, index, seed=0):
@@ -66,15 +67,24 @@ class SensitivityAnalysis():
 
         scores = {}
         for i, name in enumerate(dmd_test.feature_names):
-            shuffled_x = self.get_shuffled_x(dmd_test, i, method=method,
+            if dmd_test.n_samples > self.max_samples_to_use:
+                rs = numpy.random.RandomState(i)
+                subset = rs.permutation(self.max_samples_to_use)
+                dmd_test_ = dmd_test.split_by_indices(subset)
+                y_pred_ = y_pred[subset]
+            else:
+                dmd_test_ = dmd_test
+                y_pred_ = y_pred
+
+            shuffled_x = self.get_shuffled_x(dmd_test_, i, method=method,
                                              model_support_dmd=self.model_support_dmd)
             shuffled_pred = predict_function(shuffled_x)
 
             if base_score > 0:
-                scores[name] = 1 - abs(base_score - score_function(y_pred,
+                scores[name] = 1 - abs(base_score - score_function(y_pred_,
                                                                    shuffled_pred))  # higher difference - more impact so add 1- in front
             else:
-                scores[name] = score_function(y_pred, shuffled_pred)  # higher score - less impact
+                scores[name] = score_function(y_pred_, shuffled_pred)  # higher score - less impact
 
         if raw_scores:
             # description = "The raw scores of how each feature affects the model's predictions."
