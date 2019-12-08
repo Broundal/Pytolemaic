@@ -90,7 +90,7 @@ def scoring_report_deepdive(scoring_report):
     print("\nLet's check the target score first - ")
     print('{} score is {:0.3f} which is perfect'.format(metric, score_value))
     print(
-        'Confidence interval is [{:0.3f}, {:0.3f}] which implies a ci_ratio of {:0.3f} which is quite large. Consider increase test size..'.format(
+        'Confidence interval is [{:0.3f}, {:0.3f}] which implies a ci_ratio of {:0.3f} which is quite large. Consider increase test set size.'.format(
             ci_low, ci_high, ci_ratio))
 
     print("\nNow check out the confusion matrix - regular and normalized version")

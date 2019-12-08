@@ -25,7 +25,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/broundal/Pytolemaic",
     version=str(version),
-    packages=find_packages(exclude=['tests', 'scripts', 'examples']),
+    packages=find_packages(exclude=['tests', 'scripts']),
     setup_requires=setup_reqs,
     install_requires=install_reqs,
     include_package_data=True,
