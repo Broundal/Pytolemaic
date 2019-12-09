@@ -1,4 +1,5 @@
 import numpy
+from matplotlib._color_data import XKCD_COLORS
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 
@@ -54,3 +55,9 @@ class GeneralUtils():
         nan_locs = nan_locs.reshape(x.shape)
         x = x * nan_locs
         return x
+
+    @classmethod
+    def shuffled_colors(cls):
+        l = list(XKCD_COLORS.values())
+        rs = numpy.random.RandomState(0)
+        return rs.permutation(l)

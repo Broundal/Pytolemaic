@@ -1,16 +1,127 @@
 import numpy
 from matplotlib import pyplot as plt
-from sklearn.metrics.classification import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report, RocCurveDisplay, PrecisionRecallDisplay, \
+    precision_recall_curve, average_precision_score, auc, roc_curve
 from sklearn.utils.multiclass import unique_labels
 
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
+class ROCCurveReport():
+    def __init__(self, y_true, y_pred, labels=None, sample_weight=None):
+        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+        self._roc_curve = {}
+        self._auc = {}
+        for class_index, label in enumerate(self.labels):
+            fpr, tpr, thresholds = roc_curve(y_true == class_index, y_pred == class_index,
+                                             pos_label=1, sample_weight=sample_weight,
+                                             drop_intermediate=True)
+
+            self._roc_curve[label] = dict(fpr=fpr, tpr=tpr, thresholds=thresholds)
+            self._auc[label] = auc(fpr, tpr)
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
+    def roc_curve(self):
+        return self._roc_curve
+
+    @property
+    def auc(self):
+        return self._auc
+
+    def to_dict(self):
+        return dict(roc_curve=self.roc_curve,
+                    auc=self.auc,
+                    labels=self.labels)
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            roc_curve="ROC curve as dict (fpr, tpr, and thresholds), per label",
+            auc='Area under curve per label',
+            labels="The class labels"
+        )
+
+    def plot(self, ax=None):
+        if ax is None:
+            fig, ax = plt.subplot()
+
+        ax.set_title("ROC Curve")
+        possible_colors = GeneralUtils.shuffled_colors()
+        for class_index, label in enumerate(self.labels):
+            fpr, tpr = self._roc_curve[label]['fpr'], self._roc_curve[label]['tpr']
+            roc_auc = self.auc[label]
+            viz = RocCurveDisplay(fpr, tpr, roc_auc, 'Classifier')
+
+            viz.plot(ax=ax, name=label, color=possible_colors[class_index])
+
+        plt.draw()
+
+
+class PrecisionRecallCurveReport():
+    def __init__(self, y_true, y_pred, labels=None, sample_weight=None):
+        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+        self._recall_precision_curve = {}
+        self._average_precision = {}
+        for class_index, label in enumerate(self.labels):
+            precision, recall, thresholds = precision_recall_curve(y_true == class_index, y_pred == class_index,
+                                                                   pos_label=1, sample_weight=sample_weight, )
+
+            self._recall_precision_curve[label] = dict(precision=precision, recall=recall, thresholds=thresholds)
+
+            self._average_precision[label] = average_precision_score(y_true == class_index, y_pred == class_index,
+                                                                     pos_label=1, sample_weight=sample_weight, )
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
+    def recall_precision_curve(self):
+        return self._recall_precision_curve
+
+    @property
+    def average_precision(self):
+        return self._average_precision
+
+    def to_dict(self):
+        return dict(recall_precision_curve=self.recall_precision_curve,
+                    auc=self.average_precision,
+                    labels=self.labels)
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            recall_precision_curve="Recall Precision Curve as dict (recall, precision, and thresholds), per label",
+            auc='Area under curve per label',
+            labels="The class labels"
+        )
+
+    def plot(self, ax=None):
+        if ax is None:
+            fig, ax = plt.subplot()
+
+        ax.set_title("Precision Recall Curve")
+        possible_colors = GeneralUtils.shuffled_colors()
+        for class_index, label in enumerate(self.labels):
+            precision = self._recall_precision_curve[label]['precision']
+            recall = self._recall_precision_curve[label]['recall']
+            average_precision = self._average_precision[label]
+
+            viz = PrecisionRecallDisplay(precision, recall, average_precision, 'Classifier')
+            viz.plot(ax=ax, name=label, color=possible_colors[class_index])
+
+
 class SklearnClassificationReport():
     def __init__(self, y_true, y_pred, labels=None,
                  sample_weight=None, digits=3):
         self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+
+        self._sample_weight = sample_weight
 
         self._classification_report_text = classification_report(y_true=y_true, y_pred=y_pred.reshape(-1, 1),
                                                                  labels=None,
@@ -23,9 +134,25 @@ class SklearnClassificationReport():
                                                                  sample_weight=sample_weight, digits=digits,
                                                                  output_dict=True)
 
+        self._roc_curve = ROCCurveReport(y_true=y_true, y_pred=y_pred,
+                                         labels=self.labels, sample_weight=sample_weight)
+
+        self._precision_recall_curve = PrecisionRecallCurveReport(y_true=y_true, y_pred=y_pred,
+                                                                  labels=self.labels, sample_weight=sample_weight)
+        self._y_true = y_true
+        self._y_pred = y_pred
+
     @property
     def labels(self):
         return self._labels
+
+    @property
+    def roc_curve(self) -> ROCCurveReport:
+        return self._roc_curve
+
+    @property
+    def precision_recall_curve(self) -> PrecisionRecallCurveReport:
+        return self._precision_recall_curve
 
     @property
     def classification_report(self):
@@ -33,21 +160,60 @@ class SklearnClassificationReport():
 
     def to_dict(self):
         return dict(classification_report_dict=self.classification_report,
+                    roc_curve=self.roc_curve.to_dict(),
+                    precision_recall_curve=self.precision_recall_curve.to_dict(),
                     labels=self.labels)
 
     @classmethod
     def to_dict_meaning(cls):
         return dict(
             classification_report_dict="Accuracy score for various metrics",
+            roc_curve="Roc curve report",
+            precision_recall_curve="Precision-Recall curve report",
             labels="The class labels"
         )
 
-    def plot(self):
+    def _plot_classification_report(self):
         import matplotlib.pyplot as plt
 
         fig = plt.figure(figsize=(10, 3 + len(self.labels)))
         fig.text(0.5, 0.5, self._classification_report_text,
                  ha='center', va='center', size=20, fontname='courier', family='monospace')
+
+    #
+    # def _plot_precision_recall_curve(self, ax):
+    #     possible_colors = self._shuffled_colors()
+    #     for class_index, label in enumerate(self.labels):
+    #         precision, recall, _ =  precision_recall_curve(self._y_true==class_index, self._y_pred==class_index,
+    #                                                        pos_label=1, sample_weight=self._sample_weight)
+    #         average_precision = average_precision_score(self._y_true==class_index, self._y_pred==class_index,
+    #                                                     pos_label=1, sample_weight=self._sample_weight)
+    #
+    #         viz = PrecisionRecallDisplay(precision, recall, average_precision, 'Classifier')
+    #         viz.plot(ax=ax, name=label, color=possible_colors[class_index])
+    #
+    # def _plot_roc_curve(self, ax):
+    #     possible_colors = self._shuffled_colors()
+    #     for class_index, label in enumerate(self.labels):
+    #         fpr, tpr, _ = roc_curve(self._y_true == class_index, self._y_pred == class_index,
+    #                                 pos_label=1, sample_weight=self._sample_weight,
+    #                                 drop_intermediate=True)
+    #         roc_auc = auc(fpr, tpr)
+    #
+    #         viz = RocCurveDisplay(fpr, tpr, roc_auc, 'Classifier')
+    #
+    #         viz.plot(ax=ax, name=label, color=possible_colors[class_index])
+
+
+    def plot(self):
+        self._plot_classification_report()
+
+        fig, (ax1, ax2) = plt.subplots(1, 2)
+
+        self.precision_recall_curve.plot(ax1)
+        self.roc_curve.plot(ax2)
+
+        plt.tight_layout()
         plt.draw()
 
 
