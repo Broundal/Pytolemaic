@@ -123,17 +123,20 @@ class PyTrust():
 
         self.scoring = Scoring(metrics=metrics)
 
-        score_values_report, confusion_matrix, scatter = self.scoring.score_value_report(model=self.model,
-                                                                                         dmd_test=self.test,
-                                                                                         labels=self.test.labels,
-                                                                                         y_pred=self.y_pred_test,
-                                                                                         y_proba=self.y_proba_test)
+        score_values_report, confusion_matrix, scatter, classification_report = \
+            self.scoring.score_value_report(model=self.model,
+                                            dmd_test=self.test,
+                                            labels=self.test.labels,
+                                            y_pred=self.y_pred_test,
+                                            y_proba=self.y_proba_test)
+
         separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
         return ScoringFullReport(target_metric=self.metric,
                                  metric_reports=score_values_report,
                                  separation_quality=separation_quality,
                                  confusion_matrix=confusion_matrix,
-                                 scatter=scatter)
+                                 scatter=scatter,
+                                 classification_report=classification_report)
 
     @cache
     def quality_report(self):

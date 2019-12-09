@@ -1,10 +1,54 @@
 import numpy
 from matplotlib import pyplot as plt
-from sklearn.metrics.classification import confusion_matrix
+from sklearn.metrics.classification import confusion_matrix, classification_report
 from sklearn.utils.multiclass import unique_labels
 
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+
+
+class SklearnClassificationReport():
+    def __init__(self, y_true, y_pred, labels=None,
+                 sample_weight=None, digits=3):
+        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+
+        self._classification_report_text = classification_report(y_true=y_true, y_pred=y_pred.reshape(-1, 1),
+                                                                 labels=None,
+                                                                 target_names=[str(k) for k in self._labels],
+                                                                 sample_weight=sample_weight, digits=digits,
+                                                                 output_dict=False)
+        print(self._classification_report_text)
+        self._classification_report_dict = classification_report(y_true=y_true, y_pred=y_pred,
+                                                                 labels=None, target_names=self._labels,
+                                                                 sample_weight=sample_weight, digits=digits,
+                                                                 output_dict=True)
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
+    def classification_report(self):
+        return self._classification_report_dict
+
+    def to_dict(self):
+        return dict(classification_report_dict=self.classification_report,
+                    labels=self.labels)
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            classification_report_dict="Accuracy score for various metrics",
+            labels="The class labels"
+        )
+
+    def plot(self):
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=(10, 3 + len(self.labels)))
+        fig.text(0.5, 0.5, self._classification_report_text,
+                 ha='center', va='center', size=20, fontname='courier', family='monospace')
+        plt.draw()
 
 
 class ConfusionMatrixReport():
@@ -213,18 +257,22 @@ class ScoringMetricReport():
 
 class ScoringFullReport():
     def __init__(self, target_metric, metric_reports: [ScoringMetricReport], separation_quality: float,
-                 confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None):
+                 confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None,
+                 classification_report: SklearnClassificationReport = None):
         self._target_metric = target_metric
         self._separation_quality = separation_quality
         self._metric_scores_dict = {r.metric: r for r in metric_reports}
         self._confusion_matrix = confusion_matrix
         self._scatter = scatter
+        self._classification_report = classification_report
 
     def plot(self):
         if self.confusion_matrix is not None:
             self.confusion_matrix.plot()
         if self.scatter is not None:
             self.scatter.plot()
+        if self.classification_report is not None:
+            self.classification_report.plot()
 
         n = len(self.metric_scores)
         fig, axs = plt.subplots(n)
@@ -243,7 +291,8 @@ class ScoringFullReport():
             target_metric=self.target_metric,
             separation_quality=GeneralUtils.f5(self.separation_quality),
             scatter=None if self.scatter is None else self.scatter.to_dict(),
-            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict()
+            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(),
+            classification_report=None if self.classification_report is None else self.classification_report.to_dict()
         )
 
     @classmethod
@@ -253,7 +302,8 @@ class ScoringFullReport():
             metric_scores="Score information for various metrics saved in a dict structure where key is the metric name and value is of type {}".format(ScoringMetricReport.__name__),
             separation_quality="Measure whether the test and train comes from same distribution. High quality (max 1) means the test and train come from the same distribution. Low score (min 0) means the test set is problematic.",
             scatter="Scatter information (y_true vs y_pred). Available only for regressors.",
-            confusion_matrix="Confusion matrix (y_true vs y_pred). Available only for classifiers."
+            confusion_matrix="Confusion matrix (y_true vs y_pred). Available only for classifiers.",
+            classification_report="Sklearn's classification report"
         )
 
     @property
@@ -275,3 +325,17 @@ class ScoringFullReport():
     @property
     def scatter(self) -> ScatterReport:
         return self._scatter
+
+    @property
+    def classification_report(self) -> SklearnClassificationReport:
+        return self._classification_report
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure(figsize=(5, 1.5))
+    text = fig.text(0.5, 0.5, 'Hello path effects world!\nThis is the normal '
+                              'path effect.\nPretty dull, huh?',
+                    ha='center', va='center', size=20)
+    plt.show()

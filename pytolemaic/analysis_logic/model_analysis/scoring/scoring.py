@@ -3,7 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.multiclass import unique_labels
 
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringMetricReport, ConfusionMatrixReport, \
-    ScatterReport
+    ScatterReport, SklearnClassificationReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
@@ -38,7 +38,7 @@ class Scoring():
 
         is_classification = GeneralUtils.is_classification(model)
 
-        confusion_matrix, scatter = None, None
+        confusion_matrix, scatter, classification_report = None, None, None
         if is_classification:
 
             y_proba = y_proba if y_proba is not None else model.predict_proba(x_test)
@@ -47,6 +47,8 @@ class Scoring():
             confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred,
                                                      labels=labels if labels is not None else unique_labels(y_true,
                                                                                                             y_pred))
+
+            classification_report = SklearnClassificationReport(y_true=y_true, y_pred=y_pred, labels=labels)
 
             for metric in self.metrics:
                 if not metric.ptype == CLASSIFICATION:
@@ -89,7 +91,7 @@ class Scoring():
                     ci_low=ci_low,
                     ci_high=ci_high))
 
-        return score_report, confusion_matrix, scatter
+        return score_report, confusion_matrix, scatter, classification_report
 
     def _prepare_dataset_for_score_quality(self, dmd_train: DMD,
                                            dmd_test: DMD):
