@@ -21,6 +21,8 @@ class KDDCup99():
         self.model = GeneralUtils.simple_imputation_pipeline(
             RandomForestClassifier(random_state=0, n_estimators=100, n_jobs=3))
 
+        self.other_label_size = 1000
+
     @property
     def labels(self):
         return ['normal', 'abnormal']
@@ -119,8 +121,22 @@ class KDDCup99():
         x = self._d['data']
         y = self._d['target']
         y = numpy.array([k.decode('utf-8') for k in y])
-        y[~(y == 'normal.')] = 'abnormal'
-        y[y == 'normal.'] = 'normal'
+
+        threshold = self.other_label_size
+        other_label = 'other'
+        labels, counts = numpy.unique(y, return_counts=True)
+
+        for label, count in zip(labels, counts):
+            if count < threshold:
+                y[y == label] = other_label
+
+            if label.endswith('.'):
+                y[y == label] = label[:-1]
+
+        # 2 classes:
+        # y[~(y == 'normal.')] = 'abnormal'
+        # y[y == 'normal.'] = 'normal'
+
         for i in [1, 2, 3]:
             x[:, i] = [k.decode('utf-8') for k in x[:, i]]
 

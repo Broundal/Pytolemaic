@@ -6,7 +6,6 @@ Small:
 ** Metrics - micro / binary / additional
 ** split - stratified
 ** Uncertainty methods - prediction intervals regression - xgboost quantiles
-** sklearn classification_report
 
 
 Big:
