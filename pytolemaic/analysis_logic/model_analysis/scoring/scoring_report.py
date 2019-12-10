@@ -128,7 +128,7 @@ class SklearnClassificationReport():
                                                                  target_names=[str(k) for k in self._labels],
                                                                  sample_weight=sample_weight, digits=digits,
                                                                  output_dict=False)
-        print(self._classification_report_text)
+
         self._classification_report_dict = classification_report(y_true=y_true, y_pred=y_pred,
                                                                  labels=None, target_names=self._labels,
                                                                  sample_weight=sample_weight, digits=digits,
@@ -179,30 +179,6 @@ class SklearnClassificationReport():
         fig = plt.figure(figsize=(10, 3 + len(self.labels)))
         fig.text(0.5, 0.5, self._classification_report_text,
                  ha='center', va='center', size=20, fontname='courier', family='monospace')
-
-    #
-    # def _plot_precision_recall_curve(self, ax):
-    #     possible_colors = self._shuffled_colors()
-    #     for class_index, label in enumerate(self.labels):
-    #         precision, recall, _ =  precision_recall_curve(self._y_true==class_index, self._y_pred==class_index,
-    #                                                        pos_label=1, sample_weight=self._sample_weight)
-    #         average_precision = average_precision_score(self._y_true==class_index, self._y_pred==class_index,
-    #                                                     pos_label=1, sample_weight=self._sample_weight)
-    #
-    #         viz = PrecisionRecallDisplay(precision, recall, average_precision, 'Classifier')
-    #         viz.plot(ax=ax, name=label, color=possible_colors[class_index])
-    #
-    # def _plot_roc_curve(self, ax):
-    #     possible_colors = self._shuffled_colors()
-    #     for class_index, label in enumerate(self.labels):
-    #         fpr, tpr, _ = roc_curve(self._y_true == class_index, self._y_pred == class_index,
-    #                                 pos_label=1, sample_weight=self._sample_weight,
-    #                                 drop_intermediate=True)
-    #         roc_auc = auc(fpr, tpr)
-    #
-    #         viz = RocCurveDisplay(fpr, tpr, roc_auc, 'Classifier')
-    #
-    #         viz.plot(ax=ax, name=label, color=possible_colors[class_index])
 
 
     def plot(self):
@@ -272,7 +248,7 @@ class ConfusionMatrixReport():
                  rotation_mode="anchor")
 
         # Loop over data dimensions and create text annotations.
-        fmt = '.2f' if numpy.min(cm[cm > 0]) < 1 else 'd'
+        fmt = '.2g' if numpy.min(cm[cm > 0]) < 1 else 'd'
         if fmt == 'd':
             cm = cm.astype(int)
         thresh = cm.max() / 2.

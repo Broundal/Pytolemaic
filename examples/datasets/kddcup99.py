@@ -142,7 +142,7 @@ class KDDCup99():
 
         train_inds, test_inds = sklearn.model_selection.train_test_split(numpy.arange(len(y)),
                                                                          test_size=0.3, random_state=0,
-                                                                         stratify=y == 'abnormal')
+                                                                         stratify=y)
 
         df = pandas.DataFrame(x, columns=self.column_names())
         df['target'] = y
