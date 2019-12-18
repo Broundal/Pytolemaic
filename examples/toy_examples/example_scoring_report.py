@@ -27,7 +27,7 @@ def run():
     metric = Metrics.recall.name
 
     ## set splitting strategy
-    splitter = 'shuffled'  # todo: support stratified
+    splitter = 'stratified'
 
     ## sample meta data (e.g. sample weight) - empty in this example
     sample_meta_train = None

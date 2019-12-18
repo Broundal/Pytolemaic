@@ -9,7 +9,7 @@ from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQual
     ModelQualityReport
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier, UncertaintyModelRegressor
-from pytolemaic.utils.dmd import DMD, ShuffleSplitter
+from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
 
@@ -40,7 +40,9 @@ class PyTrust():
         self.model = model
 
         if splitter == 'shuffled':
-            splitter = ShuffleSplitter  # todo support stratified
+            splitter = ShuffleSplitter
+        elif splitter == 'stratified':
+            splitter = StratifiedSplitter
         else:
             raise NotImplementedError
 

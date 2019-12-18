@@ -338,22 +338,26 @@ class ScoringMetricReport():
         if ax is None:
             fig, ax = plt.subplots(1)
 
+
         ci_low = GeneralUtils.f5(self.ci_low)
         ci_high = GeneralUtils.f5(self.ci_high)
         value = GeneralUtils.f5(self.value)
+        n_digits = -int(numpy.log10(ci_high - ci_low)) + 1  # 0.0011 --> -(-2) +1 = 3
 
         ax.plot([ci_low, ci_high], [1, 1], '-b',
                 ci_low, 1, '|b',
                 ci_high, 1, '|b',
                 value, 1, 'or', )
 
-        delta = (ci_high - ci_low) * 1e-1 + 1e-4
-        l_lim = max(0, ci_low - delta)
-        r_lim = min(1, ci_high + delta)
+        delta = (ci_high - ci_low) * 1e-1 + 10 ** -n_digits / 2
+        l_lim = numpy.round(max(0, ci_low - delta), n_digits)
+        r_lim = numpy.round(min(1, ci_high + delta), n_digits)
 
         ax.set_xlim(l_lim, r_lim)
-        x = numpy.linspace(l_lim, r_lim, num=5)
-        xlabels = ["%.5g" % k for k in x]
+        x = numpy.linspace(l_lim, r_lim, num=1 + int(numpy.round(r_lim - l_lim, n_digits) / 10 ** -n_digits))
+        print(x, n_digits)
+
+        xlabels = ["%.5g" % numpy.round(k, n_digits) for k in x]
         ax.set(xticks=x.tolist(),
                xticklabels=xlabels,
                yticklabels=[''],
@@ -365,7 +369,7 @@ class ScoringMetricReport():
         for x, label in [(ci_low, 'ci_low (25%)'),
                          (value, '{} value'.format(self.metric)),
                          (ci_high, 'ci_high  (75%)')]:
-            y = 1.01
+            y = 1.01 + 0.01 * (x == value)
             ax.text(x, y, label,
                     ha="center", va="center", )
 

@@ -1,16 +1,29 @@
 import copy
 
+import numpy
 import numpy as np
 import pandas
+from sklearn.model_selection import train_test_split
 
 
 class ShuffleSplitter():
     @classmethod
     def split(cls, dmdy, ratio=0.1, random_state=0):
-        n_right = int(np.round(dmdy.n_samples * ratio, 0))
-        rs = np.random.RandomState(random_state)
-        shuffled = rs.permutation(dmdy.n_samples)
-        return shuffled[:-n_right], shuffled[-n_right:]
+        train, test = train_test_split(numpy.arange(dmdy.n_samples),
+                                       test_size=ratio, random_state=random_state,
+                                       shuffle=True, stratify=None)
+
+        return train, test
+
+
+class StratifiedSplitter():
+    @classmethod
+    def split(cls, dmdy, ratio=0.1, random_state=0):
+        train, test = train_test_split(numpy.arange(dmdy.n_samples),
+                                       test_size=ratio, random_state=random_state,
+                                       shuffle=True, stratify=dmdy.target)
+
+        return train, test
 
 
 class DMD():
