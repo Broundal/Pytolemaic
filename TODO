@@ -4,7 +4,6 @@ Backlog:
 
 Small:
 ** Metrics - micro / binary / additional
-** split - stratified
 ** Uncertainty methods - prediction intervals regression - xgboost quantiles
 
 
@@ -16,7 +15,8 @@ Big:
                     - Check if more data is required, Find areas with not enough samples
                     - Find anomalies / outliers in data
                     - Find anomalies in samples
+** Uncertainty methods - out of distribution of sample
 
 
-Advanced ML - group id, sample weight
-problem types - vision / time series / anomaly detection
+** Advanced ML - group id, sample weight
+** problem types - vision / time series / anomaly detection

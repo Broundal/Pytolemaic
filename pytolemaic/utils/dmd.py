@@ -93,15 +93,17 @@ class DMD():
                        self._samples_meta.iloc[indices, :]),
                    splitter=self.splitter)
 
-    def split(self, ratio):
+    def split(self, ratio, return_indices=False):
 
         dmd_y = DMD(x=self._y.values if self._y is not None else np.arange(
             self.n_samples), samples_meta=self._samples_meta)
         left, right = self.splitter.split(dmd_y, ratio=ratio)
         left = list(sorted(left))
         right = list(sorted(right))
-
-        return self.split_by_indices(left), self.split_by_indices(right),
+        if return_indices:
+            return left, right
+        else:
+            return self.split_by_indices(left), self.split_by_indices(right),
 
     def append(self, other, axis=0):
         if axis == 0:

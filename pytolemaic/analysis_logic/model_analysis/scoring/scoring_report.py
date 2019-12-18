@@ -277,9 +277,11 @@ class ConfusionMatrixReport():
 
 
 class ScatterReport():
-    def __init__(self, y_true, y_pred):
+    def __init__(self, y_true, y_pred, error_bars=None):
         self._y_true = y_true
         self._y_pred = y_pred
+        self._error_bars = error_bars
+
 
     @property
     def y_true(self):
@@ -299,9 +301,17 @@ class ScatterReport():
                     y_pred="Predicted values"
                     )
 
-    def plot(self):
+    def plot(self, max_points=500):
+        if max_points is None:
+            max_points = len(self.y_true)
+
+        rs = numpy.random.RandomState(0)
+        inds = rs.permutation(len(self.y_true))[:max_points]
+
+
         plt.figure()
-        plt.plot(self.y_true, self.y_pred, '.b')
+        plt.errorbar(self.y_true[inds], self.y_pred[inds], xerr=None, yerr=self._error_bars[inds], fmt='.b', ecolor='k')
+
         plt.xlabel('Y true')
         plt.ylabel('Y predicted')
         plt.title('Scatter plot')
@@ -355,7 +365,6 @@ class ScoringMetricReport():
 
         ax.set_xlim(l_lim, r_lim)
         x = numpy.linspace(l_lim, r_lim, num=1 + int(numpy.round(r_lim - l_lim, n_digits) / 10 ** -n_digits))
-        print(x, n_digits)
 
         xlabels = ["%.5g" % numpy.round(k, n_digits) for k in x]
         ax.set(xticks=x.tolist(),

@@ -128,14 +128,14 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                                              'confidence']
                                                          )
 
-    def fit_uncertainty_model(self, dmd_test, estimator=None, n_jobs=-1,
+    def fit_uncertainty_model(self, dmd_test, n_jobs=-1,
                               **kwargs):
 
         if self.uncertainty_method in ['probability']:
             pass  # no fit logic required
         elif self.uncertainty_method in ['confidence']:
             estimator = RandomForestClassifier(
-                random_state=0, n_jobs=n_jobs, n_estimators=5)
+                random_state=0, n_jobs=n_jobs, n_estimators=100)
 
             self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
                 estimator)
