@@ -5,6 +5,8 @@ import numpy as np
 import pandas
 from sklearn.model_selection import train_test_split
 
+from pytolemaic.utils.constants import FeatureTypes
+
 
 class ShuffleSplitter():
     @classmethod
@@ -30,11 +32,12 @@ class DMD():
     FEATURE_NAMES = '__FEATURE_NAMES__'
     FEATURE_TYPES = '__FEATURE_TYPES__'
     INDEX = '__INDEX__'
+    CATEGOICAL_ENCODING = 'CATEGOICAL_ENCODING'
 
     # SAMPLE_WEIGHTS = '__SAMPLE_WEIGHTS__'
 
     def __init__(self, x, y=None, columns_meta=None, samples_meta=None,
-                 splitter=ShuffleSplitter, labels=None):
+                 splitter=ShuffleSplitter, labels=None, categorical_encoding=None):
 
         self._x = pandas.DataFrame(x)
         if y is not None:
@@ -52,6 +55,36 @@ class DMD():
                 raise ValueError("Labels should be given to all classes")
 
         self._labels = labels
+
+        self._categorical_encoding_by_name = categorical_encoding or {}
+        self._categorical_encoding_by_ind = self._validate_categorical_encoding()
+
+    def _validate_categorical_encoding(self):
+        categorical_encoding = self.categorical_encoding_by_feature_name
+
+        if len(categorical_encoding) == 0:
+            return {}
+
+        categorical_features = self.categorical_features
+        if len(categorical_features) == 0:
+            raise ValueError(
+                "When setting categorical_encoding you must also specify which feature is categorical through columns_meta")
+
+        feature_names = self.feature_names
+        values = self.values
+        for icol in categorical_features:
+            if feature_names[icol] not in categorical_encoding:
+                raise ValueError("No categorical names are set for feature #{}:{}".format(icol, feature_names[icol]))
+
+            vec = values[:, icol]
+            vec = vec[numpy.isfinite(vec)]
+            delta = set(vec) - set(categorical_encoding[feature_names[icol]].keys())
+            if delta:
+                raise ValueError("No categorical name is set for categories {} (feature #{}:{})".format(delta, icol,
+                                                                                                        feature_names[
+                                                                                                            icol]))
+
+        return {icol: self._categorical_encoding_by_name[feature_names[icol]] for icol in categorical_features}
 
 
     def __deepcopy__(self, memodict={}):
@@ -177,3 +210,19 @@ class DMD():
     @property
     def labels(self):
         return self._labels
+
+    @property
+    def categorical_features(self):
+        if self.FEATURE_TYPES not in self._columns_meta.columns:
+            return []
+        else:
+            return numpy.arange(self.n_features)[
+                self._columns_meta[self.FEATURE_TYPES].values.ravel() == FeatureTypes.categorical]
+
+    @property
+    def categorical_encoding_by_feature_name(self):
+        return self._categorical_encoding_by_name
+
+    @property
+    def categorical_encoding_by_icols(self):
+        return self._categorical_encoding_by_ind
