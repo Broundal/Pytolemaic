@@ -16,17 +16,17 @@ class ElasticNetWrapper(ElasticNet):
 
 
 class LimeExplainer():
-    def __init__(self, kernel_width=3, n_features_to_show=None, tol=1e-2, max_samples=256000):
+    def __init__(self, kernel_width=3, n_features_to_plot=None, tol=1e-2, max_samples=256000):
         """
 
         :param kernel_width: Lime parameter
-        :param n_features_to_show: # of features to show/plot
+        :param n_features_to_plot: # of features to show/plot
         :param tol: desired convergence tol on explanation
         :param max_samples: limit on # of samples used to create explanation
         """
 
         self.kernel_width = kernel_width
-        self.n_features_to_show = n_features_to_show
+        self.n_features_to_plot = n_features_to_plot
         self.predict_function = None
         self.tol = tol
         self.max_samples = max_samples
@@ -55,15 +55,18 @@ class LimeExplainer():
         self.model = model
         self.predict_function = self.model.predict_proba if is_classification else self.model.predict
         self.labels = numpy.arange(len(test.labels)) if is_classification else None
-        self.n_features_to_show = self.n_features_to_show or dmd_train.n_features
+
         self.n_features = dmd_train.n_features
+        self.n_features_to_plot = self.n_features_to_plot or dmd_train.n_features
+        self.n_features_to_plot = min(self.n_features_to_plot, self.n_features)
 
     def explain(self, sample):
         try:
             exp = self._lime_explainer(sample)
 
-            return sorted(exp.as_list(), key=lambda a: a[1], reverse=True)[:self.n_features_to_show]
+            return dict(exp.as_list())
         except:
+            logging.exception("Failed to produce lime explanation for sample {}".format(sample))
             return None
 
     def plot(self, sample):
@@ -97,7 +100,7 @@ class LimeExplainer():
             dict_delta = lambda exp_dict1, exp_dict2, features_to_show: {k: abs(exp_dict1[k] - exp_dict2[k])
                                                                          for k in exp_dict1 if k in features_to_show}
             best_features = lambda exp_dict: sorted(exp_dict.keys(), key=lambda key: abs(exp_dict[key]), reverse=True)[
-                                             :self.n_features_to_show]
+                                             :self.n_features_to_plot]
 
             model_regressor = ElasticNetWrapper(random_state=0, l1_ratio=0.9, alpha=1e-3, warm_start=True, copy_X=False,
                                                 selection='random', tol=1e-4)
