@@ -64,7 +64,7 @@ class LimeExplainer():
 
         self.model = model
         self.predict_function = self.model.predict_proba if is_classification else self.model.predict
-        self.labels = numpy.arange(len(test.labels)) if is_classification else None
+        self.labels = numpy.arange(len(dmd_train.labels)) if is_classification else None
 
         self.n_features = dmd_train.n_features
         self.n_features_to_plot = self.n_features_to_plot or dmd_train.n_features
