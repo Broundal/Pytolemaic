@@ -15,8 +15,15 @@ class ElasticNetWrapper(ElasticNet):
         return super(ElasticNetWrapper, self).fit(X, y, check_input)
 
 
-class LimeReport():
+class LimeExplainer():
     def __init__(self, kernel_width=3, n_features_to_show=None, tol=1e-2, max_samples=256000):
+        """
+
+        :param kernel_width: Lime parameter
+        :param n_features_to_show: # of features to show/plot
+        :param tol: desired convergence tol on explanation
+        :param max_samples: limit on # of samples used to create explanation
+        """
 
         self.kernel_width = kernel_width
         self.n_features_to_show = n_features_to_show
@@ -49,6 +56,7 @@ class LimeReport():
         self.predict_function = self.model.predict_proba if is_classification else self.model.predict
         self.labels = numpy.arange(len(test.labels)) if is_classification else None
         self.n_features_to_show = self.n_features_to_show or dmd_train.n_features
+        self.n_features = dmd_train.n_features
 
     def explain(self, sample):
         try:
@@ -97,7 +105,7 @@ class LimeReport():
             num_samples = 16000
             exp = lm.explainer.explain_instance(sample, self.predict_function,
                                                 labels=self.labels,
-                                                num_features=self.n_features_to_show,
+                                                num_features=self.n_features,
                                                 num_samples=num_samples,
                                                 model_regressor=model_regressor)
 
@@ -108,7 +116,7 @@ class LimeReport():
                 num_samples *= 2
                 exp = lm.explainer.explain_instance(sample, self.predict_function,
                                                     labels=self.labels,
-                                                    num_features=self.n_features_to_show,
+                                                    num_features=self.n_features,
                                                     num_samples=num_samples,
                                                     model_regressor=model_regressor)
 
@@ -147,23 +155,15 @@ if __name__ == '__main__':
 
     model = dataset.get_model()
 
-    lm = LimeReport()
+    lm = LimeExplainer()
     lm.fit(train, model)
 
     # asking for explanation for LIME model
 
     for i in range(3):
-        # # yp = model.predict_proba(dmd_train.values[i, :]) if is_classification else model.predict(dmd_train.values[i, :])
-        # exp = lm.explainer.explain_instance(test.values[i, :], model.predict_proba, labels=numpy.arange(len(test.labels)), num_features=train.n_features)
-        # # exp.as_pyplot_figure(label=int(model.predict(test.values[i, :].reshape(1,-1))))
-        # exp.as_pyplot_figure()
-        # print(test._x.iloc[i, :])
-        # print(model.predict(test.values[i, :].reshape(1,-1)))
+        print(lm.explain(test.values[i, :]))
         lm.plot(test.values[i, :])
-        # explain = lm.explain(test.values[0,:])
-        # e0 = explain[0]
-        # e1 = explain[1]
-        # print(e0)
+
         a = 0
 
     plt.show()
