@@ -16,7 +16,7 @@ class ElasticNetWrapper(ElasticNet):
 
 
 class LimeExplainer():
-    def __init__(self, kernel_width=3, n_features_to_plot=None, tol=1e-2, max_samples=256000):
+    def __init__(self, kernel_width=3, n_features_to_plot=None, tol=1e-2, max_samples=256000, fillna=-999):
         """
 
         :param kernel_width: Lime parameter
@@ -30,12 +30,21 @@ class LimeExplainer():
         self.predict_function = None
         self.tol = tol
         self.max_samples = max_samples
+        self.fillna = fillna
 
     def fit(self, dmd_train: DMD, model):
         is_classification = GeneralUtils.is_classification(model)
 
+        x = dmd_train.values
+        nan_mask = ~numpy.isfinite(x)
+        if numpy.any(nan_mask):
+            logging.warning(
+                "Lime cannot handle missing values. Fillna={} was used to coerce the issue.".format(self.fillna))
+            x = numpy.copy(x)
+            x[nan_mask] = self.fillna
+
         self.explainer = LimeTabularExplainer(
-            training_data=dmd_train.values,
+            training_data=x,
             mode="classification" if is_classification else "regression",
             training_labels=None,  # ???
             feature_names=dmd_train.feature_names,
@@ -47,7 +56,8 @@ class LimeExplainer():
             class_names=dmd_train.labels,
             feature_selection='auto',  # ??? options are 'forward_selection', 'lasso_path', 'none' or 'auto'.
             discretize_continuous=True,
-            discretizer='decile',  # ??? options are 'quartile', 'decile', 'entropy'
+            discretizer='decile',
+            # -- Lime discretizers do not support nans (options are 'quartile', 'decile', 'entropy')
             sample_around_instance=True,  # default is False
             random_state=0,
             training_data_stats=None)
@@ -75,7 +85,7 @@ class LimeExplainer():
 
             label = self.model.predict(sample.reshape(1, -1))
 
-            if GeneralUtils.is_classification(model):
+            if GeneralUtils.is_classification(self.model):
                 exp.as_pyplot_figure(label=int(label))
             else:
                 exp.as_pyplot_figure(label=None)
@@ -91,7 +101,8 @@ class LimeExplainer():
         nan_mask = ~numpy.isfinite(sample)
         if any(nan_mask):
             logging.warning("Lime cannot handle missing values. Fillna(0) was used to coerce the issue.")
-            sample[nan_mask] = 0
+            sample = numpy.copy(sample)
+            sample[nan_mask] = self.fillna
 
         try:
 
@@ -106,22 +117,22 @@ class LimeExplainer():
                                                 selection='random', tol=1e-4)
 
             num_samples = 16000
-            exp = lm.explainer.explain_instance(sample, self.predict_function,
-                                                labels=self.labels,
-                                                num_features=self.n_features,
-                                                num_samples=num_samples,
-                                                model_regressor=model_regressor)
+            exp = self.explainer.explain_instance(sample, self.predict_function,
+                                                  labels=self.labels,
+                                                  num_features=self.n_features,
+                                                  num_samples=num_samples,
+                                                  model_regressor=model_regressor)
 
             lower_exp = as_dict(exp)
 
             converged = False
             while not converged and num_samples < self.max_samples:
                 num_samples *= 2
-                exp = lm.explainer.explain_instance(sample, self.predict_function,
-                                                    labels=self.labels,
-                                                    num_features=self.n_features,
-                                                    num_samples=num_samples,
-                                                    model_regressor=model_regressor)
+                exp = self.explainer.explain_instance(sample, self.predict_function,
+                                                      labels=self.labels,
+                                                      num_features=self.n_features,
+                                                      num_samples=num_samples,
+                                                      model_regressor=model_regressor)
 
                 higher_exp = as_dict(exp)
 
