@@ -41,14 +41,18 @@ class UCIAdult():
         nan_mask = df.replace('?', numpy.nan).isnull()
         if fit:
             self.xencoders = []
+            self.categorical_encoding = {}
             for i, col in enumerate(self.column_names()):
                 if feature_types[i] == FeatureTypes.categorical:
-                    self.xencoders.append(LabelEncoder().fit(df[col]))
+                    le = LabelEncoder().fit(df[col])
+                    self.xencoders.append(le)
+                    self.categorical_encoding[col] = {i: cls_ for i, cls_ in enumerate(le.classes_)}
                 else:
                     self.xencoders.append(None)
 
             self.yencoder = LabelEncoder().fit(df['target'])
             self._labels = self.yencoder.classes_
+            self.categorical_encoding['target'] = {i: cls_ for i, cls_ in enumerate(self.labels)}
 
         for i, col in enumerate(self.column_names()):
             if feature_types[i] == FeatureTypes.categorical:
@@ -95,12 +99,14 @@ class UCIAdult():
         train = DMD(x=self.training_data[0], y=self.training_data[1],
                     samples_meta=None, columns_meta={DMD.FEATURE_NAMES: self.column_names(),
                                                      DMD.FEATURE_TYPES: self.feature_types()},
-                    labels=self.labels)
+                    labels=self.labels,
+                    categorical_encoding=self.categorical_encoding)
 
         test = DMD(x=self.testing_data[0], y=self.testing_data[1],
                    samples_meta=None, columns_meta={DMD.FEATURE_NAMES: self.column_names(),
                                                     DMD.FEATURE_TYPES: self.feature_types()},
-                   labels=self.labels)
+                   labels=self.labels,
+                   categorical_encoding=self.categorical_encoding)
         return train, test
 
 
