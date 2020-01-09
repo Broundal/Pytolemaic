@@ -46,6 +46,16 @@ def run():
     print("Overall quality of test data: {:0.3f}".format(quality_report.test_quality_report.test_set_quality))
     print("Overall quality of model: {:0.3f}".format(quality_report.model_quality_report.model_quality))
     print('*** quality_report was commented out ***')
+
+    print("\nLet's create a Lime explainer")
+    lime_explainer = pytrust.create_lime_explainer()
+
+    sample = test.values[0, :]
+    print("And plot explanation for the first sample in test data: {}".format(sample))
+    lime_explainer.plot(sample)
+    explanation = lime_explainer.explain(sample)
+    print("Lime explanation is: {}".format(explanation))
+
     # pprint(quality_report.to_dict(), width=120)
     # pprint(quality_report.to_dict_meaning(), width=120)
 

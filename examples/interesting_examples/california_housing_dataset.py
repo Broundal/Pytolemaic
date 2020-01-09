@@ -51,6 +51,15 @@ def run():
     # pprint(quality_report.to_dict(), width=120)
     # pprint(quality_report.to_dict_meaning(), width=120)
 
+    print("\nLet's create a Lime explainer")
+    lime_explainer = pytrust.create_lime_explainer()
+
+    sample = test.values[0, :]
+    print("And plot explanation for the first sample in test data: {}".format(sample))
+    lime_explainer.plot(sample)
+    explanation = lime_explainer.explain(sample)
+    print("Lime explanation is: {}".format(explanation))
+
 
 def sensitivity_deepdive(sensitivity_report):
     print("\nlet's check which 3 features are most important. Does it make sense?")

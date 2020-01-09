@@ -5,6 +5,7 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
+from pytolemaic.analysis_logic.prediction_analysis.lime_report import LimeExplainer
 from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
     ModelQualityReport
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
@@ -16,6 +17,9 @@ from pytolemaic.utils.metrics import Metrics, Metric
 
 def cache(func):
     def cache_wrapper(self, *args, **kwargs):
+        if not hasattr(self, '_cache'):
+            self._cache = {}
+
         if func.__name__ not in self._cache:
             self._cache[func.__name__] = func(self, *args, **kwargs)
 
@@ -172,3 +176,9 @@ class PyTrust():
             self._uncertainty_models[method] = uncertainty_model
 
         return self._uncertainty_models[method]
+
+    @cache
+    def create_lime_explainer(self):
+        lime_explainer = LimeExplainer(n_features_to_plot=20)
+        lime_explainer.fit(self.train, model=self.model)
+        return lime_explainer
