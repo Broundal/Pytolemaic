@@ -70,18 +70,18 @@ class LimeExplainer():
         self.n_features_to_plot = self.n_features_to_plot or dmd_train.n_features
         self.n_features_to_plot = min(self.n_features_to_plot, self.n_features)
 
-    def explain(self, sample):
+    def explain(self, sample: numpy.ndarray) -> [dict, None]:
         try:
-            exp = self._lime_explainer(sample)
+            exp = self._lime_explaination(sample)
 
             return dict(exp.as_list())
         except:
             logging.exception("Failed to produce lime explanation for sample {}".format(sample))
             return None
 
-    def plot(self, sample):
+    def plot(self, sample: numpy.ndarray):
         try:
-            exp = self._lime_explainer(sample)
+            exp = self._lime_explaination(sample)
 
             label = self.model.predict(sample.reshape(1, -1))
 
@@ -96,7 +96,7 @@ class LimeExplainer():
         except ValueError as e:
             logging.exception("Failed to plot Lime for instance\n{}".format(sample))
 
-    def _lime_explainer(self, sample):
+    def _lime_explaination(self, sample):
 
         nan_mask = ~numpy.isfinite(sample)
         if any(nan_mask):

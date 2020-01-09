@@ -21,6 +21,7 @@ The package contains the following functionalities:
 
 #### On prediction
 - **Prediction uncertainty**: Provides an uncertainty measure for given model's prediction.
+- **Lime explanation**: Provides Lime explanation for sample of interest.
 
 
 
@@ -127,4 +128,14 @@ The module can be used to yield uncertainty measure for predictions.
     uncertainty_model = pytrust.create_uncertainty_model(method='confidence')
     predictions = uncertainty_model.predict(x_pred) # same as model.predict(x_pred)
     uncertainty = uncertainty_model.uncertainty(x_pred)
+```
+
+
+#### Lime explanation
+
+The module can be used to produce lime explanations for sample of interest. 
+```
+    explainer = pytrust.create_lime_explainer()
+    explainer.explain(sample) # returns a dictionary
+    explainer.plot(sample) # produce a graphical explanation    
 ```
