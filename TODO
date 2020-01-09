@@ -10,11 +10,11 @@ Small:
 Big:
 ** Readable report (e.g. pdf)
 ** UI - widgets for notebooks
-** Explainability   - shap / lime / DT / KNN / linear
+** Explainability   - shap / DT / KNN / linear
 ** Dataset quality  - values distribution in feature, recognize complex feature types
                     - Check if more data is required, Find areas with not enough samples
                     - Find anomalies / outliers in data
-                    - Find anomalies in samples
+                    - Find anomalies / outliers in target
 ** Uncertainty methods - out of distribution of sample
 
 
