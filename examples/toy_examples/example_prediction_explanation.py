@@ -1,9 +1,8 @@
 from matplotlib import pyplot as plt
 
-from examples.datasets.linear import LinearRegressionDataset
+from examples.datasets.linear import LinearRegressionDataset, LinearClassificationDataset
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.metrics import Metrics
 
 
 def run():
@@ -11,41 +10,28 @@ def run():
     # PyTrust supports both numpy and pandas.DataFrame.
 
     # Obtain simple regression dataset. Use LinearClassificationDataset for classification
-    dataset = LinearRegressionDataset()
-    columns_names = dataset.column_names()
+    for dataset in [LinearRegressionDataset(), LinearClassificationDataset()]:
+        columns_names = dataset.column_names()
 
-    # for quality report, we need for train/test sets and model
-    xtrain, ytrain = dataset.training_data
-    xtest, ytest = dataset.get_samples()
-    regressor = dataset.get_model()
+        # for quality report, we need for train/test sets and model
+        xtrain, ytrain = dataset.training_data
+        xtest, ytest = dataset.get_samples()
+        estimator = dataset.get_model()
 
-    ## set metric
-    metric = Metrics.mae.name
+        # set the feature names names
+        columns_meta = {DMD.FEATURE_NAMES: columns_names}
 
-    ## set splitting strategy
-    splitter = 'shuffled'
+        pytrust = PyTrust(
+            model=estimator,
+            xtrain=xtrain, ytrain=ytrain,
+            xtest=xtest, ytest=ytest,
+            columns_meta=columns_meta)
 
-    ## sample meta data (e.g. sample weight) - empty in this example
-    sample_meta_train = None
-    sample_meta_test = None
+        sample = xtest[0, :]
 
-    # set the feature names names
-    columns_meta = {DMD.FEATURE_NAMES: columns_names}
-
-    pytrust = PyTrust(
-        model=regressor,
-        xtrain=xtrain, ytrain=ytrain,
-        xtest=xtest, ytest=ytest,
-        sample_meta_train=sample_meta_train, sample_meta_test=sample_meta_test,
-        columns_meta=columns_meta,
-        metric=metric,
-        splitter=splitter)
-
-    sample = xtest[0, :]
-
-    # Create explanation for target sample
-    explanation = lime_explanation(pytrust, sample)
-    print("Lime explanation is: {}".format(explanation))
+        # Create explanation for target sample
+        explanation = lime_explanation(pytrust, sample)
+        print("Lime explanation is: {}".format(explanation))
 
 
 def lime_explanation(pytrust, sample):

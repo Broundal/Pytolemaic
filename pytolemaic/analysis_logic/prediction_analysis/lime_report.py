@@ -158,26 +158,3 @@ class LimeExplainer():
             raise
 
 
-if __name__ == '__main__':
-    from examples.datasets.california_housing import CaliforniaHousing
-
-    # dataset = UCIAdult()
-    dataset = CaliforniaHousing()
-
-    train, test = dataset.as_dmd()
-    print(train.categorical_encoding_by_feature_name)
-
-    model = dataset.get_model()
-
-    lm = LimeExplainer()
-    lm.fit(train, model)
-
-    # asking for explanation for LIME model
-
-    for i in range(3):
-        print(lm.explain(test.values[i, :]))
-        lm.plot(test.values[i, :])
-
-        a = 0
-
-    plt.show()
