@@ -31,8 +31,8 @@ def run():
     sample_meta_train = None
     sample_meta_test = None
 
-    # set the feature names names
-    columns_meta = {DMD.FEATURE_NAMES: [name for name in columns_names]}
+    # set the feature names
+    columns_meta = {DMD.FEATURE_NAMES: columns_names}
 
     pytrust = PyTrust(
         model=regressor,
