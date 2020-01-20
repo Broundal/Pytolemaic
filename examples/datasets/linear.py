@@ -5,7 +5,7 @@ from pytolemaic.utils.general import GeneralUtils
 
 
 class LinearBase():
-    def __init__(self, model, n_samples=500, n_features=3):
+    def __init__(self, model, n_samples=500, n_features=5):
         self.n_samples = n_samples
         self.n_features = n_features
 
@@ -23,7 +23,7 @@ class LinearBase():
     def column_names(self):
         # 1st has no importance, while 3rd has double importance
 
-        return ['zero importance', 'triple importance'] + ['regular importance #%d' % (k + 2) for k in
+        return ['zero importance', 'triple importance'] + ['regular importance #%d' % (k + 1) for k in
                                                                     range(self.n_features - 2)]
 
     @property
