@@ -292,8 +292,8 @@ class ScatterReport():
         return self._y_pred
 
     def to_dict(self):
-        return dict(y_true=GeneralUtils.f5(self.y_true),
-                    y_pred=GeneralUtils.f5(self.y_pred))
+        return dict(y_true=list(GeneralUtils.f5(self.y_true)),
+                    y_pred=list(GeneralUtils.f5(self.y_pred)))
 
     @classmethod
     def to_dict_meaning(cls):
