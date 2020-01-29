@@ -309,7 +309,7 @@ class ScatterReport():
         inds = rs.permutation(len(self.y_true))[:max_points]
 
 
-        plt.figure()
+        plt.figure(figsize=(10,5))
         plt.errorbar(self.y_true[inds], self.y_pred[inds], xerr=None, yerr=self._error_bars[inds], fmt='.b', ecolor='k')
 
         plt.xlabel('Y true')
