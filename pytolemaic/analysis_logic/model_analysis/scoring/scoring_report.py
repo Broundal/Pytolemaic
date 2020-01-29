@@ -278,8 +278,8 @@ class ConfusionMatrixReport():
 
 class ScatterReport():
     def __init__(self, y_true, y_pred, error_bars=None):
-        self._y_true = y_true
-        self._y_pred = y_pred
+        self._y_true = y_true.reshape(-1, 1)
+        self._y_pred = y_pred.reshape(-1, 1)
         self._error_bars = error_bars
 
 
@@ -292,8 +292,8 @@ class ScatterReport():
         return self._y_pred
 
     def to_dict(self):
-        return dict(y_true=list(GeneralUtils.f5(self.y_true)),
-                    y_pred=list(GeneralUtils.f5(self.y_pred)))
+        return dict(y_true=list(GeneralUtils.f5(self.y_true.ravel())),
+                    y_pred=list(GeneralUtils.f5(self.y_pred.ravel())))
 
     @classmethod
     def to_dict_meaning(cls):
