@@ -18,7 +18,7 @@ def run():
         xtest=test,
         metric=metric)
 
-    print("We've trained a ML model (details below) on uci adult dataset. Let's see whether our model is a good one")
+    print("We've trained a ML model (details below) on KDDCup99 dataset. Let's see whether our model is a good one")
     print("Model details\n", classifier, '\n\n')
 
     print("First, let's calculate score report")
