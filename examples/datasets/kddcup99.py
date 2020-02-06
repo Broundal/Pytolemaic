@@ -1,4 +1,5 @@
 import copy
+import logging
 
 import numpy
 import pandas
@@ -143,6 +144,11 @@ class KDDCup99():
         train_inds, test_inds = sklearn.model_selection.train_test_split(numpy.arange(len(y)),
                                                                          test_size=0.3, random_state=0,
                                                                          stratify=y)
+
+        if len(test_inds) < 0.29 * len(y):
+            logging.warning("Issue with sklearn's stratified split. reveting to shuffle split")
+            train_inds, test_inds = sklearn.model_selection.train_test_split(numpy.arange(len(y)),
+                                                                             test_size=0.3, random_state=0)
 
         df = pandas.DataFrame(x, columns=self.column_names())
         df['target'] = y

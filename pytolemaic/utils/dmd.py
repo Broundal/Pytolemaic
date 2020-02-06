@@ -1,4 +1,5 @@
 import copy
+import logging
 
 import numpy
 import numpy as np
@@ -24,6 +25,10 @@ class StratifiedSplitter():
         train, test = train_test_split(numpy.arange(dmdy.n_samples),
                                        test_size=ratio, random_state=random_state,
                                        shuffle=True, stratify=dmdy.target)
+
+        if len(test) < ratio * 0.95 * dmdy.n_samples:
+            logging.warning("Issue encountered with sklearn's stratified split! Reveting to shuffle split")
+            train, test = ShuffleSplitter.split(dmdy=dmdy, ratio=ratio, random_state=random_state)
 
         return train, test
 
