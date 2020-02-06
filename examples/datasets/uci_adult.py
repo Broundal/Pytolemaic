@@ -11,8 +11,8 @@ from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 
 this_file = os.path.dirname(__file__)
-adult_train_path = os.path.join(this_file, 'uci_adult', 'adult.data')
-adult_test_path = os.path.join(this_file, 'uci_adult', 'adult.test')
+adult_train_path = os.path.join(this_file, 'uci_adult_files', 'adult.data')
+adult_test_path = os.path.join(this_file, 'uci_adult_files', 'adult.test')
 
 
 class UCIAdult():
