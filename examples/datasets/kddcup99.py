@@ -19,7 +19,7 @@ class KDDCup99():
 
         self._xtrain, self._xtest, self._ytrain, self._ytest = None, None, None, None
         self.model = GeneralUtils.simple_imputation_pipeline(
-            RandomForestClassifier(random_state=0, n_estimators=100, n_jobs=3))
+            RandomForestClassifier(random_state=0, n_estimators=10, n_jobs=3))
 
         self.other_label_size = 1000
 
