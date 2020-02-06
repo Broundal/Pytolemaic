@@ -52,7 +52,7 @@ def run():
     # pprint(quality_report.to_dict_meaning(), width=120)
 
     print("\nLet's create a Lime explainer")
-    lime_explainer = pytrust.create_lime_explainer()
+    lime_explainer = pytrust.create_lime_explainer(max_samples=64000)
 
     sample = test.values[0, :]
     print("And plot explanation for the first sample in test data: {}".format(sample))

@@ -178,7 +178,7 @@ class PyTrust():
         return self._uncertainty_models[method]
 
     @cache
-    def create_lime_explainer(self):
-        lime_explainer = LimeExplainer(n_features_to_plot=20)
+    def create_lime_explainer(self, **kwargs):
+        lime_explainer = LimeExplainer(n_features_to_plot=20, **kwargs)
         lime_explainer.fit(self.train, model=self.model)
         return lime_explainer

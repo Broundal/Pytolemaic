@@ -30,17 +30,15 @@ def run():
         sample = xtest[0, :]
 
         # Create explanation for target sample
-        explanation = lime_explanation(pytrust, sample)
+        print("\nLet's create a Lime explainer")
+        lime_explainer = pytrust.create_lime_explainer(max_samples=64000)
+
+        print("And plot explanation for the first sample in test data: {}".format(sample))
+        lime_explainer.plot(sample)
+
+        explanation = lime_explainer.explain(sample)
         print("Lime explanation is: {}".format(explanation))
 
-
-def lime_explanation(pytrust, sample):
-    print("\nLet's create a Lime explainer")
-    lime_explainer = pytrust.create_lime_explainer()
-    print("And plot explanation for the first sample in test data: {}".format(sample))
-    lime_explainer.plot(sample)
-    explanation = lime_explainer.explain(sample)
-    return explanation
 
 
 if __name__ == '__main__':
