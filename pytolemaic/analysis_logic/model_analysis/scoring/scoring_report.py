@@ -278,8 +278,8 @@ class ConfusionMatrixReport():
 
 class ScatterReport():
     def __init__(self, y_true, y_pred, error_bars=None):
-        self._y_true = y_true.reshape(-1, 1)
-        self._y_pred = y_pred.reshape(-1, 1)
+        self._y_true = numpy.array(y_true).reshape(-1, 1)
+        self._y_pred = numpy.array(y_pred).reshape(-1, 1)
         self._error_bars = error_bars
 
 

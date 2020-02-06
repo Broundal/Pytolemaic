@@ -8,8 +8,8 @@ from pytolemaic.utils.metrics import Metrics, CustomMetrics
 class TestMetrics(unittest.TestCase):
 
     def test_confidence_interval(self):
-        yt = numpy.random.rand(100)
-        d = numpy.random.rand(100)
+        yt = numpy.random.rand(1000)
+        d = numpy.random.rand(1000)
 
         yp = yt + 0.1 * d
         mae = Metrics.call('mae', yt, yp)
