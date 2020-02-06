@@ -49,7 +49,7 @@ class Scoring():
                                                      labels=labels if labels is not None else unique_labels(y_true,
                                                                                                             y_pred))
 
-            classification_report = SklearnClassificationReport(y_true=y_true, y_pred=y_pred, labels=labels)
+            classification_report = SklearnClassificationReport(y_true=y_true, y_pred=y_pred, y_proba=y_proba, labels=labels)
 
             for metric in self.metrics:
                 if not metric.ptype == CLASSIFICATION:

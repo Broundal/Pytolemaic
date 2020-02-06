@@ -9,12 +9,12 @@ from pytolemaic.utils.metrics import Metrics
 
 
 class ROCCurveReport():
-    def __init__(self, y_true, y_pred, labels=None, sample_weight=None):
-        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+    def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
+        self._labels = labels if labels is not None else unique_labels(y_true)
         self._roc_curve = {}
         self._auc = {}
         for class_index, label in enumerate(self.labels):
-            fpr, tpr, thresholds = roc_curve(y_true == class_index, y_pred == class_index,
+            fpr, tpr, thresholds = roc_curve(y_true == class_index, y_proba[:, class_index],
                                              pos_label=1, sample_weight=sample_weight,
                                              drop_intermediate=True)
 
@@ -34,9 +34,9 @@ class ROCCurveReport():
         return self._auc
 
     def to_dict(self):
-        return dict(roc_curve=self.roc_curve,
-                    auc=self.auc,
-                    labels=self.labels)
+        return dict(roc_curve=GeneralUtils.round_values(self.roc_curve),
+                    auc=GeneralUtils.round_values(self.auc),
+                    labels=self.labels.tolist())
 
     @classmethod
     def to_dict_meaning(cls):
@@ -63,17 +63,17 @@ class ROCCurveReport():
 
 
 class PrecisionRecallCurveReport():
-    def __init__(self, y_true, y_pred, labels=None, sample_weight=None):
-        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+    def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
+        self._labels = labels if labels is not None else unique_labels(y_true)
         self._recall_precision_curve = {}
         self._average_precision = {}
         for class_index, label in enumerate(self.labels):
-            precision, recall, thresholds = precision_recall_curve(y_true == class_index, y_pred == class_index,
+            precision, recall, thresholds = precision_recall_curve(y_true == class_index, y_proba[:, class_index],
                                                                    pos_label=1, sample_weight=sample_weight, )
 
             self._recall_precision_curve[label] = dict(precision=precision, recall=recall, thresholds=thresholds)
 
-            self._average_precision[label] = average_precision_score(y_true == class_index, y_pred == class_index,
+            self._average_precision[label] = average_precision_score(y_true == class_index, y_proba[:, class_index],
                                                                      pos_label=1, sample_weight=sample_weight, )
 
     @property
@@ -89,15 +89,15 @@ class PrecisionRecallCurveReport():
         return self._average_precision
 
     def to_dict(self):
-        return dict(recall_precision_curve=self.recall_precision_curve,
-                    auc=self.average_precision,
-                    labels=self.labels)
+        return dict(recall_precision_curve=GeneralUtils.round_values(self.recall_precision_curve),
+                    average_precision=GeneralUtils.round_values(self.average_precision),
+                    labels=self.labels.tolist())
 
     @classmethod
     def to_dict_meaning(cls):
         return dict(
             recall_precision_curve="Recall Precision Curve as dict (recall, precision, and thresholds), per label",
-            auc='Area under curve per label',
+            average_precision='Average Precision per label',
             labels="The class labels"
         )
 
@@ -117,30 +117,31 @@ class PrecisionRecallCurveReport():
 
 
 class SklearnClassificationReport():
-    def __init__(self, y_true, y_pred, labels=None,
+    def __init__(self, y_true, y_pred, y_proba, labels=None,
                  sample_weight=None, digits=3):
         self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
 
         self._sample_weight = sample_weight
 
-        self._classification_report_text = classification_report(y_true=y_true, y_pred=y_pred.reshape(-1, 1),
-                                                                 labels=None,
-                                                                 target_names=[str(k) for k in self._labels],
-                                                                 sample_weight=sample_weight, digits=digits,
-                                                                 output_dict=False)
+        self._sklearn_performance_summary_text = classification_report(y_true=y_true, y_pred=y_pred.reshape(-1, 1),
+                                                                       labels=None,
+                                                                       target_names=[str(k) for k in self._labels],
+                                                                       sample_weight=sample_weight, digits=digits,
+                                                                       output_dict=False)
 
-        self._classification_report_dict = classification_report(y_true=y_true, y_pred=y_pred,
-                                                                 labels=None, target_names=self._labels,
-                                                                 sample_weight=sample_weight, digits=digits,
-                                                                 output_dict=True)
+        self._sklearn_performance_summary_dict = classification_report(y_true=y_true, y_pred=y_pred,
+                                                                       labels=None, target_names=self._labels,
+                                                                       sample_weight=sample_weight, digits=digits,
+                                                                       output_dict=True)
 
-        self._roc_curve = ROCCurveReport(y_true=y_true, y_pred=y_pred,
+        self._roc_curve = ROCCurveReport(y_true=y_true, y_proba=y_proba,
                                          labels=self.labels, sample_weight=sample_weight)
 
-        self._precision_recall_curve = PrecisionRecallCurveReport(y_true=y_true, y_pred=y_pred,
+        self._precision_recall_curve = PrecisionRecallCurveReport(y_true=y_true, y_proba=y_proba,
                                                                   labels=self.labels, sample_weight=sample_weight)
         self._y_true = y_true
         self._y_pred = y_pred
+        self._y_proba = y_proba
 
     @property
     def labels(self):
@@ -155,20 +156,20 @@ class SklearnClassificationReport():
         return self._precision_recall_curve
 
     @property
-    def classification_report(self):
-        return self._classification_report_dict
+    def sklearn_performance_summary(self):
+        return self._sklearn_performance_summary_dict
 
     def to_dict(self):
-        return dict(classification_report_dict=self.classification_report,
+        return dict(sklearn_performance_summary=GeneralUtils.round_values(self.sklearn_performance_summary),
                     roc_curve=self.roc_curve.to_dict(),
                     precision_recall_curve=self.precision_recall_curve.to_dict(),
-                    labels=self.labels)
+                    labels=self.labels.tolist())
 
     @classmethod
     def to_dict_meaning(cls):
         return dict(
-            classification_report_dict="Accuracy score for various metrics",
-            roc_curve="Roc curve report",
+            sklearn_performance_summary="Accuracy score for various metrics produced by sklearn",
+            roc_curve="ROC curve report",
             precision_recall_curve="Precision-Recall curve report",
             labels="The class labels"
         )
@@ -177,7 +178,7 @@ class SklearnClassificationReport():
         import matplotlib.pyplot as plt
 
         fig = plt.figure(figsize=(10, 3 + len(self.labels)))
-        fig.text(0.5, 0.5, self._classification_report_text,
+        fig.text(0.5, 0.5, self._sklearn_performance_summary_text,
                  ha='center', va='center', size=20, fontname='courier', family='monospace')
 
 
