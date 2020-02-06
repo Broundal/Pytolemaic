@@ -1,3 +1,5 @@
+![Unittests](https://github.com/Broundal/Pytolemaic/workflows/Unittests/badge.svg?branch=master)
+
 # Pytolemaic
 
 ## What is Pytolemaic 
