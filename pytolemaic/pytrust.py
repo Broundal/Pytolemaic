@@ -50,25 +50,22 @@ class PyTrust():
         else:
             raise NotImplementedError
 
-        if xtrain is not None:
-            if isinstance(xtrain, DMD):
-                self.train = xtrain
-            else:
-                self.train = DMD(x=xtrain, y=ytrain,
-                                 samples_meta=sample_meta_train,
-                                 columns_meta=columns_meta,
-                                 splitter=splitter,
-                                 labels=labels)
+        self.train = xtrain
+        if self.train is not None and not isinstance(self.train, DMD):
+            self.train = DMD(x=xtrain, y=ytrain,
+                             samples_meta=sample_meta_train,
+                             columns_meta=columns_meta,
+                             splitter=splitter,
+                             labels=labels)
 
-        if xtest is not None:
-            if isinstance(xtest, DMD):
-                self.test = xtest
-            else:
-                self.test = DMD(x=xtest, y=ytest,
-                                samples_meta=sample_meta_test,
-                                columns_meta=columns_meta,
-                                splitter=splitter,
-                                labels=labels)
+        self.test = xtest
+        if self.test is not None and not isinstance(self.test, DMD):
+            self.test = DMD(x=xtest, y=ytest,
+                            samples_meta=sample_meta_test,
+                            columns_meta=columns_meta,
+                            splitter=splitter,
+                            labels=labels)
+
 
         self.metric = metric.name if isinstance(metric, Metric) else metric
 
@@ -136,7 +133,11 @@ class PyTrust():
                                             y_pred=self.y_pred_test,
                                             y_proba=self.y_proba_test)
 
-        separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
+        if self.train is not None:
+            separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
+        else:
+            separation_quality = numpy.nan
+
         return ScoringFullReport(target_metric=self.metric,
                                  metric_reports=score_values_report,
                                  separation_quality=separation_quality,
