@@ -11,6 +11,7 @@ class LinearBase():
 
         self._xtrain, self._ytrain = None, None
         self.model = model
+        self.random_state = numpy.random.RandomState(0)
 
 
     def _function(self, x):
@@ -36,7 +37,7 @@ class LinearBase():
     def get_samples(self):
         # Let's define dataset and label
 
-        x = numpy.random.rand(self.n_samples, self.n_features)
+        x = self.random_state.rand(self.n_samples, self.n_features)
 
         y = self._function(x)
 

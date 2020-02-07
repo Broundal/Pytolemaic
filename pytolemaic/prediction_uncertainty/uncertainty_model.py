@@ -155,14 +155,14 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
 
         if self.uncertainty_method in ['probability']:
             yproba = self.predict_proba(dmd)
-            yproba += 1e-10 * numpy.random.rand(*yproba.shape)
+            yproba += 1e-10 * numpy.random.RandomState(0).rand(*yproba.shape)
             max_probability = numpy.max(yproba, axis=1).reshape(-1, 1)
             delta = max_probability - yproba
             yproba[delta == 0] = 0
 
             # delta[numpy.sum(delta, axis=1)>=20,:] = 0 # i
             out = numpy.max(yproba, axis=1).reshape(-1, 1) / max_probability
-            return out.reshape(-1, 1)
+            return GeneralUtils.f5(out).reshape(-1, 1)
         elif self.uncertainty_method in ['confidence']:
             if isinstance(dmd, DMD):
                 x = dmd.values
@@ -170,7 +170,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                 x = dmd
             # return the probability it's a mistake
             out = self.uncertainty_model.predict_proba(x)[:, 0]
-            return out.reshape(-1, 1)
+            return GeneralUtils.f5(out).reshape(-1, 1)
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
