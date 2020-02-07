@@ -81,7 +81,8 @@ class LimeExplainer():
         try:
             exp = self._converged_lime_explaination(sample)
 
-            return dict(exp.as_list())
+            label = self.model.predict(sample.reshape(1, -1))
+            return dict(exp.as_list(label=int(label)))
         except:
             logging.exception("Failed to produce lime explanation for sample {}".format(sample))
             return None

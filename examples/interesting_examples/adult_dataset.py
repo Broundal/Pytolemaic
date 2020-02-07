@@ -2,6 +2,7 @@ from pprint import pprint
 
 from examples.datasets.uci_adult import UCIAdult
 from pytolemaic.pytrust import PyTrust
+from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
@@ -54,7 +55,8 @@ def run():
     print("And plot explanation for the first sample in test data: {}".format(sample))
     lime_explainer.plot(sample)
     explanation = lime_explainer.explain(sample)
-    print("Lime explanation is: {}".format(explanation))
+    print("Lime explanation is:")
+    pprint(GeneralUtils.round_values(explanation))
 
     # pprint(quality_report.to_dict(), width=120)
     # pprint(quality_report.to_dict_meaning(), width=120)
