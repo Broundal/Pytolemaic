@@ -30,5 +30,10 @@ setup(
     install_requires=install_reqs,
     include_package_data=True,
     platforms=['Linux'],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: Custom",
+        "Operating System :: Linux",
+    ],
     python_requires='>=3.6.*',
 )
