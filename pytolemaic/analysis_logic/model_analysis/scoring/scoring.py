@@ -103,7 +103,7 @@ class Scoring():
         for ind1, ind2 in [(left, right), (right, left)]:
             dmd_1 = dmd_test.split_by_indices(ind1)
             dmd_2 = dmd_test.split_by_indices(ind2)
-            uncertainty_model = UncertaintyModelRegressor(model=model, uncertainty_method='rmse')
+            uncertainty_model = UncertaintyModelRegressor(model=model, uncertainty_method='mae')
             uncertainty_model.fit(dmd_test=dmd_1)
             error_bars[ind2] = uncertainty_model.uncertainty(dmd_2).ravel()
         return error_bars

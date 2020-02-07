@@ -168,7 +168,7 @@ class PyTrust():
                     model=self.model,
                     uncertainty_method=method)
             else:
-                method = 'rmse' if method == 'auto' else method
+                method = 'mae' if method == 'auto' else method
                 uncertainty_model = UncertaintyModelRegressor(
                     model=self.model,
                     uncertainty_method=method)
