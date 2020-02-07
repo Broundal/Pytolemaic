@@ -14,7 +14,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
 
     def get_data(self, is_classification, seed=0):
         rs = numpy.random.RandomState(seed)
-        x = rs.rand(10000, 5)
+        x = rs.rand(10000, 4)
         x[:, 1] = 0
         # 1st is double importance, 2nd has no importance
         y = numpy.sum(x, axis=1) + 2 * x[:, 0]
