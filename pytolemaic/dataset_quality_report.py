@@ -1,11 +1,12 @@
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
+from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.constants import REGRESSION
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
-class TestSetQualityReport():
+class TestSetQualityReport(Report):
     def __init__(self, scoring_report: ScoringFullReport):
         self._scoring_report = scoring_report
         self._metric = scoring_report.target_metric
@@ -54,7 +55,7 @@ class TestSetQualityReport():
         return self._test_set_quality
 
 
-class TrainSetQualityReport():
+class TrainSetQualityReport(Report):
     def __init__(self, vulnerability_report: SensitivityVulnerabilityReport):
         self._vulnerability_report = vulnerability_report
 
@@ -89,7 +90,7 @@ class TrainSetQualityReport():
         return self._train_set_quality
 
 
-class ModelQualityReport():
+class ModelQualityReport(Report):
     def __init__(self, vulnerability_report: SensitivityVulnerabilityReport, scoring_report: ScoringFullReport):
         self._vulnerability_report = vulnerability_report
         self._scoring_report = scoring_report
@@ -150,7 +151,7 @@ class ModelQualityReport():
 
 
 
-class QualityReport():
+class QualityReport(Report):
     def __init__(self, train_quality_report: TrainSetQualityReport, test_quality_report: TestSetQualityReport,
                  model_quality_report: ModelQualityReport):
         self._train_quality_report = train_quality_report

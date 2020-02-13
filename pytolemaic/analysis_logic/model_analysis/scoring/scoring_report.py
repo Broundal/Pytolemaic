@@ -4,11 +4,12 @@ from sklearn.metrics import confusion_matrix, classification_report, RocCurveDis
     precision_recall_curve, average_precision_score, auc, roc_curve
 from sklearn.utils.multiclass import unique_labels
 
+from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
-class ROCCurveReport():
+class ROCCurveReport(Report):
     def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
         self._labels = labels if labels is not None else unique_labels(y_true)
         self._roc_curve = {}
@@ -62,7 +63,7 @@ class ROCCurveReport():
         plt.draw()
 
 
-class PrecisionRecallCurveReport():
+class PrecisionRecallCurveReport(Report):
     def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
         self._labels = labels if labels is not None else unique_labels(y_true)
         self._recall_precision_curve = {}
@@ -116,7 +117,7 @@ class PrecisionRecallCurveReport():
             viz.plot(ax=ax, name=label, color=possible_colors[class_index])
 
 
-class SklearnClassificationReport():
+class SklearnClassificationReport(Report):
     def __init__(self, y_true, y_pred, y_proba, labels=None,
                  sample_weight=None, digits=3):
         self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
@@ -194,7 +195,7 @@ class SklearnClassificationReport():
         plt.draw()
 
 
-class ConfusionMatrixReport():
+class ConfusionMatrixReport(Report):
     def __init__(self, y_true, y_pred, labels=None):
         self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred,
                                                   labels=unique_labels(y_true, y_pred)).tolist()
@@ -277,7 +278,7 @@ class ConfusionMatrixReport():
         # plt.show()
 
 
-class ScatterReport():
+class ScatterReport(Report):
     def __init__(self, y_true, y_pred, error_bars=None):
         self._y_true = numpy.array(y_true).reshape(-1, 1)
         self._y_pred = numpy.array(y_pred).reshape(-1, 1)
@@ -320,7 +321,7 @@ class ScatterReport():
         # plt.show()
 
 
-class ScoringMetricReport():
+class ScoringMetricReport(Report):
     def __init__(self, metric, value, ci_low, ci_high):
         self._metric = metric
         self._value = value
@@ -411,7 +412,7 @@ class ScoringMetricReport():
         return ci_ratio
 
 
-class ScoringFullReport():
+class ScoringFullReport(Report):
     def __init__(self, target_metric, metric_reports: [ScoringMetricReport], separation_quality: float,
                  confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None,
                  classification_report: SklearnClassificationReport = None):

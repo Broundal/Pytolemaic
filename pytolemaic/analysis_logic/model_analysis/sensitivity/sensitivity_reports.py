@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 
+from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.general import GeneralUtils
 
 
@@ -8,7 +9,7 @@ class SensitivityTypes():
     missing = 'missing'
 
 
-class SensitivityStatsReport():
+class SensitivityStatsReport(Report):
     def __init__(self, n_features: int, n_low: int, n_zero: int):
         self._n_features = n_features
         self._n_low = n_low
@@ -55,7 +56,7 @@ class SensitivityStatsReport():
         return self._n_zero
 
 
-class SensitivityVulnerabilityReport():
+class SensitivityVulnerabilityReport(Report):
     def __init__(self, imputation: float, leakage: float, too_many_features: float):
         self._too_many_features = too_many_features
         self._imputation = imputation
@@ -102,7 +103,7 @@ class SensitivityVulnerabilityReport():
         return self._too_many_features
 
 
-class SensitivityOfFeaturesReport():
+class SensitivityOfFeaturesReport(Report):
     def __init__(self, method: str, sensitivities: dict):
         self._method = method
         self._sensitivities = sensitivities
@@ -149,7 +150,7 @@ class SensitivityOfFeaturesReport():
         return [(k, v) for k, v in sorted(self._sensitivities.items(), key=lambda kv: -kv[1])]
 
 
-class SensitivityFullReport():
+class SensitivityFullReport(Report):
 
     def __init__(self,
                  shuffle_report: SensitivityOfFeaturesReport,
