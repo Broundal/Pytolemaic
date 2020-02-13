@@ -356,7 +356,10 @@ class ScoringMetricReport(Report):
         ci_low = GeneralUtils.f5(self.ci_low)
         ci_high = GeneralUtils.f5(self.ci_high)
         value = GeneralUtils.f5(self.value)
-        n_digits = -int(numpy.log10(ci_high - ci_low)) + 1  # 0.0011 --> -(-2) +1 = 3
+        if ci_high == ci_low:
+            n_digits = 5
+        else:
+            n_digits = -int(numpy.log10(ci_high - ci_low)) + 1  # 0.0011 --> -(-2) +1 = 3
 
         ax.plot([ci_low, ci_high], [1, 1], '-b',
                 ci_low, 1, '|b',
