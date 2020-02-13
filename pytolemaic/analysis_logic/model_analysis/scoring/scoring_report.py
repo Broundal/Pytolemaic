@@ -293,14 +293,16 @@ class ScatterReport():
         return self._y_pred
 
     def to_dict(self):
+        error_bars = GeneralUtils.f5(self._error_bars.ravel()) if self._error_bars is not None else None
         return dict(y_true=list(GeneralUtils.f5(self.y_true.ravel())),
-                    y_pred=list(GeneralUtils.f5(self.y_pred.ravel())))
+                    y_pred=list(GeneralUtils.f5(self.y_pred.ravel())),
+                    error_bars=error_bars)
 
     @classmethod
     def to_dict_meaning(cls):
         return dict(y_true="True values",
-                    y_pred="Predicted values"
-                    )
+                    y_pred="Predicted values",
+                    error_bars="The uncertainty of each prediction")
 
     def plot(self, max_points=500):
         if max_points is None:
@@ -488,10 +490,6 @@ class ScoringFullReport():
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure(figsize=(5, 1.5))
-    text = fig.text(0.5, 0.5, 'Hello path effects world!\nThis is the normal '
-                              'path effect.\nPretty dull, huh?',
-                    ha='center', va='center', size=20)
-    plt.show()
+    if __name__ == '__main__':
+        from pprint import pprint
+    pprint(ScoringFullReport.to_dict_meaning(), width=160)
