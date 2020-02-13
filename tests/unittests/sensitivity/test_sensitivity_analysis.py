@@ -22,27 +22,31 @@ class TestSensitivity(unittest.TestCase):
 
     def test_leakage(self):
         sensitivity = SensitivityAnalysis()
-        self.assertEqual(sensitivity._leakage(n_features=10, n_zero=0), 0)
-        self.assertEqual(sensitivity._leakage(n_features=10, n_zero=9), 1)
-        self.assertGreaterEqual(sensitivity._leakage(n_features=10, n_zero=8),
+        self.assertEqual(sensitivity._leakage(n_features=10, n_very_low=0), 0)
+        self.assertEqual(sensitivity._leakage(n_features=10, n_very_low=9), 1)
+        self.assertGreaterEqual(sensitivity._leakage(n_features=10, n_very_low=8),
                                 0.8)
 
-        print([sensitivity._leakage(n_features=10, n_zero=k) for k in
+        print([sensitivity._leakage(n_features=10, n_very_low=k) for k in
                range(10)])
 
     def test_overfit(self):
         sensitivity = SensitivityAnalysis()
 
-        print([sensitivity._leakage(n_features=10, n_low=k, n_zero=5) for k in
+        print([sensitivity._too_many_features(n_features=15, n_low=k+5, n_very_low=5+k//2, n_zero=5) for k in
                range(10)])
 
         self.assertEqual(
-            sensitivity._too_many_features(n_features=10, n_low=0, n_zero=0), 0)
+            sensitivity._too_many_features(n_features=10, n_low=0, n_very_low=0, n_zero=0), 0)
         self.assertEqual(
-            sensitivity._too_many_features(n_features=10, n_low=5, n_zero=0), 0.5)
+            sensitivity._too_many_features(n_features=10, n_low=5, n_very_low=0, n_zero=0), 0.5)
+
+        self.assertGreater(
+            sensitivity._too_many_features(n_features=10, n_low=9, n_very_low=9, n_zero=0), 0.9)
+
 
         self.assertGreaterEqual(
-            sensitivity._too_many_features(n_features=10, n_low=9, n_zero=9), 0.9)
+            sensitivity._too_many_features(n_features=10, n_low=9, n_very_low=9, n_zero=9), 0.0)
 
     def test_imputation(self):
         sensitivity = SensitivityAnalysis()

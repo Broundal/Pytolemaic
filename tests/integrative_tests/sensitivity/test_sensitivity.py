@@ -167,23 +167,25 @@ class TestSensitivity(unittest.TestCase):
         stats = sensitivity._sensitivity_stats(shuffled)
         n_features = stats.n_features
         n_zero = stats.n_zero
+        n_very_low = stats.n_very_low
         n_low = stats.n_low
 
 
         leakage_score = sensitivity._leakage(
             n_features=n_features,
+            n_very_low=n_very_low,
             n_zero=n_zero)
 
         self.assertGreater(leakage_score, 0)
         self.assertLessEqual(leakage_score, 1)
 
-
         overfit_score = sensitivity._too_many_features(
             n_features=n_features,
+            n_very_low=n_very_low,
             n_low=n_low,
             n_zero=n_zero)
 
-        self.assertGreater(overfit_score, 0)
+        self.assertGreaterEqual(overfit_score, 0)
         self.assertLessEqual(overfit_score, 1)
 
         imputation_score = sensitivity._imputation_score(shuffled=shuffled,
