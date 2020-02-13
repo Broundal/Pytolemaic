@@ -490,6 +490,5 @@ class ScoringFullReport():
 
 
 if __name__ == '__main__':
-    if __name__ == '__main__':
-        from pprint import pprint
+    from pprint import pprint
     pprint(ScoringFullReport.to_dict_meaning(), width=160)
