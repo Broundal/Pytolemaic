@@ -66,6 +66,11 @@ class PyTrust():
                             splitter=splitter,
                             labels=labels)
 
+        if metric is None:
+            if GeneralUtils.is_classification(model):
+                metric = Metrics.recall
+            else:
+                metric = Metrics.mae
 
         self.metric = metric.name if isinstance(metric, Metric) else metric
 
