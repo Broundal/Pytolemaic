@@ -10,15 +10,17 @@ class SensitivityTypes():
 
 
 class SensitivityStatsReport(Report):
-    def __init__(self, n_features: int, n_low: int, n_zero: int):
+    def __init__(self, n_features: int, n_low: int, n_very_low: int, n_zero: int):
         self._n_features = n_features
         self._n_low = n_low
+        self._n_very_low = n_very_low
         self._n_zero = n_zero
 
     def to_dict(self):
         return dict(
             n_features=self.n_features,
             n_low=self.n_low,
+            n_very_low=self.n_very_low,
             n_zero=self.n_zero,
         )
 
@@ -27,7 +29,8 @@ class SensitivityStatsReport(Report):
         return dict(
             n_features="Number of features in dataset",
             n_low="Number of feature with low sensitivity (sensitivity lower than 5% of max sensitivity)",
-            n_zero="Number of feature with zero sensitivity (sensitivity lower than 1e-4)",
+            n_very_low="Number of feature with low sensitivity (sensitivity lower than 5% of max sensitivity)",
+            n_zero="Number of feature with zero sensitivity",
         )
 
     def plot(self, ax=None, method=None):
@@ -50,6 +53,10 @@ class SensitivityStatsReport(Report):
     @property
     def n_low(self):
         return self._n_low
+
+    @property
+    def n_very_low(self):
+        return self._n_very_low
 
     @property
     def n_zero(self):
@@ -215,3 +222,7 @@ class SensitivityFullReport(Report):
     @property
     def vulnerability_report(self) -> SensitivityVulnerabilityReport:
         return self._vulnerability_report
+
+if __name__ == '__main__':
+    from pprint import pprint
+    pprint(SensitivityFullReport.to_dict_meaning(), width=160)

@@ -15,6 +15,8 @@ class SensitivityAnalysis():
         self.metrics = Metrics.supported_metrics()
         self.model_support_dmd = None
         self.max_samples_to_use = 20000
+        self.low_sensitivity_threshold = 0.05
+        self.very_low_sensitivity_threshold = 1e-4
 
     @classmethod
     def shuffle_x(cls, x, index, seed=0):
@@ -110,12 +112,20 @@ class SensitivityAnalysis():
         if not sensitivity:
             return {}
 
-        sensitivity = np.array(list(sensitivity.sensitivities.values()))
+        sensitivity = np.abs(np.array(list(sensitivity.sensitivities.values())))
         n_features = len(sensitivity)
-        n_zero = int(np.sum(sensitivity < min(1e-4, 1 / n_features)))
-        n_low = int(np.sum(sensitivity < max(sensitivity) * 0.05))
+
+        low_sensitivity = max(sensitivity) * self.low_sensitivity_threshold
+        very_low_sensitivity = max(sensitivity) * self.very_low_sensitivity_threshold
+        zero_sensitivity = 0
+
+        n_low = int(np.sum(sensitivity < low_sensitivity))
+        n_very_low = int(np.sum(sensitivity < very_low_sensitivity))
+        n_zero = int(np.sum(sensitivity <= zero_sensitivity))
+
         return SensitivityStatsReport(n_features=n_features,
                                       n_low=n_low,
+                                      n_very_low=n_very_low,
                                       n_zero=n_zero)
 
     def _vulnerability_report(self, shuffled_sensitivity: SensitivityOfFeaturesReport,
@@ -125,9 +135,10 @@ class SensitivityAnalysis():
         stats = shuffled_sensitivity_stats
 
         leakage = self._leakage(n_features=stats.n_features,
-                                n_zero=stats.n_zero)
+                                n_very_low=stats.n_very_low)
         too_many_features = self._too_many_features(n_features=stats.n_features,
                                                     n_low=stats.n_low,
+                                                    n_very_low=stats.n_very_low,
                                                     n_zero=stats.n_zero)
         imputation = self._imputation_score(
             shuffled=shuffled_sensitivity,
@@ -137,7 +148,7 @@ class SensitivityAnalysis():
                                               too_many_features=too_many_features,
                                               leakage=leakage)
 
-    def _leakage(self, n_features, n_zero, **kwargs):
+    def _leakage(self, n_features, n_very_low, **kwargs):
         """
         measure the chance for data leakage - strong data leakage cause only few features to contribute to the model.
         :param shuffled_sensitivity:
@@ -147,11 +158,11 @@ class SensitivityAnalysis():
         if n_features < 2:
             return 0
 
-        n_non_zero = n_features - n_zero
+        n_non_zero = n_features - n_very_low
 
-        return np.power(n_zero / n_features, n_non_zero - 1)
+        return np.power(n_very_low / n_features, n_non_zero - 1)
 
-    def _too_many_features(self, n_features, n_low, n_zero, **kwargs):
+    def _too_many_features(self, n_features, n_low, n_very_low, n_zero, **kwargs):
         """
         Many features with low sensitivity indicate the model relies on non-informative feature. This may cause overfit.
         higher value when there are many features with low contribution
@@ -159,7 +170,7 @@ class SensitivityAnalysis():
         :return:
         """
 
-        return max(n_low / n_features, np.sqrt(n_zero / n_features))
+        return max((n_low-n_zero) / n_features, np.sqrt((n_very_low-n_zero) / n_features))
 
     def _imputation_score(self, shuffled: SensitivityOfFeaturesReport, missing: SensitivityOfFeaturesReport):
         """
