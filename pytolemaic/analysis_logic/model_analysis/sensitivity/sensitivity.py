@@ -110,7 +110,7 @@ class SensitivityAnalysis():
 
     def _sensitivity_stats(self, sensitivity: SensitivityOfFeaturesReport):
         if not sensitivity:
-            return {}
+            return None
 
         sensitivity = np.abs(np.array(list(sensitivity.sensitivities.values())))
         n_features = len(sensitivity)

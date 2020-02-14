@@ -13,8 +13,7 @@ class CaliforniaHousing():
 
         self._d = sklearn.datasets.fetch_california_housing(return_X_y=False)
         self._xtrain, self._xtest, self._ytrain, self._ytest = None, None, None, None
-        self.model = GeneralUtils.simple_imputation_pipeline(
-            RandomForestRegressor(random_state=0, n_estimators=100, n_jobs=3))
+        self.model = RandomForestRegressor(random_state=0, n_estimators=100, n_jobs=3)
 
     def column_names(self):
         return self._d['feature_names']

@@ -177,8 +177,9 @@ class SensitivityFullReport(Report):
 
         self.shuffle_report.plot(ax=a11)
         self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
-        self.missing_report.plot(ax=a21)
-        self.missing_stats_report.plot(ax=a22, method=self.missing_report.method)
+        if self.missing_report is not None:
+            self.missing_report.plot(ax=a21)
+            self.missing_stats_report.plot(ax=a22, method=self.missing_report.method)
 
         plt.tight_layout()
 
@@ -198,8 +199,8 @@ class SensitivityFullReport(Report):
         return dict(
             shuffle_report=self.shuffle_report.to_dict(),
             shuffle_stats_report=self.shuffle_stats_report.to_dict(),
-            missing_report=self.missing_report.to_dict(),
-            missing_stats_report=self.missing_stats_report.to_dict(),
+            missing_report=None if self.missing_report is None else self.missing_report.to_dict(),
+            missing_stats_report=None if self.missing_report is None else self.missing_stats_report.to_dict(),
             vulnerability_report=self.vulnerability_report.to_dict(),
         )
 

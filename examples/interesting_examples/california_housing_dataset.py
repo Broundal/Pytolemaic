@@ -67,8 +67,7 @@ def sensitivity_deepdive(sensitivity_report):
 
     print("Compare sensitivities obtain which shuffle method and missing method")
     print('shuffle method', sensitivity_report.shuffle_report.sorted_sensitivities[:3], '\n'
-                                                                                        'missing method',
-          sensitivity_report.missing_report.sorted_sensitivities[:3], '\n')
+                                                                                        'missing method: N/A')
 
     print("Looking on top 3 features we see similar values. "
           "This means that error caused by missing values affect the model similarly to a regular mistake")
