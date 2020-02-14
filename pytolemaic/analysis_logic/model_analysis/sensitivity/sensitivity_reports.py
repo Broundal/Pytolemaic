@@ -16,13 +16,14 @@ class SensitivityStatsReport(Report):
         self._n_very_low = n_very_low
         self._n_zero = n_zero
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             n_features=self.n_features,
             n_low=self.n_low,
             n_very_low=self.n_very_low,
             n_zero=self.n_zero,
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -69,12 +70,13 @@ class SensitivityVulnerabilityReport(Report):
         self._imputation = imputation
         self._leakage = leakage
 
-    def to_dict(self):
-        return dict(
-            too_many_features=GeneralUtils.f5(self.too_many_features),
-            imputation=GeneralUtils.f5(self.imputation),
-            leakage=GeneralUtils.f5(self.leakage)
+    def to_dict(self, printable=False):
+        out = dict(
+            too_many_features=self.too_many_features,
+            imputation=self.imputation,
+            leakage=self.leakage
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -115,11 +117,12 @@ class SensitivityOfFeaturesReport(Report):
         self._method = method
         self._sensitivities = sensitivities
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             method=self.method,
-            sensitivities={k: GeneralUtils.f5(v) for k, v in self.sensitivities.items()},
+            sensitivities=self.sensitivities,
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -202,14 +205,15 @@ class SensitivityFullReport(Report):
             vulnerability_report=SensitivityVulnerabilityReport.to_dict_meaning(),
         )
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             shuffle_report=self.shuffle_report.to_dict(),
             shuffle_stats_report=self.shuffle_stats_report.to_dict(),
             missing_report=None if self.missing_report is None else self.missing_report.to_dict(),
             missing_stats_report=None if self.missing_report is None else self.missing_stats_report.to_dict(),
             vulnerability_report=self.vulnerability_report.to_dict(),
         )
+        return self._printable_dict(out, printable=printable)
 
     @property
     def shuffle_report(self) -> SensitivityOfFeaturesReport:

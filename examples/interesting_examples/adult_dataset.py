@@ -58,7 +58,7 @@ def run():
     print("Lime explanation is:")
     pprint(GeneralUtils.round_values(explanation))
 
-    # pprint(quality_report.to_dict(), width=120)
+    #pprint(quality_report.to_dict(printable=True), width=120)
     # pprint(quality_report.to_dict_meaning(), width=120)
 
 
@@ -75,7 +75,7 @@ def sensitivity_deepdive(sensitivity_report):
 
     print(
         "\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better). The meaning of the fields can be obtained with to_dict_meaning()")
-    pprint(sensitivity_report.vulnerability_report.to_dict(), width=120)
+    pprint(sensitivity_report.vulnerability_report.to_dict(printable=True), width=120)
     print('*** vulnerability_report explanation was commented out ***')
     # pprint(sensitivity_report.vulnerability_report.to_dict_meaning(), width=120)
 
@@ -86,7 +86,7 @@ def sensitivity_deepdive(sensitivity_report):
     print("\n\nWe can see entire sensitivity report as well as explanation for the various fields using"
           " to_dict() and to_dict_meaning()")
     print('*** sensitivity_report was commented out ***')
-    # pprint(sensitivity_report.to_dict(), width=120)
+    # pprint(sensitivity_report.to_dict(printable=True), width=120)
     # pprint(sensitivity_report.to_dict_meaning(), width=120)
     print("\nNow let's plot some nice graphs")
     sensitivity_report.plot()
@@ -118,7 +118,7 @@ def scoring_report_deepdive(scoring_report):
     print(
         "\nWe can see entire scoring report as well as explanation for the various fields using to_dict() and to_dict_meaning()")
     print('*** scoring_report was commented out ***')
-    # pprint(scoring_report.to_dict(), width=120)
+    # pprint(scoring_report.to_dict(printable=True), width=120)
     # pprint(scoring_report.to_dict_meaning(), width=120)
 
     print("\nAnd also plot some nice graphs")

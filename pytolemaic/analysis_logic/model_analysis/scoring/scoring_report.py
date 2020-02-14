@@ -34,10 +34,11 @@ class ROCCurveReport(Report):
     def auc(self):
         return self._auc
 
-    def to_dict(self):
-        return dict(roc_curve=GeneralUtils.round_values(self.roc_curve),
-                    auc=GeneralUtils.round_values(self.auc),
+    def to_dict(self, printable=False):
+        out = dict(roc_curve=self.roc_curve,
+                    auc=self.auc,
                     labels=self.labels.tolist())
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -89,10 +90,11 @@ class PrecisionRecallCurveReport(Report):
     def average_precision(self):
         return self._average_precision
 
-    def to_dict(self):
-        return dict(recall_precision_curve=GeneralUtils.round_values(self.recall_precision_curve),
-                    average_precision=GeneralUtils.round_values(self.average_precision),
+    def to_dict(self, printable=False):
+        out = dict(recall_precision_curve=self.recall_precision_curve,
+                    average_precision=self.average_precision,
                     labels=self.labels.tolist())
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -160,11 +162,12 @@ class SklearnClassificationReport(Report):
     def sklearn_performance_summary(self):
         return self._sklearn_performance_summary_dict
 
-    def to_dict(self):
-        return dict(sklearn_performance_summary=GeneralUtils.round_values(self.sklearn_performance_summary),
+    def to_dict(self, printable=False):
+        out = dict(sklearn_performance_summary=self.sklearn_performance_summary,
                     roc_curve=self.roc_curve.to_dict(),
                     precision_recall_curve=self.precision_recall_curve.to_dict(),
                     labels=self.labels.tolist())
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -178,7 +181,7 @@ class SklearnClassificationReport(Report):
     def _plot_classification_report(self):
         import matplotlib.pyplot as plt
 
-        fig = plt.figure(figsize=(10, 3 + len(self.labels)))
+        fig = plt.figure(figsize=(14, 3 + len(self.labels)))
         fig.text(0.5, 0.5, self._sklearn_performance_summary_text,
                  ha='center', va='center', size=20, fontname='courier', family='monospace')
 
@@ -216,10 +219,11 @@ class ConfusionMatrixReport(Report):
 
         return GeneralUtils.f3(cm).tolist()
 
-    def to_dict(self):
-        return dict(confusion_matrix=self.confusion_matrix,
+    def to_dict(self, printable=False):
+        out = dict(confusion_matrix=self.confusion_matrix,
                     normalized_confusion_matrix=self.normalized_confusion_matrix,
                     labels=self.labels)
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -293,11 +297,12 @@ class ScatterReport(Report):
     def y_pred(self):
         return self._y_pred
 
-    def to_dict(self):
-        error_bars = GeneralUtils.f5(self._error_bars.ravel()) if self._error_bars is not None else None
-        return dict(y_true=list(GeneralUtils.f5(self.y_true.ravel())),
-                    y_pred=list(GeneralUtils.f5(self.y_pred.ravel())),
+    def to_dict(self, printable=False):
+        error_bars = self._error_bars.ravel() if self._error_bars is not None else None
+        out = dict(y_true=self.y_true.ravel(),
+                    y_pred=self.y_pred.ravel(),
                     error_bars=error_bars)
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -330,14 +335,15 @@ class ScoringMetricReport(Report):
         self._ci_low = ci_low
         self._ci_high = ci_high
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             metric=self.metric,
-            value=GeneralUtils.f5(self.value),
-            ci_low=GeneralUtils.f5(self.ci_low),
-            ci_high=GeneralUtils.f5(self.ci_high),
-            ci_ratio=GeneralUtils.f5(self.ci_ratio),
+            value=self.value,
+            ci_low=self.ci_low,
+            ci_high=self.ci_high,
+            ci_ratio=self.ci_ratio,
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -450,19 +456,20 @@ class ScoringFullReport(Report):
 
         plt.tight_layout()
 
-    def to_dict(self):
+    def to_dict(self, printable=False):
         metric_scores = {k: v.to_dict() for k, v in self.metric_scores.items()}
         for v in metric_scores.values():
             v.pop('metric', None)
 
-        return dict(
+        out = dict(
             metric_scores=metric_scores,
             target_metric=self.target_metric,
-            separation_quality=GeneralUtils.f5(self.separation_quality),
+            separation_quality=self.separation_quality,
             scatter=None if self.scatter is None else self.scatter.to_dict(),
             confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(),
             classification_report=None if self.classification_report is None else self.classification_report.to_dict()
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):

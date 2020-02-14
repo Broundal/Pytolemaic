@@ -1,3 +1,5 @@
+import copy
+
 import numpy
 from matplotlib._color_data import XKCD_COLORS
 from sklearn.impute import SimpleImputer
@@ -61,3 +63,43 @@ class GeneralUtils():
         l = list(XKCD_COLORS.values())
         rs = numpy.random.RandomState(0)
         return rs.permutation(l)
+
+    @classmethod
+    def make_dict_json_compatible(cls, dictionary: dict):
+        
+        def retype(obj):
+            if isinstance(obj, (numpy.int_, numpy.intc, numpy.intp, numpy.int8,
+                                numpy.int16, numpy.int32, numpy.int64, numpy.uint8,
+                                numpy.uint16, numpy.uint32, numpy.uint64)):
+                return int(obj)
+            elif isinstance(obj, (numpy.float_, numpy.float16, numpy.float32,
+                                  numpy.float64)):
+                return float(obj)
+            elif isinstance(obj, (numpy.ndarray,)): #### This is the fix
+                return obj.tolist()
+            return  obj
+
+        dictionary = copy.deepcopy(dictionary)
+        for k,v in dictionary.items():
+            if isinstance(v, dict):
+                dictionary[k] = cls.make_dict_json_compatible(v)
+            else:
+                dictionary[k] = retype(v)
+
+        return dictionary
+
+    @classmethod
+    def make_dict_printable(cls, dictionary: dict):
+        dictionary = cls.round_values(dictionary, digits=5)
+        dictionary = cls.make_dict_json_compatible(dictionary)
+
+        for k,v in dictionary.items():
+            if isinstance(v, dict):
+                dictionary[k] = cls.make_dict_printable(v)
+            elif isinstance(v, (list, tuple)):
+                if len(v) > 10:
+                    dictionary[k] = [v[0], v[1], '...', v[-2], v[-1]]
+            else:
+                pass
+
+        return dictionary

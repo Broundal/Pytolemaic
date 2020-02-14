@@ -43,7 +43,7 @@ def run():
     print("Overall quality of test data: {:0.3f}".format(quality_report.test_quality_report.test_set_quality))
     print("Overall quality of model: {:0.3f}".format(quality_report.model_quality_report.model_quality))
     print('*** quality_report was commented out ***')
-    # pprint(quality_report.to_dict(), width=120)
+    # pprint(quality_report.to_dict(printable=True), width=120)
     # pprint(quality_report.to_dict_meaning(), width=120)
 
     print("\nLet's create a Lime explainer")
@@ -72,7 +72,7 @@ def sensitivity_deepdive(sensitivity_report):
 
     print(
         "\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better). The meaning of the fields can be obtained with to_dict_meaning()")
-    pprint(sensitivity_report.vulnerability_report.to_dict(), width=120)
+    pprint(sensitivity_report.vulnerability_report.to_dict(printable=True), width=120)
     print('\n\n*** vulnerability_report explanation was commented out ***')
     # pprint(sensitivity_report.vulnerability_report.to_dict_meaning(), width=120)
 
@@ -81,9 +81,9 @@ def sensitivity_deepdive(sensitivity_report):
     print("However, none of the values seems to be high, which is reassuring")
 
     print("\n\nWe can see entire sensitivity report as well as explanation for the various fields using"
-          " to_dict() and to_dict_meaning()")
+          " to_dict(printable=True) and to_dict_meaning()")
     print('*** sensitivity_report was commented out ***')
-    # pprint(sensitivity_report.to_dict(), width=120)
+    # pprint(sensitivity_report.to_dict(printable=True), width=120)
     # pprint(sensitivity_report.to_dict_meaning(), width=120)
     print("\nNow let's plot some nice graphs")
     sensitivity_report.plot()
@@ -112,9 +112,9 @@ def scoring_report_deepdive(scoring_report):
     print("\nFinally, let's look on the separation quality")
     print("Score quality is {:0.3f} which is great!".format(quality))
     print(
-        "\nWe can see entire scoring report as well as explanation for the various fields using to_dict() and to_dict_meaning()")
+        "\nWe can see entire scoring report as well as explanation for the various fields using to_dict(printable=True) and to_dict_meaning()")
     print('*** scoring_report was commented out ***')
-    # pprint(scoring_report.to_dict(), width=120)
+    # pprint(scoring_report.to_dict(printable=True), width=120)
     # pprint(scoring_report.to_dict_meaning(), width=120)
 
     print("\nAnd also plot some nice graphs")

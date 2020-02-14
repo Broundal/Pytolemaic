@@ -13,12 +13,13 @@ class TestSetQualityReport(Report):
 
         self._test_set_quality = self._calculate_test_set_quality()
 
-    def to_dict(self):
-        return dict(
-            ci_ratio=GeneralUtils.f5(self.ci_ratio),
-            separation_quality=GeneralUtils.f5(self.separation_quality),
-            test_set_quality=GeneralUtils.f5(self.test_set_quality),
+    def to_dict(self, printable=False):
+        out = dict(
+            ci_ratio=self.ci_ratio,
+            separation_quality=self.separation_quality,
+            test_set_quality=self.test_set_quality,
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -70,11 +71,12 @@ class TrainSetQualityReport(Report):
 
         return train_set_quality
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             vulnerability_report=self.vulnerability_report.to_dict(),
-            train_set_quality=GeneralUtils.f5(self.train_set_quality),
+            train_set_quality=self.train_set_quality,
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -119,12 +121,13 @@ class ModelQualityReport(Report):
 
         return model_quality
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             vulnerability_report=self.vulnerability_report.to_dict(),
-            model_loss=GeneralUtils.f5(self.model_loss),
-            model_quality=GeneralUtils.f5(self.model_quality),
+            model_loss=self.model_loss,
+            model_quality=self.model_quality,
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):
@@ -158,12 +161,13 @@ class QualityReport(Report):
         self._test_quality_report = test_quality_report
         self._model_quality_report = model_quality_report
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, printable=False):
+        out = dict(
             test_quality_report=self.test_quality_report.to_dict(),
             train_quality_report=self.train_quality_report.to_dict(),
             model_quality_report=self.model_quality_report.to_dict(),
         )
+        return self._printable_dict(out, printable=printable)
 
     @classmethod
     def to_dict_meaning(cls):

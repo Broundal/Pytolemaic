@@ -46,7 +46,7 @@ def run():
 
     quality_report = pytrust.quality_report()
     print("Quality report - higher is better")
-    pprint(quality_report.to_dict(), width=120)
+    pprint(quality_report.to_dict(printable=True), width=120)
     pprint(quality_report.to_dict_meaning(), width=120)
 
 
