@@ -3,6 +3,9 @@ name: CI & Upload to Pypi.org
 on:
   release:
     types: [created]
+  push:
+    paths:
+    - '**/version.py'
 
 jobs:
   deploy:
