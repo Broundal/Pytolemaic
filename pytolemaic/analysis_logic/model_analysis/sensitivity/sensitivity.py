@@ -220,7 +220,7 @@ class SensitivityAnalysis():
         vulnerability_report = self._vulnerability_report(
             shuffled_sensitivity=self.shuffled_sensitivity,
             missing_sensitivity=self.missing_sensitivity,
-            shuffled_sensitivity_stats=missing_stats_report)
+            shuffled_sensitivity_stats=shuffle_stats_report)
 
         return SensitivityFullReport(
             shuffle_report=self.shuffled_sensitivity,
