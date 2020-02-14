@@ -173,13 +173,20 @@ class SensitivityFullReport(Report):
         self._vulnerability_report = vulnerability_report
 
     def plot(self):
-        fig, ((a11, a12), (a21, a22)) = plt.subplots(2, 2, figsize = (10, 10))
-
-        self.shuffle_report.plot(ax=a11)
-        self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
         if self.missing_report is not None:
+
+            fig, ((a11, a12), (a21, a22)) = plt.subplots(2, 2, figsize = (10, 10))
+
+            self.shuffle_report.plot(ax=a11)
+            self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
             self.missing_report.plot(ax=a21)
             self.missing_stats_report.plot(ax=a22, method=self.missing_report.method)
+
+        else:
+            fig, (a11, a12) = plt.subplots(1, 2, figsize = (10, 10))
+
+            self.shuffle_report.plot(ax=a11)
+            self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
 
         plt.tight_layout()
 
