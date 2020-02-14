@@ -6,7 +6,7 @@ from sklearn.utils.multiclass import unique_labels
 
 from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.general import GeneralUtils
-from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.metrics import Metrics, Metric
 
 
 class ROCCurveReport(Report):
@@ -367,8 +367,13 @@ class ScoringMetricReport(Report):
                 value, 1, 'or', )
 
         delta = (ci_high - ci_low) * 1e-1 + 10 ** -n_digits / 2
-        l_lim = numpy.round(max(0, ci_low - delta), n_digits)
-        r_lim = numpy.round(min(1, ci_high + delta), n_digits)
+
+        metric_obj = Metrics.supported_metrics()[self.metric]
+        r_lim = 1e100 if metric_obj.is_loss else 1
+        l_lim = 0 if metric_obj.is_loss else -1e100
+
+        l_lim = max(l_lim, numpy.round(ci_low - delta, n_digits))
+        r_lim = min(r_lim, numpy.round(ci_high + delta, n_digits))
 
         ax.set_xlim(l_lim, r_lim)
         x = numpy.linspace(l_lim, r_lim, num=1 + int(numpy.round(r_lim - l_lim, n_digits) / 10 ** -n_digits))
