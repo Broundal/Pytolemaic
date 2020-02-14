@@ -32,7 +32,9 @@ setup(
     platforms=['Linux'],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Operating System :: Linux",
+        "License :: Free To Use But Restricted",
+        "Operating System :: Unix",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence"
     ],
     python_requires='>=3.6.*',
 )
