@@ -6,6 +6,7 @@ on:
   push:
     paths:
     - '**/version.py'
+    - '!.github/**'
 
 jobs:
   deploy:

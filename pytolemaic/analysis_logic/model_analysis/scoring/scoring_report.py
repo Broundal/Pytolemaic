@@ -376,7 +376,9 @@ class ScoringMetricReport(Report):
         r_lim = min(r_lim, numpy.round(ci_high + delta, n_digits))
 
         ax.set_xlim(l_lim, r_lim)
-        x = numpy.linspace(l_lim, r_lim, num=1 + int(numpy.round(r_lim - l_lim, n_digits) / 10 ** -n_digits))
+        n_points = 1 + int(numpy.round(r_lim - l_lim, n_digits) / 10 ** -n_digits) % 10
+
+        x = numpy.linspace(l_lim, r_lim, num=n_points)
 
         xlabels = ["%.5g" % numpy.round(k, n_digits) for k in x]
         ax.set(xticks=x.tolist(),
@@ -442,7 +444,7 @@ class ScoringFullReport(Report):
             self.classification_report.plot()
 
         n = len(self.metric_scores)
-        fig, axs = plt.subplots(n, figsize=(8,n*2))
+        fig, axs = plt.subplots(n, figsize=(12,n*2))
         for i, k in enumerate(sorted(self.metric_scores.keys())):
             self.metric_scores[k].plot(axs[i])
 
