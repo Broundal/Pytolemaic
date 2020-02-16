@@ -43,12 +43,19 @@ class PyTrust():
                  labels=None):
         self.model = model
 
-        if splitter == 'shuffled':
-            splitter = ShuffleSplitter
-        elif splitter == 'stratified':
-            splitter = StratifiedSplitter
+        if isinstance(splitter, str):
+            if splitter == 'shuffled':
+                splitter = ShuffleSplitter
+            elif splitter == 'stratified':
+                splitter = StratifiedSplitter
+            else:
+                raise NotImplementedError("splitter='{}' is not supported".format(splitter))
         else:
-            raise NotImplementedError
+            if not hasattr(splitter, 'split'):
+                raise ValueError("splitter='{}' does not supported split() operation".format(splitter))
+            else:
+                raise NotImplementedError("splitter='{}' is not supported".format(splitter))
+
 
         self.train = xtrain
         if self.train is not None and not isinstance(self.train, DMD):
