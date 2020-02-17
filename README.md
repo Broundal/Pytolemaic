@@ -11,6 +11,12 @@ The package supports classification/regression models built for tabular datasets
 The package is aimed for personal use and comes with no guarantees. 
 I hope you will find it useful. I will appreciate any feedback you have.
 
+## Install
+Pytolemaic package may be installed via Pypi:
+```
+pip install pytolemaic
+```
+
 ## supported features
 The package contains the following functionalities:
 
