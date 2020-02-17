@@ -12,7 +12,7 @@ The package is aimed for personal use and comes with no guarantees.
 I hope you will find it useful. I will appreciate any feedback you have.
 
 ## Install
-Pytolemaic package may be installed via Pypi:
+Pytolemaic package may be installed using ```pip```:
 ```
 pip install pytolemaic
 ```
