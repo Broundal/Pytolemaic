@@ -5,7 +5,8 @@ class Report():
     def to_dict(self, printable=False):
         raise NotImplementedError
 
-    def to_dict_meaning(self):
+    @classmethod
+    def to_dict_meaning(cls):
         raise NotImplementedError
 
     def plot(self):

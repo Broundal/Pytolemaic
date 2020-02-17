@@ -1,3 +1,5 @@
+import logging
+
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
 from pytolemaic.utils.base_report import Report
@@ -97,26 +99,39 @@ class ModelQualityReport(Report):
         self._vulnerability_report = vulnerability_report
         self._scoring_report = scoring_report
         self._model_loss = self._get_model_loss()
+        self._model_normalized_loss = self._get_model_normalized_loss()
 
         self._model_quality = self._calculate_model_quality()
 
     def _get_model_loss(self):
+        metric = self.scoring_report.target_metric
+        return Metrics.metric_as_loss(
+            self.scoring_report.metric_scores[metric].value, metric)
+
+    def _get_model_normalized_loss(self):
         metric = Metrics.supported_metrics()[self.scoring_report.target_metric]
 
-        if metric.ptype == REGRESSION and Metrics.normalized_rmse.name in self.scoring_report.metric_scores:
-            loss = self.scoring_report.metric_scores[Metrics.normalized_rmse.name].value
-        else:
-            loss = Metrics.metric_as_loss(
-                self.scoring_report.metric_scores[self.scoring_report.target_metric].value,
-                self.scoring_report.target_metric)
+        if not metric.is_loss:
+            return self._get_model_loss()
 
-        return loss
+        if metric.ptype == REGRESSION:
+            secondary_metric = Metrics.r2.name
+        else:
+            secondary_metric = Metrics.recall.name
+
+        if secondary_metric not in self.scoring_report.metric_scores:
+            logging.warning("secondary metric {} is not available in scoring report".format(secondary_metric))
+            return 0
+        else:
+            return Metrics.metric_as_loss(
+                self.scoring_report.metric_scores[secondary_metric].value,
+                secondary_metric)
 
     def _calculate_model_quality(self):
         model_quality = 1.0
         model_quality = model_quality \
                         - self._vulnerability_report.imputation \
-                        - self.model_loss
+                        - self._model_normalized_loss
         model_quality = max(model_quality, 0)
 
         return model_quality
@@ -151,6 +166,11 @@ class ModelQualityReport(Report):
     @property
     def model_loss(self):
         return self._model_loss
+
+    @property
+    def model_normalized_loss(self):
+        return self._model_normalized_loss
+
 
 
 

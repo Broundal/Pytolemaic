@@ -135,7 +135,7 @@ class SensitivityOfFeaturesReport(Report):
         if ax is None:
             fig, ax = plt.subplots(1)
 
-        sorted_features = self.sorted_sensitivities  # sorted(self.sensitivities.items(), key=lambda kv: kv[1])
+        sorted_features = self.sorted_sensitivities  # sorted(self.sensitivities.items(), key=lambda kv: -kv[1])
         
         if n_features_to_plot is not None:
             sorted_features = sorted_features[:min(n_features_to_plot, len(sorted_features))]

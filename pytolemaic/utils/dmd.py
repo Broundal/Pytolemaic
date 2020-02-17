@@ -71,7 +71,7 @@ class DMD():
             return {}
 
         categorical_features = self.categorical_features
-        if len(categorical_features) == 0:
+        if categorical_features is None or len(categorical_features) == 0:
             raise ValueError(
                 "When setting categorical_encoding you must also specify which feature is categorical through columns_meta")
 
@@ -219,7 +219,7 @@ class DMD():
     @property
     def categorical_features(self):
         if self.FEATURE_TYPES not in self._columns_meta.columns:
-            return []
+            return None
         else:
             return numpy.arange(self.n_features)[
                 self._columns_meta[self.FEATURE_TYPES].values.ravel() == FeatureTypes.categorical]
@@ -231,3 +231,7 @@ class DMD():
     @property
     def categorical_encoding_by_icols(self):
         return self._categorical_encoding_by_ind
+
+    @property
+    def nan_mask(self):
+        return self._x.isnull().values
