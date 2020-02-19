@@ -5,7 +5,7 @@ Backlog:
 Small:
 ** Metrics - micro / binary / additional
 ** Uncertainty methods - prediction intervals regression - xgboost quantiles
-
+** raise insights to user when there are important insights he should look intp
 
 Big:
 ** Readable report (e.g. pdf)

@@ -1,0 +1,5 @@
+16/02/2020 - Package made public, supporting
+* See here: https://towardsdatascience.com/pytolemaic-package-for-model-quality-analysis-2b7bea751cfd
+
+Since then:
+- added calibration curve to scoring report
