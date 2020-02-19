@@ -48,13 +48,16 @@ class LimeExplainer():
             mode="classification" if is_classification else "regression",
             training_labels=None,  # ???
             feature_names=dmd_train.feature_names,
-            categorical_features=dmd_train.categorical_features or [],  ###
+            categorical_features=dmd_train.categorical_features if dmd_train.categorical_features is not None else [],
+            ###
             categorical_names=dmd_train.categorical_encoding_by_icols,  ###
             kernel_width=self.kernel_width,
-            kernel=None,  # default is np.sqrt(np.exp(-(d ** 2) / kernel_width ** 2))
+            kernel=None,
+            # default is np.sqrt(np.exp(-(d ** 2) / kernel_width ** 2))
             verbose=False,
             class_names=dmd_train.labels,
-            feature_selection='auto',  # ??? options are 'forward_selection', 'lasso_path', 'none' or 'auto'.
+            feature_selection='auto',
+            # ??? options are 'forward_selection', 'lasso_path', 'none' or 'auto'.
             discretize_continuous=True,
             discretizer='decile',
             # -- Lime discretizers do not support nans (options are 'quartile', 'decile', 'entropy')

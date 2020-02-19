@@ -1,6 +1,7 @@
 import copy
 
 import numpy
+import pandas
 from matplotlib._color_data import XKCD_COLORS
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
@@ -93,7 +94,7 @@ class GeneralUtils():
         dictionary = cls.round_values(dictionary, digits=5)
         dictionary = cls.make_dict_json_compatible(dictionary)
 
-        for k,v in dictionary.items():
+        for k, v in dictionary.items():
             if isinstance(v, dict):
                 dictionary[k] = cls.make_dict_printable(v)
             elif isinstance(v, (list, tuple)):
@@ -103,3 +104,7 @@ class GeneralUtils():
                 pass
 
         return dictionary
+
+    @classmethod
+    def nan_mask(cls, x):
+        return pandas.DataFrame(x).isnull().values
