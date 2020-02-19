@@ -198,7 +198,7 @@ class CalibrationCurveReport(Report):
                      label, brier_loss))
 
             # todo: remove y_proba from self
-            ax2.hist(self._y_proba[:, class_index], range=(0, 1.2),
+            ax2.hist(self._y_proba[:, class_index], range=(0, 1.),
                      bins=self._n_bins, label=label,
                      color=possible_colors[class_index],
                      histtype="step", lw=2)
@@ -206,11 +206,11 @@ class CalibrationCurveReport(Report):
         ax1.set_ylabel("Fraction of positives")
         ax1.set_ylim([-0.05, 1.05])
         ax1.legend(loc="lower right")
-        ax1.set_title('Calibration plots  (reliability curve)')
+        ax1.set_title('Calibration plots (reliability curve)')
 
         ax2.set_xlabel("Mean predicted value")
         ax2.set_ylabel("Count")
-        ax2.legend(loc="upper right")
+        ax2.legend(loc="upper center", ncol=2)
 
 
 class SklearnClassificationReport(Report):
