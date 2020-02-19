@@ -1,7 +1,9 @@
 import numpy
 import sklearn.datasets
 import sklearn.model_selection
+from matplotlib import pyplot as plt
 from sklearn.tree import DecisionTreeClassifier
+
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.dmd import DMD
 
@@ -42,5 +44,24 @@ def run():
         splitter='stratified',
         metric='recall')
 
+    scoring_report = pytrust.scoring_report()
+    scoring_report.plot()
+
+    sensitivity_report = pytrust.sensitivity_report()
+    sensitivity_report.plot()
+
+    quality_report = pytrust.quality_report()
+    quality_report.plot()
+
+    sample = xtest[0, :].reshape(1, -1)
+    explainer = pytrust.create_lime_explainer(max_samples=64000)
+    explainer.explain(sample=sample)
+
+    uncertainty_model = pytrust.create_uncertainty_model(method='default')
+    prediction = uncertainty_model.predict(sample)  # same as model.predict
+    uncertainty = uncertainty_model.uncertainty(sample)  # uncertainty value
+
+
 if __name__ == '__main__':
     run()
+    plt.show()

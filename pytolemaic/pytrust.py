@@ -171,16 +171,16 @@ class PyTrust():
         return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report,
                              model_quality_report=model_quality_report)
 
-    def create_uncertainty_model(self, method='auto'):
+    def create_uncertainty_model(self, method='default'):
         if method not in self._uncertainty_models:
 
             if self.is_classification:
-                method = 'confidence' if method == 'auto' else method
+                method = 'confidence' if method == 'default' else method
                 uncertainty_model = UncertaintyModelClassifier(
                     model=self.model,
                     uncertainty_method=method)
             else:
-                method = 'mae' if method == 'auto' else method
+                method = 'mae' if method == 'default' else method
                 uncertainty_model = UncertaintyModelRegressor(
                     model=self.model,
                     uncertainty_method=method)

@@ -4,7 +4,6 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import Scor
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
 from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.constants import REGRESSION
-from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
 
@@ -196,6 +195,10 @@ class QualityReport(Report):
             train_quality_report=TrainSetQualityReport.to_dict_meaning(),
             model_quality_report=ModelQualityReport.to_dict_meaning(),
         )
+
+    def plot(self):
+        # nothing to plot
+        pass
 
     @property
     def train_quality_report(self):

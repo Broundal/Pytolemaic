@@ -111,12 +111,12 @@ class LimeExplainer():
         model_regressor = ElasticNetWrapper(random_state=0, l1_ratio=0.9, alpha=1e-3, warm_start=True, copy_X=False,
                                             selection='random', tol=1e-4)
 
-        exp = self.explainer.explain_instance(sample, self.predict_function,
+        exp = self.explainer.explain_instance(sample.ravel(),
+                                              self.predict_function,
                                               labels=self.labels,
                                               num_features=self.n_features,
                                               num_samples=num_samples,
                                               model_regressor=model_regressor)
-
 
         return exp
 
