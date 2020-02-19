@@ -1,12 +1,15 @@
 import numpy
+import sklearn.calibration
 from matplotlib import pyplot as plt
-from sklearn.metrics import confusion_matrix, classification_report, RocCurveDisplay, PrecisionRecallDisplay, \
-    precision_recall_curve, average_precision_score, auc, roc_curve
+from sklearn.metrics import confusion_matrix, classification_report, \
+    RocCurveDisplay, PrecisionRecallDisplay, \
+    precision_recall_curve, average_precision_score, auc, roc_curve, \
+    brier_score_loss
 from sklearn.utils.multiclass import unique_labels
 
 from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.general import GeneralUtils
-from pytolemaic.utils.metrics import Metrics, Metric
+from pytolemaic.utils.metrics import Metrics
 
 
 class ROCCurveReport(Report):
@@ -115,33 +118,134 @@ class PrecisionRecallCurveReport(Report):
             recall = self._recall_precision_curve[label]['recall']
             average_precision = self._average_precision[label]
 
-            viz = PrecisionRecallDisplay(precision, recall, average_precision, 'Classifier')
+            viz = PrecisionRecallDisplay(precision, recall, average_precision,
+                                         'Classifier')
             viz.plot(ax=ax, name=label, color=possible_colors[class_index])
+
+
+class CalibrationCurveReport(Report):
+    def __init__(self, y_true, y_proba, labels=None, sample_weight=None,
+                 n_bins=10):
+        self._labels = labels if labels is not None else unique_labels(y_true)
+        self._calibration_curve = {}
+        self._brier_loss = {}
+        self._y_proba = y_proba
+        self._n_bins = n_bins
+
+        for class_index, label in enumerate(self.labels):
+            fraction_of_positives, mean_predicted_value = \
+                sklearn.calibration.calibration_curve(
+                    y_true=y_true == class_index,
+                    y_prob=y_proba[:, class_index],
+                    normalize=False,
+                    n_bins=n_bins,
+                    strategy='uniform')
+            self._calibration_curve[label] = dict(
+                fraction_of_positives=fraction_of_positives,
+                mean_predicted_value=mean_predicted_value)
+            self._brier_loss[label] = brier_score_loss(
+                y_true=y_true == class_index,
+                y_prob=y_proba[:, class_index],
+                sample_weight=sample_weight,
+                pos_label=1)
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
+    def calibration_curve(self):
+        return self._calibration_curve
+
+    @property
+    def brier_loss(self):
+        return self._brier_loss
+
+    def to_dict(self, printable=False):
+        out = dict(calibration_curve=self.calibration_curve,
+                   brier_loss=self.brier_loss,
+                   labels=self.labels.tolist())
+        return self._printable_dict(out, printable=printable)
+
+    @classmethod
+    def to_dict_meaning(cls):
+        return dict(
+            calibration_curve="Calibration curve as a dict (fraction_of_positives, mean_predicted_value), per label",
+            brier_loss="Brier loss (lower is better), per label",
+            labels="The class labels"
+        )
+
+    def plot(self):
+
+        fig = plt.figure(figsize=(10, 10))
+        ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
+        ax2 = plt.subplot2grid((3, 1), (2, 0))
+
+        ax1.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+
+        ax1.set_title("Calibartion Curve")
+        possible_colors = GeneralUtils.shuffled_colors()
+        for class_index, label in enumerate(self.labels):
+            mean_predicted_value = self._calibration_curve[label][
+                'mean_predicted_value']
+            fraction_of_positives = self._calibration_curve[label][
+                'fraction_of_positives']
+
+            brier_loss = self.brier_loss[label]
+            ax1.plot(mean_predicted_value, fraction_of_positives, "s-",
+                     color=possible_colors[class_index],
+                     label="class %s (brier loss=%1.3f)" % (
+                     label, brier_loss))
+
+            # todo: remove y_proba from self
+            ax2.hist(self._y_proba[:, class_index], range=(0, 1.2),
+                     bins=self._n_bins, label=label,
+                     color=possible_colors[class_index],
+                     histtype="step", lw=2)
+
+        ax1.set_ylabel("Fraction of positives")
+        ax1.set_ylim([-0.05, 1.05])
+        ax1.legend(loc="lower right")
+        ax1.set_title('Calibration plots  (reliability curve)')
+
+        ax2.set_xlabel("Mean predicted value")
+        ax2.set_ylabel("Count")
+        ax2.legend(loc="upper right")
 
 
 class SklearnClassificationReport(Report):
     def __init__(self, y_true, y_pred, y_proba, labels=None,
                  sample_weight=None, digits=3):
-        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+        self._labels = labels if labels is not None else unique_labels(y_true,
+                                                                       y_pred)
 
         self._sample_weight = sample_weight
 
-        self._sklearn_performance_summary_text = classification_report(y_true=y_true, y_pred=y_pred.reshape(-1, 1),
-                                                                       labels=None,
-                                                                       target_names=[str(k) for k in self._labels],
-                                                                       sample_weight=sample_weight, digits=digits,
-                                                                       output_dict=False)
+        self._sklearn_performance_summary_text = classification_report(
+            y_true=y_true, y_pred=y_pred.reshape(-1, 1),
+            labels=None,
+            target_names=[str(k) for k in self._labels],
+            sample_weight=sample_weight, digits=digits,
+            output_dict=False)
 
-        self._sklearn_performance_summary_dict = classification_report(y_true=y_true, y_pred=y_pred,
-                                                                       labels=None, target_names=self._labels,
-                                                                       sample_weight=sample_weight, digits=digits,
-                                                                       output_dict=True)
+        self._sklearn_performance_summary_dict = classification_report(
+            y_true=y_true, y_pred=y_pred,
+            labels=None, target_names=self._labels,
+            sample_weight=sample_weight, digits=digits,
+            output_dict=True)
 
         self._roc_curve = ROCCurveReport(y_true=y_true, y_proba=y_proba,
-                                         labels=self.labels, sample_weight=sample_weight)
+                                         labels=self.labels,
+                                         sample_weight=sample_weight)
 
-        self._precision_recall_curve = PrecisionRecallCurveReport(y_true=y_true, y_proba=y_proba,
-                                                                  labels=self.labels, sample_weight=sample_weight)
+        self._calibration_curve = CalibrationCurveReport(y_true=y_true,
+                                                         y_proba=y_proba,
+                                                         labels=self.labels,
+                                                         sample_weight=sample_weight)
+
+        self._precision_recall_curve = PrecisionRecallCurveReport(
+            y_true=y_true, y_proba=y_proba,
+            labels=self.labels, sample_weight=sample_weight)
         self._y_true = y_true
         self._y_pred = y_pred
         self._y_proba = y_proba
@@ -159,14 +263,20 @@ class SklearnClassificationReport(Report):
         return self._precision_recall_curve
 
     @property
+    def calibration_curve(self) -> CalibrationCurveReport:
+        return self._calibration_curve
+
+    @property
     def sklearn_performance_summary(self):
         return self._sklearn_performance_summary_dict
 
     def to_dict(self, printable=False):
-        out = dict(sklearn_performance_summary=self.sklearn_performance_summary,
-                    roc_curve=self.roc_curve.to_dict(),
-                    precision_recall_curve=self.precision_recall_curve.to_dict(),
-                    labels=self.labels.tolist())
+        out = dict(
+            sklearn_performance_summary=self.sklearn_performance_summary,
+            roc_curve=self.roc_curve.to_dict(),
+            precision_recall_curve=self.precision_recall_curve.to_dict(),
+            calibration_curve=self.calibration_curve.to_dict(),
+            labels=self.labels.tolist())
         return self._printable_dict(out, printable=printable)
 
     @classmethod
@@ -175,6 +285,7 @@ class SklearnClassificationReport(Report):
             sklearn_performance_summary="Accuracy score for various metrics produced by sklearn",
             roc_curve="ROC curve report",
             precision_recall_curve="Precision-Recall curve report",
+            calibration_curve="Calibration curve report",
             labels="The class labels"
         )
 
@@ -193,6 +304,10 @@ class SklearnClassificationReport(Report):
 
         self.precision_recall_curve.plot(ax1)
         self.roc_curve.plot(ax2)
+        plt.tight_layout()
+
+        # new figure
+        self.calibration_curve.plot()
 
         plt.tight_layout()
         plt.draw()
