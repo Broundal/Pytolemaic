@@ -1,0 +1,150 @@
+import logging
+
+import numpy
+import scipy.stats
+
+from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import \
+    DatasetAnalysisReport, MissingValuesReport
+from pytolemaic.utils.constants import CLASSIFICATION
+from pytolemaic.utils.dmd import DMD
+
+
+class DatasetAnalysis():
+    def __init__(self, problem_Type, class_count_threshold=10, outliers_n_sigma=(3, 5),
+                 nan_threshold_per_col=(0.1, 0.5, 0.9), nan_threshold_per_sample=(0.1, 0.5, 0.9)):
+        self._problem_type = problem_Type
+        self._class_count_threshold = class_count_threshold
+        self._outliers_n_sigma = outliers_n_sigma
+        self._nan_threshold_per_feature = nan_threshold_per_col
+        self._nan_threshold_per_sample = nan_threshold_per_sample
+
+    def count_unique_classes(self, dataset: DMD) -> dict:
+
+        if dataset.categorical_features is None:
+            logging.warning("Unable to analyze categorical features if feature types information is unavailable.")
+            return {}
+
+        if len(dataset.categorical_features) == 0:
+            return {}
+
+        out = {}
+        x = numpy.zeros((dataset.n_samples, dataset.n_features + 1))
+        x[:, :-1] = dataset.values
+        x[:, -1] = dataset.target.ravel()
+
+        feature_names = dataset.feature_names + ['target']
+
+        nan_mask = numpy.zeros((dataset.n_samples, dataset.n_features + 1)).astype(bool)
+        nan_mask[:, :-1] = dataset.nan_mask
+
+        target_is_categorical = self._problem_type == CLASSIFICATION
+        target_index = [dataset.n_features] if target_is_categorical else []
+
+        categorical_features = dataset.categorical_features.tolist() + target_index
+
+        for i in categorical_features:
+            vec = x[~nan_mask[:, i], i]
+            if len(vec) == 0:
+                continue
+            try:
+                classes_, counts = numpy.unique(vec, return_counts=True)
+            except:
+                classes_ = set(vec)
+                counts = [sum(vec == class_) for class_ in classes_]
+
+            if min(counts) <= self._class_count_threshold:
+                out[feature_names[i]] = {class_: count for class_, count in zip(classes_, counts) if
+                                         count <= self._class_count_threshold}
+
+        return out
+
+    def count_outliers(self, dataset: DMD) -> dict:
+        if dataset.categorical_features is None:
+            logging.warning(
+                "Unable to analyze numerical features for outlier if feature types information is unavailable.")
+            return {}
+
+        if len(dataset.categorical_features) == dataset.n_features:
+            return {}
+
+        out = {}
+        x = numpy.zeros((dataset.n_samples, dataset.n_features + 1))
+        x[:, :-1] = dataset.values
+        x[:, -1] = dataset.target.ravel()
+        feature_names = dataset.feature_names + ['target']
+
+        nan_mask = numpy.zeros((dataset.n_samples, dataset.n_features + 1)).astype(bool)
+        nan_mask[:, :-1] = dataset.nan_mask
+
+        target_is_categorical = self._problem_type == CLASSIFICATION
+        target_index = {dataset.n_features} if target_is_categorical else set()
+        numerical_features = set(numpy.arange(dataset.n_features + 1)) - set(
+            dataset.categorical_features) - target_index
+
+        expected_outliers_per_sigma = {sigma: int(0.75 + (1 - scipy.stats.norm.cdf(sigma)) * dataset.n_samples)
+                                       for sigma in self._outliers_n_sigma}
+
+        for i in numerical_features:
+            vec = x[~nan_mask[:, i], i]
+            if len(vec) == 0:
+                continue
+
+            for sigma in self._outliers_n_sigma:
+                prev_indices = []
+                indices = numpy.arange(len(vec))
+                mean, std = 0, 0
+                while len(prev_indices) != len(indices):
+                    vec_for_stats = vec[indices]
+                    std = numpy.std(vec_for_stats)
+                    mean = numpy.mean(vec_for_stats)
+                    outliers = ((vec_for_stats > mean + (2 + sigma) * std) + (
+                            vec_for_stats < mean - (2 + sigma) * std)).astype(bool)
+                    prev_indices = indices
+                    indices = indices[~outliers]
+
+                expected_outliers = expected_outliers_per_sigma[sigma]
+                n_outliers = numpy.sum(vec > mean + sigma * std) + numpy.sum(vec < mean - sigma * std)
+
+                if n_outliers > 2 * expected_outliers:
+                    if feature_names[i] not in out:
+                        out[feature_names[i]] = {}
+                    out[feature_names[i]]['{}-sigma'.format(sigma)] = n_outliers
+                    # n_sigma = '{}-sigma'.format(sigma)
+                    # if n_sigma not in out:
+                    #     out[n_sigma] = {}
+                    # out[n_sigma][feature_names[i]] = n_outliers
+
+        return out
+
+    def count_missing_values(self, dataset: DMD):
+        nan_mask = dataset.nan_mask
+
+        # features
+        nan_cols = {}
+        for nan_threshold in self._nan_threshold_per_feature:
+            nan_ratios = numpy.sum(nan_mask, axis=0) / dataset.n_samples
+            is_off_limit = nan_ratios >= nan_threshold
+            nan_cols[nan_threshold] = dict(
+                zip(numpy.array(dataset.feature_names)[is_off_limit], nan_ratios[is_off_limit]))
+
+        # samples
+        nan_rows = {}
+        for nan_threshold in self._nan_threshold_per_sample:
+            nan_ratios = numpy.sum(nan_mask, axis=1) / dataset.n_features
+            is_off_limit = nan_ratios >= nan_threshold
+            nan_rows[nan_threshold] = dict(zip(numpy.arange(dataset.n_samples)[is_off_limit], nan_ratios[is_off_limit]))
+
+        return nan_cols, nan_rows
+
+    def dataset_analysis_report(self, dataset: DMD):
+        nan_counts_features, nan_counts_samples = self.count_missing_values(dataset=dataset)
+
+        self.count_unique_classes(dataset=dataset)
+        self.count_outliers(dataset=dataset)
+
+        return DatasetAnalysisReport(
+            class_counts=self.count_unique_classes(dataset=dataset),
+            outliers_count=self.count_outliers(dataset=dataset),
+            missing_values_report=MissingValuesReport(nan_counts_features=nan_counts_features,
+                                                      nan_counts_samples=nan_counts_samples)
+        )

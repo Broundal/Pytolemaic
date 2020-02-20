@@ -97,6 +97,10 @@ class GeneralUtils():
         for k, v in dictionary.items():
             if isinstance(v, dict):
                 dictionary[k] = cls.make_dict_printable(v)
+                if len(dictionary[k]) > 20:
+                    keys = list(dictionary[k].keys())[:20]
+                    dictionary[k] = {key: dictionary[k][key] for key in keys}
+                    dictionary[k]['...'] = '...'
             elif isinstance(v, (list, tuple)):
                 if len(v) > 10:
                     dictionary[k] = [v[0], v[1], '...', v[-2], v[-1]]

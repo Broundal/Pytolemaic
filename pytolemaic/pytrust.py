@@ -1,5 +1,7 @@
 import numpy
 
+from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis
+from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
     Scoring
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
@@ -10,6 +12,7 @@ from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQual
     ModelQualityReport
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier, UncertaintyModelRegressor
+from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
@@ -195,3 +198,9 @@ class PyTrust():
         lime_explainer = LimeExplainer(n_features_to_plot=20, **kwargs)
         lime_explainer.fit(self.train, model=self.model)
         return lime_explainer
+
+    @cache
+    def dataset_analysis_report(self, **kwargs) -> DatasetAnalysisReport:
+        da = DatasetAnalysis(problem_Type=CLASSIFICATION if self.is_classification else REGRESSION)
+        report = da.dataset_analysis_report(dataset=self.train)
+        return report

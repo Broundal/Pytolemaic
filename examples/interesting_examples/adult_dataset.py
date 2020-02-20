@@ -23,14 +23,18 @@ def run():
     print("We've trained a ML model (details below) on uci adult dataset. Let's see whether our model is a good one")
     print("Model details\n", classifier, '\n\n')
 
-    print("First, let's calculate score report")
+    print("Let's analyze the dataset")
+    print("Calculating...")
+    dataset_analysis_report = pytrust.dataset_analysis_report()
+    dataset_analysis_report.plot()
+    print("Calculating... Done")
+
+    print("Let's calculate score report")
     print("Calculating...")
     scoring_report = pytrust.scoring_report()
     print("Calculating... Done")
     print("\nNow let's deepdive into the report!")
     scoring_report_deepdive(scoring_report)
-
-
 
     print("\n\nNext we'd like to check feature sensitivity")
     print("Calculating...")

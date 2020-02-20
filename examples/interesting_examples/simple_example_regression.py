@@ -46,6 +46,9 @@ def run():
     sensitivity_report = pytrust.sensitivity_report()
     sensitivity_report.plot()
 
+    dataset_analysis_report = pytrust.dataset_analysis_report()
+    dataset_analysis_report.plot()
+
     quality_report = pytrust.quality_report()
     quality_report.plot()
 

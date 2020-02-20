@@ -26,7 +26,13 @@ def run():
 
     print("Model details\n", estimator, '\n\n')
 
-    print("First, let's calculate score report")
+    print("Let's analyze the dataset")
+    print("Calculating...")
+    dataset_analysis_report = pytrust.dataset_analysis_report()
+    dataset_analysis_report.plot()
+    print("Calculating... Done")
+
+    print("Let's calculate score report")
     print("Calculating...")
     scoring_report = pytrust.scoring_report()
     print("Calculating... Done")
