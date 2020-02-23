@@ -164,7 +164,7 @@ class DatasetAnalysisReport(Report):
         n_low_count_classes = [len(self.class_counts[feature]) for feature in features]
 
         x = [str(k) for k in reversed(features)]
-        y = list(reverseKd(n_low_count_classes))
+        y = list(reversed(n_low_count_classes))
         plt.barh(x, y)
         ax.set(
             title='Features with under represented classes',
