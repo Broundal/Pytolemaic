@@ -6,6 +6,8 @@ Small:
 ** Metrics - micro / binary / additional
 ** Uncertainty methods - prediction intervals regression - xgboost quantiles
 ** raise insights to user when there are important insights he should look intp
+** calibration curve for uncertainty models
+** make separation quality into a report, and add sensitivity analysis for classifier model, and connect it to insights.
 
 Big:
 ** Readable report (e.g. pdf)

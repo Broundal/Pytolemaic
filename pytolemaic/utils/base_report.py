@@ -12,10 +12,16 @@ class Report():
     def plot(self):
         raise NotImplementedError
 
+    def insights_summary(self):
+        raise NotImplementedError
+
+    def _add_cls_name_prefix(self, l):
+        prefix = str(type(self).__name__)
+        return [prefix + ': ' + item for item in l]
+
     @classmethod
     def _printable_dict(cls, out, printable=False):
         if printable:
             return GeneralUtils.make_dict_printable(out)
         else:
             return out
-

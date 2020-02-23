@@ -1,3 +1,5 @@
+import itertools
+
 import numpy
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis
@@ -204,3 +206,7 @@ class PyTrust():
         da = DatasetAnalysis(problem_Type=CLASSIFICATION if self.is_classification else REGRESSION)
         report = da.dataset_analysis_report(dataset=self.train)
         return report
+
+    @cache
+    def insights_summary(self):
+        return itertools.chain(self.scoring_report().insights_summary())

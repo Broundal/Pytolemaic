@@ -1,3 +1,5 @@
+import itertools
+
 import numpy
 import sklearn.calibration
 from matplotlib import pyplot as plt
@@ -66,6 +68,18 @@ class ROCCurveReport(Report):
 
         plt.draw()
 
+    def insights_summary(self):
+        min_points_threshold = 5
+        n_points = [(label, len(set(self._roc_curve[label]['thresholds']))) for label in self.labels]
+        label, min_points = sorted(n_points, key=lambda pair: pair[1])[0]
+        insights = []
+        if min_points <= min_points_threshold:
+            insights = ['Only {} probability values ({}) for class {}. '
+                        'This may impede the tuning of prediction threshold and the calibartion curve. Such behavior may indicate a bug.'
+                            .format(min_points, set(self._roc_curve[label]['thresholds']), label)]
+
+        return self._add_cls_name_prefix(insights)
+
 
 class PrecisionRecallCurveReport(Report):
     def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
@@ -121,6 +135,9 @@ class PrecisionRecallCurveReport(Report):
             viz = PrecisionRecallDisplay(precision, recall, average_precision,
                                          'Classifier')
             viz.plot(ax=ax, name=label, color=possible_colors[class_index])
+
+    def insights_summary(self):
+        return []
 
 
 class CalibrationCurveReport(Report):
@@ -211,6 +228,31 @@ class CalibrationCurveReport(Report):
         ax2.set_xlabel("Mean predicted value")
         ax2.set_ylabel("Count")
         ax2.legend(loc="upper center", ncol=2)
+
+    def insights_summary(self):
+        lvl1 = 0.25
+        lvl2 = 0.5
+        lvl3 = 0.75
+
+        brier_loss = [(label, self._brier_loss[label]) for label in self.labels]
+        label, max_loss = sorted(brier_loss, key=lambda pair: pair[1], reverse=True)[0]
+        insights = []
+        if max_loss <= lvl1:
+            pass  # OK
+        elif max_loss <= lvl2:
+            insights = [
+                'Brier loss for class {} indicates model is not well calibrated. Please look at Calibration Curve.'.format(
+                    label)]
+        elif max_loss <= lvl3:
+            insights = [
+                'Brier loss for class {} indicates model is badly calibrated! Check the Calibration Curve.'.format(
+                    label)]
+        else:
+            insights = [
+                'Brier loss for class {} indicates model is not calibrated at all! Check the Calibration Curve!'.format(
+                    label)]
+
+        return self._add_cls_name_prefix(insights)
 
 
 class SklearnClassificationReport(Report):
@@ -312,6 +354,41 @@ class SklearnClassificationReport(Report):
         plt.tight_layout()
         plt.draw()
 
+    def _sklearn_summary_insights(self):
+        lvl1 = 0.75
+        lvl2 = 0.5
+        lvl3 = 0.25
+
+        insights = []
+
+        metrics = ['f1-score', 'precision', 'recall']
+
+        for label in list(self.labels) + ['macro avg']:
+            for metric in metrics:
+                score = self.sklearn_performance_summary[label][metric]
+                if label == 'macro avg':
+                    prefix = 'The overall performance ({}) is '.format(metric)
+                else:
+                    prefix = '{} score for class {} is {} which is '.format(metric, label, numpy.round(score, 2))
+
+                if score >= lvl1:
+                    pass  # ok
+                elif score >= lvl2:
+                    insights.append(prefix + 'quite low.')
+                elif score >= lvl3:
+                    insights.append(prefix + 'very low! Look at the confusion matrix.'.format(metric, label))
+                elif score >= lvl2:
+                    insights.append(prefix + 'extremely low! Check out the confusion matrix!'.format(metric, label))
+
+        return self._add_cls_name_prefix(insights)
+
+    def insights_summary(self):
+        return list(itertools.chain(self._sklearn_summary_insights(),
+                                    self.roc_curve.insights_summary(),
+                                    self.precision_recall_curve.insights_summary(),
+                                    self.calibration_curve.insights_summary(),
+                                    ))
+
 
 class ConfusionMatrixReport(Report):
     def __init__(self, y_true, y_pred, labels=None):
@@ -396,13 +473,20 @@ class ConfusionMatrixReport(Report):
 
         # plt.show()
 
+    def insights_summary(self):
+        insights = []
+        for i, label in enumerate(self.labels):
+            if numpy.sum(numpy.array(self.confusion_matrix)[:, i]) < 10:
+                insights.append('Model rarely predicts class {}! Is that ok??'.format(label))
+
+        return self._add_cls_name_prefix(insights
+                                         )
 
 class ScatterReport(Report):
     def __init__(self, y_true, y_pred, error_bars=None):
         self._y_true = numpy.array(y_true).reshape(-1, 1)
         self._y_pred = numpy.array(y_pred).reshape(-1, 1)
         self._error_bars = error_bars
-
 
     @property
     def y_true(self):
@@ -432,8 +516,7 @@ class ScatterReport(Report):
         rs = numpy.random.RandomState(0)
         inds = rs.permutation(len(self.y_true))[:max_points]
 
-
-        plt.figure(figsize=(10,5))
+        plt.figure(figsize=(10, 5))
         plt.errorbar(self.y_true[inds], self.y_pred[inds], xerr=None, yerr=self._error_bars[inds], fmt='.b', ecolor='k')
 
         plt.xlabel('Y true')
@@ -442,6 +525,9 @@ class ScatterReport(Report):
         plt.draw()
         # plt.show()
 
+    def insights_summary(self):
+        # todo: what insights can we derive?
+        return []
 
 class ScoringMetricReport(Report):
     def __init__(self, metric, value, ci_low, ci_high):
@@ -519,6 +605,26 @@ class ScoringMetricReport(Report):
 
         plt.draw()
 
+    def insights_summary(self):
+        insights = []
+
+        if self.value < self.ci_low or self.value > self.ci_high:
+            insights.append('{} value {} is out of range of confidence interval [{},{}]'
+                            .format(self.metric, self.value, self.ci_low, self.ci_high))
+
+        lvl1 = 0.1
+        lvl2 = 0.3
+        if self.ci_ratio < lvl1:
+            pass  # ok
+        elif self.ci_ratio < lvl2:
+            insights.append('Confidence interval for metric {} is quite large'.format(self.metric))
+        else:
+            insights.append(
+                'Confidence interval for metric {} is very large. You should not rely on this score measurement'.format(
+                    self.metric))
+
+        return self._add_cls_name_prefix(insights)
+
     @property
     def metric(self):
         return self._metric
@@ -590,12 +696,46 @@ class ScoringFullReport(Report):
     def to_dict_meaning(cls):
         return dict(
             target_metric="Metric of interest",
-            metric_scores="Score information for various metrics saved in a dict structure where key is the metric name and value is of type {}".format(ScoringMetricReport.__name__),
+            metric_scores="Score information for various metrics saved in a dict structure where key is the metric name and value is of type {}".format(
+                ScoringMetricReport.__name__),
             separation_quality="Measure whether the test and train comes from same distribution. High quality (max 1) means the test and train come from the same distribution. Low score (min 0) means the test set is problematic.",
             scatter="Scatter information (y_true vs y_pred). Available only for regressors.",
             confusion_matrix="Confusion matrix (y_true vs y_pred). Available only for classifiers.",
             classification_report="Sklearn's classification report"
         )
+
+    def separation_quality_insight(self):
+        lvl1 = 0.95
+        lvl2 = 0.7
+        insights = []
+        separability = numpy.round(self.separation_quality, 2)
+        if separability > lvl1:
+            pass  # ok
+        elif separability > lvl2:
+            insights.append(
+                'Covariance shift ={} is not negligible, there may be some issue with train/test distribution'
+                .format(1 - separability))
+        else:
+            insights.append("Covariance shift ={} is high! Double check the way you've defined the test set!\n"
+                            "Running sensitivity analysis on a model trained to classify train/test samples may "
+                            "indicate the source for the distribution differences.".format(1 - separability))
+
+        return self._add_cls_name_prefix(insights)
+
+    def insights_summary(self):
+        insights_from_reports = [report.insights_summary() for report in [self.metric_scores[self.target_metric],
+                                                                          self.scatter, self.confusion_matrix,
+                                                                          self.classification_report]
+                                 if report is not None]
+
+        return list(itertools.chain(self.separation_quality_insight(), *insights_from_reports))
+
+        # metric_scores=metric_scores,
+        # target_metric=self.target_metric,
+        # separation_quality=self.separation_quality,
+        # scatter=None if self.scatter is None else self.scatter.to_dict(),
+        # confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(),
+        # classification_report=None if self.classification_report is None else self.classification_report.to_dict()
 
     @property
     def separation_quality(self):
