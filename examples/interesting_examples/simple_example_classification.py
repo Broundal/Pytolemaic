@@ -10,6 +10,7 @@ from pytolemaic.utils.dmd import DMD
 
 def run():
     # Dataset: xtrain, ytrain, xtest, ytest
+    # noinspection PyUnresolvedReferences
     data = sklearn.datasets.load_wine(return_X_y=False)
 
     x = data['data']
@@ -63,6 +64,10 @@ def run():
     uncertainty_model = pytrust.create_uncertainty_model(method='default')
     prediction = uncertainty_model.predict(sample)  # same as model.predict
     uncertainty = uncertainty_model.uncertainty(sample)  # uncertainty value
+
+    print("Let's check for insights...")
+    print('\n'.join(pytrust.insights_summary()))
+    print("Done!")
 
 
 if __name__ == '__main__':

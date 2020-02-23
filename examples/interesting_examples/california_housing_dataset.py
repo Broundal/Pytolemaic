@@ -57,6 +57,10 @@ def run():
     # pprint(quality_report.to_dict(printable=True), width=120)
     # pprint(quality_report.to_dict_meaning(), width=120)
 
+    print("Let's check for insights...")
+    print('\n'.join(pytrust.insights_summary()))
+    print("Done!")
+
     print("\nLet's create a Lime explainer")
     lime_explainer = pytrust.create_lime_explainer(max_samples=64000)
 

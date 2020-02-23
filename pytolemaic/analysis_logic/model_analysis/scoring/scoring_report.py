@@ -69,14 +69,18 @@ class ROCCurveReport(Report):
         plt.draw()
 
     def insights_summary(self):
-        min_points_threshold = 5
-        n_points = [(label, len(set(self._roc_curve[label]['thresholds']))) for label in self.labels]
-        label, min_points = sorted(n_points, key=lambda pair: pair[1])[0]
+        min_points_threshold = 3 + 2  # 3 + '0' + '1'
+
+        thresholds = {label: set(numpy.clip(self._roc_curve[label]['thresholds'], 0, 1)) for label in self.labels}
+
         insights = []
-        if min_points <= min_points_threshold:
-            insights = ['Only {} probability values ({}) for class {}. '
-                        'This may impede the tuning of prediction threshold and the calibartion curve. Such behavior may indicate a bug.'
-                            .format(min_points, set(self._roc_curve[label]['thresholds']), label)]
+
+        for label in self.labels:
+            n_points = len(thresholds[label])
+            if n_points <= min_points_threshold:
+                insights = ['Only {} probability values ({}) for class {}. '
+                            'This may impede the tuning of prediction threshold and the calibartion curve. Such behavior may indicate a bug.'
+                                .format(n_points, sorted(thresholds[label]), label)]
 
         return self._add_cls_name_prefix(insights)
 
@@ -449,6 +453,7 @@ class ConfusionMatrixReport(Report):
         fmt = '.2g' if numpy.min(cm[cm > 0]) < 1 else 'd'
         if fmt == 'd':
             cm = cm.astype(int)
+        # noinspection PyArgumentList
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -613,15 +618,17 @@ class ScoringMetricReport(Report):
                             .format(self.metric, self.value, self.ci_low, self.ci_high))
 
         lvl1 = 0.1
-        lvl2 = 0.3
+        lvl2 = 0.5
+        ci_range_and_ratio = '[{:.3g}, {:.3g}], ci ratio of {:.3g}'.format(self.ci_low, self.ci_high, self.ci_ratio)
         if self.ci_ratio < lvl1:
             pass  # ok
         elif self.ci_ratio < lvl2:
-            insights.append('Confidence interval for metric {} is quite large'.format(self.metric))
+            insights.append(
+                'Confidence interval for metric {} is quite large ({})'.format(self.metric, ci_range_and_ratio))
         else:
             insights.append(
-                'Confidence interval for metric {} is very large. You should not rely on this score measurement'.format(
-                    self.metric))
+                'Confidence interval for metric {} is very large ({}). The score measurement is inaccurate.'.format(
+                    self.metric, ci_range_and_ratio))
 
         return self._add_cls_name_prefix(insights)
 
@@ -713,10 +720,10 @@ class ScoringFullReport(Report):
             pass  # ok
         elif separability > lvl2:
             insights.append(
-                'Covariance shift ={} is not negligible, there may be some issue with train/test distribution'
+                'Covariance shift ={:.2g} is not negligible, there may be some issue with train/test distribution'
                 .format(1 - separability))
         else:
-            insights.append("Covariance shift ={} is high! Double check the way you've defined the test set!\n"
+            insights.append("Covariance shift ={:.2g} is high! Double check the way you've defined the test set!\n"
                             "Running sensitivity analysis on a model trained to classify train/test samples may "
                             "indicate the source for the distribution differences.".format(1 - separability))
 
