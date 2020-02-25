@@ -78,8 +78,8 @@ class ROCCurveReport(Report):
         for label in self.labels:
             n_points = len(thresholds[label])
             if n_points <= min_points_threshold:
-                insights = ['Only {} probability values ({}) for class {}. '
-                            'This may impede the tuning of prediction threshold and the calibartion curve. Such behavior may indicate a bug.'
+                insights = ["Only {} probability values ({}) for class '{}'. "
+                            "This may impede the tuning of prediction threshold and the calibartion curve. Such behavior may indicate a bug."
                                 .format(n_points, sorted(thresholds[label]), label)]
 
         return self._add_cls_name_prefix(insights)
@@ -484,8 +484,7 @@ class ConfusionMatrixReport(Report):
             if numpy.sum(numpy.array(self.confusion_matrix)[:, i]) < 10:
                 insights.append('Model rarely predicts class {}! Is that ok??'.format(label))
 
-        return self._add_cls_name_prefix(insights
-                                         )
+        return self._add_cls_name_prefix(insights)
 
 class ScatterReport(Report):
     def __init__(self, y_true, y_pred, error_bars=None):
@@ -627,8 +626,8 @@ class ScoringMetricReport(Report):
                 'Confidence interval for metric {} is quite large ({})'.format(self.metric, ci_range_and_ratio))
         else:
             insights.append(
-                'Confidence interval for metric {} is very large ({}). The score measurement is inaccurate.'.format(
-                    self.metric, ci_range_and_ratio))
+                'Confidence interval for metric {} is very large ({}). The score measurement of {} is inaccurate.'.format(
+                    self.metric, ci_range_and_ratio, self.value))
 
         return self._add_cls_name_prefix(insights)
 
