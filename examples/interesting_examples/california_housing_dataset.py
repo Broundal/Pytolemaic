@@ -85,7 +85,7 @@ def sensitivity_deepdive(sensitivity_report):
     print("\nThe 3 least important features are:")
     print(sensitivity_report.shuffle_report.sorted_sensitivities[-3:])
     print("Thus there are {} features with 0 sensitivity and {} features with low sensitivity".format(
-        sensitivity_report.shuffle_stats_report.n_zero, sensitivity_report.shuffle_stats_report.n_low))
+        sensitivity_report.shuffle_report.stats_report.n_zero, sensitivity_report.shuffle_report.stats_report.n_low))
 
     print(
         "\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better). The meaning of the fields can be obtained with to_dict_meaning()")

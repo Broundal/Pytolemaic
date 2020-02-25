@@ -1,3 +1,5 @@
+import itertools
+
 from matplotlib import pyplot as plt
 
 from pytolemaic.utils.base_report import Report
@@ -74,7 +76,10 @@ class SensitivityStatsReport(Report):
             insights.append("{} very little sensitivity".format(sentence))
         elif self.n_low > lvl * self.n_features:
             insights.append("{} little sensitivity".format(sentence))
-        return self._add_cls_name_prefix(insights)
+
+        # insights = self._add_cls_name_prefix(insights)
+
+        return insights
 
 
 class SensitivityVulnerabilityReport(Report):
@@ -221,13 +226,38 @@ class SensitivityOfFeaturesReport(Report):
     @property
     def stats_report(self) -> SensitivityStatsReport:
         return self._stats_report
-    #
-    # def insights_summary(self):
-    #     return []
-    #     if self.method != 'shuffled':
-    #         return []
-    #
-    #     return self._add_cls_name_prefix(insights)
+
+    def insights_summary(self):
+        stats_report_insights = self.stats_report.insights_summary()
+        insights = []
+        insights.append("The most important feature is '{}', followed by '{}' and '{}'."
+                        .format(self.sorted_sensitivities[0][0],
+                                self.sorted_sensitivities[1][0],
+                                self.sorted_sensitivities[2][0]))
+        if self.stats_report.n_zero > 0:
+            zero_sensitivity = [feature for feature, value in self.sorted_sensitivities[-self.stats_report.n_zero:]]
+            if len(zero_sensitivity) == 1:
+                list_of_features = " '{}'".format(zero_sensitivity[0])
+            else:
+                list_of_features = "\n\t" + ", ".join(["'{}'".format(feature) for feature in zero_sensitivity])
+
+            insights.append("The following features can be discarded due to 0 sensitivity:{}".format(list_of_features))
+
+        if self.stats_report.n_very_low - self.stats_report.n_zero > 0:
+            very_low_sensitivity = [feature for feature, value in
+                                    self.sorted_sensitivities[
+                                    -self.stats_report.n_very_low - self.stats_report.n_zero: -self.stats_report.n_zero]]
+            if len(very_low_sensitivity) == 1:
+                list_of_features = " '{}'".format(very_low_sensitivity[0])
+            else:
+                list_of_features = "\n\t" + ", ".join(["'{}'".format(feature) for feature in very_low_sensitivity])
+
+            insights.append(
+                "The following features can be discarded due to very low sensitivity:{}".format(list_of_features))
+
+        insights = itertools.chain(stats_report_insights, insights)
+        insights = ["{}.{}: {}".format(type(self).__name__, self.method, insight) for insight in insights]
+        return insights
 
 class SensitivityFullReport(Report):
 
@@ -282,6 +312,13 @@ class SensitivityFullReport(Report):
     def vulnerability_report(self) -> SensitivityVulnerabilityReport:
         return self._vulnerability_report
 
+    def insights_summary(self):
+        return itertools.chain(self.shuffle_report.insights_summary(),
+                               [] if self.missing_report is None else self.missing_report.insights_summary(),
+                               self.vulnerability_report.insights_summary())
+
+
 if __name__ == '__main__':
     from pprint import pprint
+
     pprint(SensitivityFullReport.to_dict_meaning(), width=160)

@@ -79,7 +79,7 @@ def sensitivity_deepdive(sensitivity_report):
     print(sensitivity_report.missing_report.sorted_sensitivities[:3])
     print("This means that error caused by missing values affect the model differently than a regular mistake")
     print("\nThere are {} features with 0 sensitivity, and {} features with low sensitivity".format(
-        sensitivity_report.shuffle_stats_report.n_zero, sensitivity_report.shuffle_stats_report.n_low))
+        sensitivity_report.shuffle_report.stats_report.n_zero, sensitivity_report.shuffle_report.stats_report.n_low))
     print("\nlet's check which 3 features are least important. Does it make sense?")
     print(sensitivity_report.shuffle_report.sorted_sensitivities[-3:])
 

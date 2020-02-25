@@ -1,6 +1,8 @@
 import unittest
 
-from examples.interesting_examples import adult_dataset, california_housing_dataset, kddcup99_dataset, prediction_uncertainty_adult_dataset, simple_example_classification, simple_example_regression
+from examples.interesting_examples import adult_dataset, california_housing_dataset, kddcup99_dataset, \
+    prediction_uncertainty_adult_dataset, simple_example_classification, simple_example_regression
+
 
 class TestInterestingExamples(unittest.TestCase):
 

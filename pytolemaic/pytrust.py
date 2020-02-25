@@ -210,4 +210,5 @@ class PyTrust():
     @cache
     def insights_summary(self):
         return itertools.chain(self.dataset_analysis_report().insights_summary(),
-                               self.scoring_report().insights_summary())
+                               self.scoring_report().insights_summary(),
+                               self.sensitivity_report().insights_summary())
