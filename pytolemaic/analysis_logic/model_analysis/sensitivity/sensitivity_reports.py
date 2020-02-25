@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 
 from pytolemaic.utils.base_report import Report
-from pytolemaic.utils.general import GeneralUtils
 
 
 class SensitivityTypes():
@@ -63,6 +62,20 @@ class SensitivityStatsReport(Report):
     def n_zero(self):
         return self._n_zero
 
+    def insights_summary(self):
+
+        insights = []
+
+        lvl = 0.5
+        sentence = "More than {} of features have".format(lvl * self.n_features)
+        if self.n_zero > lvl * self.n_features:
+            insights.append("{} no sensitivity at all".format(sentence))
+        elif self.n_very_low > lvl * self.n_features:
+            insights.append("{} very little sensitivity".format(sentence))
+        elif self.n_low > lvl * self.n_features:
+            insights.append("{} little sensitivity".format(sentence))
+        return self._add_cls_name_prefix(insights)
+
 
 class SensitivityVulnerabilityReport(Report):
     def __init__(self, imputation: float, leakage: float, too_many_features: float):
@@ -111,6 +124,44 @@ class SensitivityVulnerabilityReport(Report):
     def too_many_features(self):
         return self._too_many_features
 
+    def insights_summary(self):
+
+        insights = []
+        lvl1, lvl2, lvl3 = 0.1, 0.5, 0.9
+        sentence = "Vulnerability to imputation is {:.3g} indicating your model is %s to the imputation technique.".format(
+            self.imputation)
+        if self.imputation < lvl1:
+            pass  # ok
+        elif self.imputation < lvl2:
+            insights.append(sentence % "somewhat sensitive")
+        elif self.imputation < lvl3:
+            insights.append(sentence % "sensitive")
+        else:
+            insights.append(sentence % "very sensitive" + "You should check what's going on, there may be a bug.")
+
+        lvl1, lvl2 = 0.1, 0.75
+        sentence = "Vulnerability to data leakage is {:.3g} indicating %s data leakage.".format(self.imputation)
+        if self.leakage < lvl1:
+            pass  # ok
+        elif self.leakage < lvl2:
+            insights.append(
+                sentence % "there is a chance of" + "Check the features with the highest sensitivity scores.")
+        else:
+            insights.append(
+                sentence % "a very high chance of" + "Check the features with the highest sensitivity scores.")
+
+        lvl1, lvl2 = 0.1, 0.5
+        sentence = "Vulnerability to number of features is {:.3g} indicating %s.".format(self.imputation)
+        if self.too_many_features < lvl1:
+            pass  # ok
+        elif self.too_many_features < lvl2:
+            insights.append(
+                sentence % "there are substantial number of features which could be discarded / regularized")
+        else:
+            insights.append(
+                sentence % "that many features have little value and may cause overfit. Discard these feature or increase regularization.")
+
+        return self._add_cls_name_prefix(insights)
 
 class SensitivityOfFeaturesReport(Report):
     def __init__(self, method: str, sensitivities: dict):
@@ -159,6 +210,13 @@ class SensitivityOfFeaturesReport(Report):
     def sorted_sensitivities(self):
         return [(k, v) for k, v in sorted(self._sensitivities.items(), key=lambda kv: -kv[1])]
 
+    #
+    # def insights_summary(self):
+    #     return []
+    #     if self.method != 'shuffled':
+    #         return []
+    #
+    #     return self._add_cls_name_prefix(insights)
 
 class SensitivityFullReport(Report):
 
