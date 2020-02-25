@@ -146,7 +146,8 @@ class LimeExplainer():
 
         try:
 
-            num_samples = 16000
+            num_samples = min(16000, self.max_samples // 2)
+
             exp = self._lime_explaination(sample=sample, num_samples=num_samples)
             higher_exp = as_dict(exp)
 

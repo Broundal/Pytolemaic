@@ -12,6 +12,7 @@ class LinearBase():
         self._xtrain, self._ytrain = None, None
         self.model = model
         self.random_state = numpy.random.RandomState(0)
+        self.y_type = float
 
 
     def _function(self, x):
@@ -54,7 +55,7 @@ class LinearClassificationDataset(LinearBase):
     def __init__(self, **kwargs):
         super(LinearClassificationDataset, self).__init__(
             model=GeneralUtils.simple_imputation_pipeline(
-                RandomForestClassifier(random_state=0, n_estimators=3)),
+                RandomForestClassifier(random_state=0, n_estimators=3, n_jobs=1)),
             **kwargs)
         self.y_type = int
 
@@ -62,7 +63,7 @@ class LinearRegressionDataset(LinearBase):
     def __init__(self, **kwargs):
         super(LinearRegressionDataset, self).__init__(
             model=GeneralUtils.simple_imputation_pipeline(
-                RandomForestRegressor(random_state=0, n_estimators=3)),
+                RandomForestRegressor(random_state=0, n_estimators=3, n_jobs=1)),
             **kwargs)
         self.y_type = float
 
