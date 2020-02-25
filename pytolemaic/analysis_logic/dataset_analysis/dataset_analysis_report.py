@@ -122,6 +122,58 @@ class MissingValuesReport(Report):
         plt.tight_layout()
         plt.draw()
 
+    def insights_summary(self):
+        insights = []
+        info = self.to_dict(printable=True)
+
+        lvl1 = 0.1
+        lvl2 = 0.5
+        lvl3 = 0.9
+
+        counts = [info['per_feature'][key]['count'] for key in info['per_feature']]
+        if len(counts) > 0 and max(counts) > 0:
+            max_key_features = max([key for key, values in info['per_feature'].items() if values['count'] > 0])
+            missing_values = info['per_feature'][max_key_features]
+            threshold = missing_values['threshold']
+
+            sentence = "missing values ({}) were found in {} features".format(max_key_features, missing_values['count'])
+            if threshold < lvl1:
+                insights.append("Some {}.".format(sentence))
+            elif threshold < lvl2:
+                insights.append("Significant number of {}.".format(sentence))
+            elif threshold < lvl3:
+                insights.append(
+                    "High number of {}. Check out these features:\n{}".format(sentence, missing_values['features']))
+            else:
+                insights.append("Extremely high number of {}. Check out these features:\n{}".format(sentence,
+                                                                                                    missing_values[
+                                                                                                        'features']))
+
+        lvl1 = 0.1
+        lvl2 = 0.5
+        lvl3 = 0.9
+
+        counts = [info['per_sample'][key]['count'] for key in info['per_sample']]
+        if len(counts) > 0 and max(counts) > 0:
+            max_key_samples = max([key for key, values in info['per_sample'].items() if values['count'] > 0])
+            missing_values = info['per_sample'][max_key_samples]
+            threshold = missing_values['threshold']
+
+            sentence = "missing values ({}) were found in {} samples".format(max_key_samples, missing_values['count'])
+            if threshold < lvl1:
+                insights.append("Some {}.".format(sentence))
+            elif threshold < lvl2:
+                insights.append("Significant number of {}.".format(sentence))
+            elif threshold < lvl3:
+                insights.append(
+                    "High number of {}. Check out these samples:\n{}".format(sentence, missing_values['samples']))
+            else:
+                insights.append("Extremely high number of {}. Check out these samples:\n{}".format(sentence,
+                                                                                                   missing_values[
+                                                                                                       'samples']))
+
+        return self._add_cls_name_prefix(insights)
+
 
 class DatasetAnalysisReport(Report):
     def __init__(self, class_counts, outliers_count, missing_values_report: MissingValuesReport):
@@ -130,11 +182,11 @@ class DatasetAnalysisReport(Report):
         self._missing_values_report = missing_values_report
 
     @property
-    def class_counts(self):
+    def class_counts(self) -> dict:
         return self._class_counts
 
     @property
-    def outliers_count(self):
+    def outliers_count(self) -> dict:
         return self._outliers_count
 
     @property
@@ -150,7 +202,7 @@ class DatasetAnalysisReport(Report):
     def to_dict_meaning(self):
         return dict(
             few_class_representatives='{feature_name: {class: instances_count}} : listing categorical features that has at least 1 class which is under-represented (less than 10 instances).',
-            outliers_count='{feature_name: {n-sigma: outliers_count}} : listing numerical features that has more outliers than is expected with respect to n-sigma. '
+            outliers_count='{feature_name: {n-sigma: outliers_info}} : listing numerical features that has more outliers than is expected with respect to n-sigma. '
                            'E.g. for 3-sigma we expect ceil(0.0027 x n_samples) outliers.',
             missing_values=self.missing_values_report.to_dict_meaning())
 
@@ -182,7 +234,8 @@ class DatasetAnalysisReport(Report):
 
         features = sorted([str(k) for k in self.outliers_count.keys()], reverse=True)
         for sigma in sorted(sigmas):
-            fv = [(feature, values[sigma]) for feature, values in self.outliers_count.items() if sigma in values]
+            fv = [(feature, values[sigma]['n_outliers']) for feature, values in self.outliers_count.items() if
+                  sigma in values]
 
             x, y = zip(*fv)
 
@@ -200,3 +253,44 @@ class DatasetAnalysisReport(Report):
         self.missing_values_report.plot()
         self._plot_class_counts()
         self._plot_outlier_counts()
+
+    def _class_count_insights(self):
+        insights = []
+        for feature_name, class_counts in self.class_counts.items():
+            if len(class_counts) == 1:
+                sentence = "Feature '{}' contains a class with few representatives".format(feature_name)
+            else:
+                sentence = "Feature '{}' contains {} classes with few representatives - {} samples in total. " \
+                           "With so few samples in each class there would be little to no learning.\n\tConsider merging all classes into a single 'other' class" \
+                    .format(feature_name, len(class_counts), sum(class_counts.values()))
+
+            list_of_classes = ["class '{}' has only {} representatives".format(key, value) for key, value in
+                               class_counts.items()]
+            if len(class_counts) == 1:
+                list_of_classes = ": " + list_of_classes[0]
+            else:
+                list_of_classes = ". List of classes:\n\t" + ",\n\t".join(list_of_classes)
+
+            insights.append("{}{}".format(sentence, list_of_classes))
+
+        return self._add_cls_name_prefix(insights)
+
+    def _outlier_counts_insights(self):
+        insights = []
+        for feature_name, outliers_info in self.outliers_count.items():
+            max_n_sigma = max(outliers_info.keys())
+
+            n_sigma_info = outliers_info[max_n_sigma]
+            n_sigma_range = "[{:.3g},{:.3g}]".format(
+                n_sigma_info['mean'] - n_sigma_info['n_sigma'] * n_sigma_info['std'],
+                n_sigma_info['mean'] + n_sigma_info['n_sigma'] * n_sigma_info['std'], )
+            sentence = "Feature '{}' has {} outliers with respect to {} - a {} range." \
+                .format(feature_name, n_sigma_info['n_outliers'], n_sigma_range, max_n_sigma)
+            insights.append(sentence)
+
+        return self._add_cls_name_prefix(insights)
+
+    def insights_summary(self):
+        return itertools.chain(self.missing_values_report.insights_summary(),
+                               self._outlier_counts_insights(),
+                               self._class_count_insights())

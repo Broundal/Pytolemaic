@@ -90,17 +90,7 @@ class DatasetAnalysis():
                 continue
 
             for sigma in self._outliers_n_sigma:
-                prev_indices = []
-                indices = numpy.arange(len(vec))
-                mean, std = 0, 0
-                while len(prev_indices) != len(indices):
-                    vec_for_stats = vec[indices]
-                    std = numpy.std(vec_for_stats)
-                    mean = numpy.mean(vec_for_stats)
-                    outliers = ((vec_for_stats > mean + (2 + sigma) * std) + (
-                            vec_for_stats < mean - (2 + sigma) * std)).astype(bool)
-                    prev_indices = indices
-                    indices = indices[~outliers]
+                mean, std = self._calc_mean_and_std(sigma, vec)
 
                 expected_outliers = expected_outliers_per_sigma[sigma]
                 n_outliers = numpy.sum(vec > mean + sigma * std) + numpy.sum(vec < mean - sigma * std)
@@ -108,13 +98,35 @@ class DatasetAnalysis():
                 if n_outliers > 2 * expected_outliers:
                     if feature_names[i] not in out:
                         out[feature_names[i]] = {}
-                    out[feature_names[i]]['{}-sigma'.format(sigma)] = n_outliers
+                    out[feature_names[i]]['{}-sigma'.format(sigma)] = dict(n_outliers=n_outliers,
+                                                                           n_sigma=sigma,
+                                                                           expected_outliers=expected_outliers,
+                                                                           mean=mean,
+                                                                           std=std)
                     # n_sigma = '{}-sigma'.format(sigma)
                     # if n_sigma not in out:
                     #     out[n_sigma] = {}
                     # out[n_sigma][feature_names[i]] = n_outliers
 
         return out
+
+    def _calc_mean_and_std(self, sigma, vec):
+        # Outliers will strongly affect the mean and variance by which they are defined.
+        # Thus, we throw away outliers according to sigma+2 before calculating the mean and std.
+        # We repeat the process iteratively until converged.
+
+        prev_indices = []
+        indices = numpy.arange(len(vec))
+        mean, std = 0, 0
+        while len(prev_indices) != len(indices):
+            vec_for_stats = vec[indices]
+            std = numpy.std(vec_for_stats)
+            mean = numpy.mean(vec_for_stats)
+            outliers = ((vec_for_stats > mean + (2 + sigma) * std) + (
+                    vec_for_stats < mean - (2 + sigma) * std)).astype(bool)
+            prev_indices = indices
+            indices = indices[~outliers]
+        return mean, std
 
     def count_missing_values(self, dataset: DMD):
         nan_mask = dataset.nan_mask
