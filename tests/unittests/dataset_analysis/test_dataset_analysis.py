@@ -57,12 +57,14 @@ class TestDatasetAnalysis(unittest.TestCase):
     self.assertTrue(9 in out)
     self.assertTrue('3-sigma' in out[9])
     self.assertTrue('5-sigma' in out[9])
-    self.assertTrue(out[9]['5-sigma'] == 1)
+    self.assertTrue(out[9]['5-sigma']['n_outliers'] == 1)
+    self.assertTrue(out[9]['3-sigma']['expected_outliers'] == 2)
+    self.assertTrue(out[9]['5-sigma']['expected_outliers'] == 0)
 
     self.assertTrue('target' in out)
     self.assertTrue('3-sigma' not in out['target'])
     self.assertTrue('5-sigma' in out['target'])
-    self.assertTrue(out['target']['5-sigma'] == 1)
+    self.assertTrue(out['target']['5-sigma']['n_outliers'] == 1)
 
   def test_count_missing_values(self):
     da = DatasetAnalysis(REGRESSION, class_count_threshold=10, outliers_n_sigma=(3, 5),
