@@ -47,7 +47,7 @@ class SensitivityAnalysis():
 
     def sensitivity_analysis(self, model, dmd_test: DMD, metric,
                              method=SensitivityTypes.shuffled, raw_scores=False,
-                             y_pred=None):
+                             y_pred=None) -> SensitivityOfFeaturesReport:
 
         self.model_support_dmd = GeneralUtils.dmd_supported(model, dmd_test)
         x = dmd_test if self.model_support_dmd else dmd_test.values
@@ -108,7 +108,7 @@ class SensitivityAnalysis():
         #             "Values are normalized to 1.")
         return SensitivityOfFeaturesReport(method=method, sensitivities=impact)
 
-    def _sensitivity_stats(self, sensitivity: SensitivityOfFeaturesReport):
+    def _sensitivity_stats(self, sensitivity: SensitivityOfFeaturesReport) -> [SensitivityStatsReport, None]:
         if not sensitivity:
             return None
 
@@ -130,7 +130,7 @@ class SensitivityAnalysis():
 
     def _vulnerability_report(self, shuffled_sensitivity: SensitivityOfFeaturesReport,
                               missing_sensitivity: SensitivityOfFeaturesReport,
-                              shuffled_sensitivity_stats: SensitivityStatsReport):
+                              shuffled_sensitivity_stats: SensitivityStatsReport) -> SensitivityVulnerabilityReport:
         # lower is better
         stats = shuffled_sensitivity_stats
 
