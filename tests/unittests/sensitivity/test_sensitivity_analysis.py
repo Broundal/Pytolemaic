@@ -10,10 +10,13 @@ from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports im
 class TestSensitivity(unittest.TestCase):
 
     def test_sensitivity_meta(self):
-        mock = SensitivityOfFeaturesReport(method='mock', sensitivities={'a' + str(k): k for k in range(10)})
 
         sensitivity = SensitivityAnalysis()
-        stats = sensitivity._sensitivity_stats(mock)
+        sensitivities = {'a' + str(k): k for k in range(10)}
+
+        mock = SensitivityOfFeaturesReport(method='mock', sensitivities=sensitivities,
+                                           stats_report=sensitivity._sensitivity_stats_report(sensitivities))
+        stats = mock.stats_report
         pprint(stats.to_dict())
 
         self.assertEqual(stats.n_features, 10)
@@ -51,14 +54,24 @@ class TestSensitivity(unittest.TestCase):
     def test_imputation(self):
         sensitivity = SensitivityAnalysis()
 
-        shuffled = SensitivityOfFeaturesReport(method=SensitivityTypes.shuffled, sensitivities={'a': 0.3, 'b': 0.5, 'c': 0.2})
-        missing = SensitivityOfFeaturesReport(method=SensitivityTypes.missing, sensitivities={'a': 0.3, 'b': 0.5, 'c': 0.2})
+        shuffled = SensitivityOfFeaturesReport(method=SensitivityTypes.shuffled,
+                                               sensitivities={'a': 0.3, 'b': 0.5, 'c': 0.2},
+                                               stats_report=sensitivity._sensitivity_stats_report(
+                                                   sensitivities={'a': 0.3, 'b': 0.5, 'c': 0.2}))
+        missing = SensitivityOfFeaturesReport(method=SensitivityTypes.missing,
+                                              sensitivities={'a': 0.3, 'b': 0.5, 'c': 0.2},
+                                              stats_report=sensitivity._sensitivity_stats_report(
+                                                  sensitivities={'a': 0.3, 'b': 0.5, 'c': 0.2}))
 
         self.assertEqual(sensitivity._imputation_score(
             shuffled=shuffled, missing=missing), 0)
 
-        shuffled = SensitivityOfFeaturesReport(method=SensitivityTypes.shuffled, sensitivities={'a': 1, 'b': 0, 'c': 0})
-        missing = SensitivityOfFeaturesReport(method=SensitivityTypes.missing, sensitivities={'a': 0, 'b': 1, 'c': 0})
+        shuffled = SensitivityOfFeaturesReport(method=SensitivityTypes.shuffled, sensitivities={'a': 1, 'b': 0, 'c': 0},
+                                               stats_report=sensitivity._sensitivity_stats_report(
+                                                   sensitivities={'a': 1, 'b': 0, 'c': 0}))
+        missing = SensitivityOfFeaturesReport(method=SensitivityTypes.missing, sensitivities={'a': 0, 'b': 1, 'c': 0},
+                                              stats_report=sensitivity._sensitivity_stats_report(
+                                                  sensitivities={'a': 0, 'b': 1, 'c': 0}))
 
         self.assertEqual(sensitivity._imputation_score(
             shuffled=shuffled, missing=missing), 1)

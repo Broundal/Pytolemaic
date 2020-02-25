@@ -5,8 +5,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
-from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport, \
-    SensitivityTypes
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityTypes
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
@@ -164,7 +163,7 @@ class TestSensitivity(unittest.TestCase):
                                                    method=SensitivityTypes.missing,
                                                    raw_scores=False)
 
-        stats = sensitivity._sensitivity_stats(shuffled)
+        stats = sensitivity._sensitivity_stats_report(shuffled.sensitivities)
         n_features = stats.n_features
         n_zero = stats.n_zero
         n_very_low = stats.n_very_low
@@ -195,7 +194,6 @@ class TestSensitivity(unittest.TestCase):
 
         report = sensitivity._vulnerability_report(
             shuffled_sensitivity=shuffled,
-            shuffled_sensitivity_stats=stats,
             missing_sensitivity=missing)
         self.assertTrue(0 <= report.imputation <= 1)
         self.assertTrue(0 <= report.leakage <= 1)

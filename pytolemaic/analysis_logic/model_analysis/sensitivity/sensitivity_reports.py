@@ -164,14 +164,17 @@ class SensitivityVulnerabilityReport(Report):
         return self._add_cls_name_prefix(insights)
 
 class SensitivityOfFeaturesReport(Report):
-    def __init__(self, method: str, sensitivities: dict):
+    def __init__(self, method: str, sensitivities: dict,
+                 stats_report: SensitivityStatsReport):
         self._method = method
         self._sensitivities = sensitivities
+        self._stats_report = stats_report
 
     def to_dict(self, printable=False):
         out = dict(
             method=self.method,
             sensitivities=self.sensitivities,
+            stats=self.stats_report.to_dict(printable=printable)
         )
         return self._printable_dict(out, printable=printable)
 
@@ -180,22 +183,27 @@ class SensitivityOfFeaturesReport(Report):
         return dict(
             method="Method used to calculate sensitivity",
             sensitivities="key-value dictionary where the key is feature name and value is feature sensitivity",
+            stats=SensitivityStatsReport.to_dict_meaning()
         )
 
-    def plot(self, ax=None, n_features_to_plot=10):
-        if ax is None:
-            fig, ax = plt.subplots(1)
+    def plot(self, axs=None, n_features_to_plot=10):
+        if axs is None:
+            fig, axs = plt.subplots(1, 2, figsize=(10, 10))
+
+        ax1, ax2 = axs
 
         sorted_features = self.sorted_sensitivities  # sorted(self.sensitivities.items(), key=lambda kv: -kv[1])
-        
+
         if n_features_to_plot is not None:
             sorted_features = sorted_features[:min(n_features_to_plot, len(sorted_features))]
 
         keys, values = zip(*sorted_features)
-        ax.barh(list(reversed(keys)), list(reversed(values)))
-        ax.set(
+        ax1.barh(list(reversed(keys)), list(reversed(values)))
+        ax1.set(
             title='"{}" Feature Sensitivity'.format(self.method),
             xlabel='Sensitivity value')
+
+        self.stats_report.plot(ax=ax2, method=self.method)
         plt.draw()
 
     @property
@@ -210,6 +218,9 @@ class SensitivityOfFeaturesReport(Report):
     def sorted_sensitivities(self):
         return [(k, v) for k, v in sorted(self._sensitivities.items(), key=lambda kv: -kv[1])]
 
+    @property
+    def stats_report(self) -> SensitivityStatsReport:
+        return self._stats_report
     #
     # def insights_summary(self):
     #     return []
@@ -222,32 +233,22 @@ class SensitivityFullReport(Report):
 
     def __init__(self,
                  shuffle_report: SensitivityOfFeaturesReport,
-                 shuffle_stats_report: SensitivityStatsReport,
                  missing_report: SensitivityOfFeaturesReport,
-                 missing_stats_report: SensitivityStatsReport,
                  vulnerability_report: SensitivityVulnerabilityReport
                  ):
         self._shuffle_report = shuffle_report
-        self._shuffle_stats_report = shuffle_stats_report
         self._missing_report = missing_report
-        self._missing_stats_report = missing_stats_report
         self._vulnerability_report = vulnerability_report
 
     def plot(self):
         if self.missing_report is not None:
-
-            fig, ((a11, a12), (a21, a22)) = plt.subplots(2, 2, figsize = (10, 10))
-
-            self.shuffle_report.plot(ax=a11)
-            self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
-            self.missing_report.plot(ax=a21)
-            self.missing_stats_report.plot(ax=a22, method=self.missing_report.method)
+            fig, (axs1, axs2) = plt.subplots(2, 2, figsize=(10, 10))
+            self.shuffle_report.plot(axs=axs1)
+            self.missing_report.plot(axs=axs2)
 
         else:
-            fig, (a11, a12) = plt.subplots(1, 2, figsize = (10, 10))
-
-            self.shuffle_report.plot(ax=a11)
-            self.shuffle_stats_report.plot(ax=a12, method=self.shuffle_report.method)
+            fig, axs = plt.subplots(1, 2, figsize=(10, 10))
+            self.shuffle_report.plot(axs=axs)
 
         plt.tight_layout()
 
@@ -257,18 +258,14 @@ class SensitivityFullReport(Report):
     def to_dict_meaning(cls):
         return dict(
             shuffle_report=SensitivityOfFeaturesReport.to_dict_meaning(),
-            shuffle_stats_report=SensitivityStatsReport.to_dict_meaning(),
             missing_report=SensitivityOfFeaturesReport.to_dict_meaning(),
-            missing_stats_report=SensitivityStatsReport.to_dict_meaning(),
             vulnerability_report=SensitivityVulnerabilityReport.to_dict_meaning(),
         )
 
     def to_dict(self, printable=False):
         out = dict(
             shuffle_report=self.shuffle_report.to_dict(),
-            shuffle_stats_report=self.shuffle_stats_report.to_dict(),
             missing_report=None if self.missing_report is None else self.missing_report.to_dict(),
-            missing_stats_report=None if self.missing_report is None else self.missing_stats_report.to_dict(),
             vulnerability_report=self.vulnerability_report.to_dict(),
         )
         return self._printable_dict(out, printable=printable)
@@ -278,16 +275,8 @@ class SensitivityFullReport(Report):
         return self._shuffle_report
 
     @property
-    def shuffle_stats_report(self) -> SensitivityStatsReport:
-        return self._shuffle_stats_report
-
-    @property
     def missing_report(self) -> SensitivityOfFeaturesReport:
         return self._missing_report
-
-    @property
-    def missing_stats_report(self) -> SensitivityStatsReport:
-        return self._missing_stats_report
 
     @property
     def vulnerability_report(self) -> SensitivityVulnerabilityReport:

@@ -90,7 +90,8 @@ class SensitivityAnalysis():
 
         if raw_scores:
             # description = "The raw scores of how each feature affects the model's predictions."
-            return SensitivityOfFeaturesReport(method=method, sensitivities=scores)
+            return SensitivityOfFeaturesReport(method=method, sensitivities=scores,
+                                               stats_report=self._sensitivity_stats_report(scores))
 
         # higher score / lower loss means the shuffled feature did less impact
         if self.metrics[metric].is_loss:
@@ -106,13 +107,14 @@ class SensitivityAnalysis():
         # description="The impact of each feature on model's predictions. "
         #             "Higher value mean larger impact (0 means no impact at all). "
         #             "Values are normalized to 1.")
-        return SensitivityOfFeaturesReport(method=method, sensitivities=impact)
+        return SensitivityOfFeaturesReport(method=method, sensitivities=impact,
+                                           stats_report=self._sensitivity_stats_report(sensitivities=impact))
 
-    def _sensitivity_stats(self, sensitivity: SensitivityOfFeaturesReport) -> [SensitivityStatsReport, None]:
-        if not sensitivity:
+    def _sensitivity_stats_report(self, sensitivities: dict) -> [SensitivityStatsReport, None]:
+        if not sensitivities:
             return None
 
-        sensitivity = np.abs(np.array(list(sensitivity.sensitivities.values())))
+        sensitivity = np.abs(np.array(list(sensitivities.values())))
         n_features = len(sensitivity)
 
         low_sensitivity = max(sensitivity) * self.low_sensitivity_threshold
@@ -129,10 +131,9 @@ class SensitivityAnalysis():
                                       n_zero=n_zero)
 
     def _vulnerability_report(self, shuffled_sensitivity: SensitivityOfFeaturesReport,
-                              missing_sensitivity: SensitivityOfFeaturesReport,
-                              shuffled_sensitivity_stats: SensitivityStatsReport) -> SensitivityVulnerabilityReport:
+                              missing_sensitivity: SensitivityOfFeaturesReport) -> SensitivityVulnerabilityReport:
         # lower is better
-        stats = shuffled_sensitivity_stats
+        stats = shuffled_sensitivity.stats_report
 
         leakage = self._leakage(n_features=stats.n_features,
                                 n_very_low=stats.n_very_low)
@@ -215,17 +216,12 @@ class SensitivityAnalysis():
 
     def sensitivity_report(self) -> SensitivityFullReport:
 
-        shuffle_stats_report = self._sensitivity_stats(self.shuffled_sensitivity)
-        missing_stats_report = self._sensitivity_stats(self.missing_sensitivity)
         vulnerability_report = self._vulnerability_report(
             shuffled_sensitivity=self.shuffled_sensitivity,
-            missing_sensitivity=self.missing_sensitivity,
-            shuffled_sensitivity_stats=shuffle_stats_report)
+            missing_sensitivity=self.missing_sensitivity)
 
         return SensitivityFullReport(
             shuffle_report=self.shuffled_sensitivity,
-            shuffle_stats_report=shuffle_stats_report,
             missing_report=self.missing_sensitivity,
-            missing_stats_report=missing_stats_report,
             vulnerability_report=vulnerability_report
         )
