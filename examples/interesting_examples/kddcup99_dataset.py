@@ -74,11 +74,12 @@ def sensitivity_deepdive(sensitivity_report):
     print("This means that error caused by missing values affect the model differently than a regular mistake")
     print(
         "\nThere are {} features with low sensitivity of which {} features are with 0 sensitivity (out of {} features)".format(
-            sensitivity_report.shuffle_report.stats_report.n_low, sensitivity_report.shuffle_stats_report.n_zero,
+            sensitivity_report.shuffle_report.stats_report.n_low, sensitivity_report.shuffle_report.stats_report.n_zero,
             sensitivity_report.shuffle_report.stats_report.n_features))
 
     print("\nLet see the features w/o sensitivity. Does it make sense?")
-    print(sensitivity_report.shuffle_report.sorted_sensitivities[-sensitivity_report.shuffle_stats_report.n_zero:])
+    print(
+        sensitivity_report.shuffle_report.sorted_sensitivities[-sensitivity_report.shuffle_report.stats_report.n_zero:])
 
     print(
         "\nUsing the sensitivity report we can obtain some vulnerability measures (lower is better). The meaning of the fields can be obtained with to_dict_meaning()")
