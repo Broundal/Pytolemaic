@@ -145,18 +145,18 @@ class SensitivityVulnerabilityReport(Report):
             insights.append(sentence % "very sensitive" + "You should check what's going on, there may be a bug.")
 
         lvl1, lvl2 = 0.1, 0.75
-        sentence = "Vulnerability to data leakage is {:.3g} indicating %s data leakage.".format(self.imputation)
+        sentence = "Vulnerability to data leakage is {:.3g} indicating %s data leakage.".format(self.leakage)
         if self.leakage < lvl1:
             pass  # ok
         elif self.leakage < lvl2:
             insights.append(
-                sentence % "there is a chance of" + "Check the features with the highest sensitivity scores.")
+                sentence % "there is a chance of" + " Check the features with the highest sensitivity scores.")
         else:
             insights.append(
-                sentence % "a very high chance of" + "Check the features with the highest sensitivity scores.")
+                sentence % "a very high chance of" + " Check the features with the highest sensitivity scores.")
 
         lvl1, lvl2 = 0.1, 0.5
-        sentence = "Vulnerability to number of features is {:.3g} indicating %s.".format(self.imputation)
+        sentence = "Vulnerability to number of features is {:.3g} indicating %s.".format(self.too_many_features)
         if self.too_many_features < lvl1:
             pass  # ok
         elif self.too_many_features < lvl2:

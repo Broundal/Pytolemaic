@@ -1,4 +1,5 @@
 import itertools
+import logging
 
 import numpy
 
@@ -150,7 +151,7 @@ class PyTrust():
                                             y_pred=self.y_pred_test,
                                             y_proba=self.y_proba_test)
 
-        if self.train is not None:
+        if self.train is not None and self.test is not None:
             separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
         else:
             separation_quality = numpy.nan
@@ -209,6 +210,6 @@ class PyTrust():
 
     @cache
     def insights_summary(self):
-        return itertools.chain(self.dataset_analysis_report().insights_summary(),
+        return list(itertools.chain(self.dataset_analysis_report().insights_summary(),
                                self.scoring_report().insights_summary(),
-                               self.sensitivity_report().insights_summary())
+                               self.sensitivity_report().insights_summary()))
