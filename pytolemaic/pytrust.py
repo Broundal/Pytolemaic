@@ -1,5 +1,4 @@
 import itertools
-import logging
 
 import numpy
 
@@ -139,7 +138,7 @@ class PyTrust():
         return y_proba_test
 
     @cache
-    def scoring_report(self):
+    def scoring_report(self) -> ScoringFullReport:
         metrics = Metrics.supported_metrics()
 
         self.scoring = Scoring(metrics=metrics)
@@ -164,7 +163,7 @@ class PyTrust():
                                  classification_report=classification_report)
 
     @cache
-    def quality_report(self):
+    def quality_report(self) -> QualityReport:
         scoring_report = self.scoring_report()
 
         test_set_report = TestSetQualityReport(scoring_report=scoring_report)
@@ -209,7 +208,7 @@ class PyTrust():
         return report
 
     @cache
-    def insights_summary(self):
+    def insights_summary(self) -> list:
         return list(itertools.chain(self.dataset_analysis_report().insights_summary(),
-                               self.scoring_report().insights_summary(),
-                               self.sensitivity_report().insights_summary()))
+                                    self.scoring_report().insights_summary(),
+                                    self.sensitivity_report().insights_summary()))

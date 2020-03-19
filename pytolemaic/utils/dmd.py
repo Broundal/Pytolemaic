@@ -109,6 +109,10 @@ class DMD():
 
         if DMD.FEATURE_NAMES not in columns_meta:
             columns_meta[DMD.FEATURE_NAMES] = df.columns
+
+        if df.shape[1] != columns_meta.shape[0]:
+            raise ValueError("Given data has {} features but columns metadata was given for {} features"
+                             .format(df.shape[1], columns_meta.shape[0]))
         return columns_meta
 
     @classmethod
@@ -147,6 +151,7 @@ class DMD():
         if axis == 0:
             if other.feature_names != self.feature_names:
                 raise ValueError("Cannot concat DMDs due to feature names difference")
+            # noinspection PyTypeChecker
             if any(self._samples_meta.columns != other._samples_meta.columns):
                 raise ValueError("Cannot concat DMDs due to samples meta difference")
 

@@ -313,9 +313,9 @@ class SensitivityFullReport(Report):
         return self._vulnerability_report
 
     def insights_summary(self):
-        return itertools.chain(self.shuffle_report.insights_summary(),
-                               [] if self.missing_report is None else self.missing_report.insights_summary(),
-                               self.vulnerability_report.insights_summary())
+        return list(itertools.chain(self.shuffle_report.insights_summary(),
+                                    [] if self.missing_report is None else self.missing_report.insights_summary(),
+                                    self.vulnerability_report.insights_summary()))
 
 
 if __name__ == '__main__':

@@ -291,6 +291,6 @@ class DatasetAnalysisReport(Report):
         return self._add_cls_name_prefix(insights)
 
     def insights_summary(self):
-        return itertools.chain(self.missing_values_report.insights_summary(),
-                               self._outlier_counts_insights(),
-                               self._class_count_insights())
+        return list(itertools.chain(self.missing_values_report.insights_summary(),
+                                    self._outlier_counts_insights(),
+                                    self._class_count_insights()))
