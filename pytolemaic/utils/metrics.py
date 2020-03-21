@@ -35,12 +35,12 @@ class CustomMetrics:
 
     @classmethod
     def rmse(cls, y_true, y_pred):
-        return numpy.sqrt(sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred))
+        return numpy.sqrt(sklearn.metrics.mean_squared_error(y_true=y_true, y_pred=y_pred))
 
     @classmethod
     def normalized_rmse(cls, y_true, y_pred):
-        return numpy.sqrt(sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred)) / (
-                    numpy.std(y_true) + 1e-10)
+        return numpy.sqrt(sklearn.metrics.mean_squared_error(y_true=y_true, y_pred=y_pred)) / (
+                numpy.std(y_true) + 1e-10)
 
 
 class Metrics():
