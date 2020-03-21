@@ -2,7 +2,7 @@ from pprint import pprint
 
 from examples.datasets.uci_adult import UCIAdult
 from pytolemaic.pytrust import PyTrust
-from pytolemaic.utils.general import GeneralUtils
+from pytolemaic.utils.general import GeneralUtils, tic, toc
 from pytolemaic.utils.metrics import Metrics
 
 
@@ -24,22 +24,24 @@ def run():
     print("Model details\n", classifier, '\n\n')
 
     print("Let's analyze the dataset")
-    print("Calculating...")
+    tic("dataset_analysis_report")
     dataset_analysis_report = pytrust.dataset_analysis_report()
+    toc("dataset_analysis_report")
+
     dataset_analysis_report.plot()
-    print("Calculating... Done")
 
     print("Let's calculate score report")
-    print("Calculating...")
+    tic("scoring_report")
     scoring_report = pytrust.scoring_report()
-    print("Calculating... Done")
+    toc("scoring_report")
+
     print("\nNow let's deepdive into the report!")
     scoring_report_deepdive(scoring_report)
 
     print("\n\nNext we'd like to check feature sensitivity")
-    print("Calculating...")
+    tic("sensitivity_report")
     sensitivity_report = pytrust.sensitivity_report()
-    print("Calculating... Done")
+    toc("sensitivity_report")
 
     print("\nNow let's deepdive into the report!")
     sensitivity_deepdive(sensitivity_report)
@@ -55,8 +57,9 @@ def run():
     # pprint(quality_report.to_dict_meaning(), width=120)
 
     print("Let's check for insights...")
+    tic("insights_summary")
     print('\n'.join(pytrust.insights_summary()))
-    print("Done!")
+    toc("insights_summary")
 
     print("\nLet's create a Lime explainer")
     lime_explainer = pytrust.create_lime_explainer(max_samples=64000)

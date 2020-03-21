@@ -1,10 +1,36 @@
 import copy
+import logging
+import os
+
+logger = logging.getLogger("Pytolemaic")
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+
+root = logging.getLogger("matplotlib")
+root.setLevel(os.environ.get("LOGLEVEL", "WARNING"))
 
 import numpy
 import pandas
 from matplotlib._color_data import XKCD_COLORS
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+
+global tictoc
+from time import time
+
+
+def tic(name=None):
+    global tictoc
+
+    tictoc = time()
+    if name is not None:
+        logging.info("Calculating {}...".format(name))
+
+
+def toc(name=None):
+    global tictoc
+    if name is not None:
+        logging.info("Calculating {}... Done {:.2g} seconds".format(name, time() - tictoc))
+    return time() - tictoc
 
 
 class GeneralUtils():
@@ -81,7 +107,7 @@ class GeneralUtils():
             return  obj
 
         dictionary = copy.deepcopy(dictionary)
-        for k,v in dictionary.items():
+        for k, v in dictionary.items():
             if isinstance(v, dict):
                 dictionary[k] = cls.make_dict_json_compatible(v)
             else:
@@ -90,22 +116,29 @@ class GeneralUtils():
         return dictionary
 
     @classmethod
-    def make_dict_printable(cls, dictionary: dict):
-        dictionary = cls.round_values(dictionary, digits=5)
-        dictionary = cls.make_dict_json_compatible(dictionary)
+    def shorten_long_dict(cls, dictionary: dict, dict_limit=20, list_limit=10):
+        if len(dictionary) > dict_limit:
+            keys = list(dictionary.keys())[:dict_limit]
+            dictionary = {key: dictionary[key] for key in keys}
+            dictionary['...'] = '...'
 
         for k, v in dictionary.items():
             if isinstance(v, dict):
-                dictionary[k] = cls.make_dict_printable(v)
-                if len(dictionary[k]) > 20:
-                    keys = list(dictionary[k].keys())[:20]
-                    dictionary[k] = {key: dictionary[k][key] for key in keys}
-                    dictionary[k]['...'] = '...'
+                dictionary[k] = cls.shorten_long_dict(v)
             elif isinstance(v, (list, tuple)):
-                if len(v) > 10:
+                if len(v) > list_limit:
                     dictionary[k] = [v[0], v[1], '...', v[-2], v[-1]]
             else:
                 pass
+
+        return dictionary
+
+    @classmethod
+    def make_dict_printable(cls, dictionary: dict):
+
+        dictionary = cls.shorten_long_dict(dictionary)
+        dictionary = cls.round_values(dictionary, digits=5)
+        dictionary = cls.make_dict_json_compatible(dictionary)
 
         return dictionary
 
