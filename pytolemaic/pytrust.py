@@ -102,7 +102,7 @@ class PyTrust():
     @cache
     def sensitivity_report(self):
         self.sensitivity.calculate_sensitivity(
-            model=self.model, dmd_test=self.test, metric=self.metric)
+            model=self.model, dmd_test=self.test, dmd_train=self.train, metric=self.metric)
 
         return self.sensitivity.sensitivity_report()
 

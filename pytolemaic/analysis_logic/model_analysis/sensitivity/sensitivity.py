@@ -19,21 +19,25 @@ class SensitivityAnalysis():
         self.very_low_sensitivity_threshold = 1e-4
 
     @classmethod
-    def shuffle_x(cls, x, index, seed=0):
+    def shuffle_x(cls, x, index, dmd_train=None, seed=0):
         rs = np.random.RandomState(seed)
-        new_order = rs.permutation(x.shape[0])
-        x[:, index] = x[:, index][new_order]
+        if dmd_train is None:
+            new_order = rs.permutation(x.shape[0])
+            x[:, index] = x[:, index][new_order]
+        else:
+            new_order = rs.permutation(dmd_train.n_samples)[:x.shape[0]]
+            x[:, index] = dmd_train.values[:, index][new_order]
         return x
 
     @classmethod
-    def get_shuffled_x(cls, dmdx: DMD, index=None, method=SensitivityTypes.shuffled, seed=0,
+    def get_shuffled_x(cls, dmdx: DMD, index=None, dmd_train=None, method=SensitivityTypes.shuffled, seed=0,
                        model_support_dmd=False):
         if index is None:
             return dmdx.values
 
         x_copy = numpy.copy(dmdx.values)
         if method == SensitivityTypes.shuffled:
-            x_copy = cls.shuffle_x(x_copy, index=index, seed=index + seed)
+            x_copy = cls.shuffle_x(x_copy, dmd_train=dmd_train, index=index, seed=index + seed)
         if method == SensitivityTypes.missing:
             x_copy[:, index] = np.nan
 
@@ -46,6 +50,7 @@ class SensitivityAnalysis():
             return x_copy
 
     def sensitivity_analysis(self, model, dmd_test: DMD, metric,
+                             dmd_train=None,
                              method=SensitivityTypes.shuffled, raw_scores=False,
                              y_pred=None) -> SensitivityOfFeaturesReport:
 
@@ -78,7 +83,7 @@ class SensitivityAnalysis():
                 dmd_test_ = dmd_test
                 y_pred_ = y_pred
 
-            shuffled_x = self.get_shuffled_x(dmd_test_, i, method=method,
+            shuffled_x = self.get_shuffled_x(dmd_test_, i, dmd_train=dmd_train, method=method,
                                              model_support_dmd=self.model_support_dmd)
             shuffled_pred = predict_function(shuffled_x)
 
@@ -192,9 +197,10 @@ class SensitivityAnalysis():
         score = np.mean(deltas) / max(deltas)
         return score
 
-    def calculate_sensitivity(self, model, dmd_test: DMD, metric: str):
+    def calculate_sensitivity(self, model, dmd_test: DMD, metric: str, dmd_train=None):
         self.shuffled_sensitivity = self.sensitivity_analysis(
             model=model,
+            dmd_train=dmd_train,
             dmd_test=dmd_test,
             metric=metric,
             method=SensitivityTypes.shuffled,
@@ -204,6 +210,7 @@ class SensitivityAnalysis():
             self.missing_sensitivity = self.sensitivity_analysis(
                 model=model,
                 dmd_test=dmd_test,
+                dmd_train=dmd_train,
                 metric=metric,
                 method=SensitivityTypes.missing,
                 raw_scores=False)
