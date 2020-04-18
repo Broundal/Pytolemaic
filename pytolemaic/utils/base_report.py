@@ -12,7 +12,7 @@ class Report():
     def plot(self):
         raise NotImplementedError
 
-    def insights_summary(self):
+    def insights(self):
         raise NotImplementedError
 
     def _add_cls_name_prefix(self, l):

@@ -68,7 +68,7 @@ class ROCCurveReport(Report):
 
         plt.draw()
 
-    def insights_summary(self):
+    def insights(self):
         min_points_threshold = 3 + 2  # 3 + '0' + '1'
 
         thresholds = {label: set(numpy.clip(self._roc_curve[label]['thresholds'], 0, 1)) for label in self.labels}
@@ -140,7 +140,7 @@ class PrecisionRecallCurveReport(Report):
                                          'Classifier')
             viz.plot(ax=ax, name=label, color=possible_colors[class_index])
 
-    def insights_summary(self):
+    def insights(self):
         return []
 
 
@@ -233,7 +233,7 @@ class CalibrationCurveReport(Report):
         ax2.set_ylabel("Count")
         ax2.legend(loc="upper center", ncol=2)
 
-    def insights_summary(self):
+    def insights(self):
         lvl1 = 0.25
         lvl2 = 0.5
         lvl3 = 0.75
@@ -386,11 +386,11 @@ class SklearnClassificationReport(Report):
 
         return self._add_cls_name_prefix(insights)
 
-    def insights_summary(self):
+    def insights(self):
         return list(itertools.chain(self._sklearn_summary_insights(),
-                                    self.roc_curve.insights_summary(),
-                                    self.precision_recall_curve.insights_summary(),
-                                    self.calibration_curve.insights_summary(),
+                                    self.roc_curve.insights(),
+                                    self.precision_recall_curve.insights(),
+                                    self.calibration_curve.insights(),
                                     ))
 
 
@@ -478,7 +478,7 @@ class ConfusionMatrixReport(Report):
 
         # plt.show()
 
-    def insights_summary(self):
+    def insights(self):
         insights = []
         for i, label in enumerate(self.labels):
             if numpy.sum(numpy.array(self.confusion_matrix)[:, i]) < 10:
@@ -529,7 +529,7 @@ class ScatterReport(Report):
         plt.draw()
         # plt.show()
 
-    def insights_summary(self):
+    def insights(self):
         # todo: what insights can we derive?
         return []
 
@@ -609,7 +609,7 @@ class ScoringMetricReport(Report):
 
         plt.draw()
 
-    def insights_summary(self):
+    def insights(self):
         insights = []
 
         if self.value < self.ci_low or self.value > self.ci_high:
@@ -720,7 +720,7 @@ class ScoringFullReport(Report):
         elif separability > lvl2:
             insights.append(
                 'Covariance shift ={:.2g} is not negligible, there may be some issue with train/test distribution'
-                .format(1 - separability))
+                    .format(1 - separability))
         else:
             insights.append("Covariance shift ={:.2g} is high! Double check the way you've defined the test set!\n"
                             "Running sensitivity analysis on a model trained to classify train/test samples may "
@@ -728,10 +728,10 @@ class ScoringFullReport(Report):
 
         return self._add_cls_name_prefix(insights)
 
-    def insights_summary(self):
-        insights_from_reports = [report.insights_summary() for report in [self.metric_scores[self.target_metric],
-                                                                          self.scatter, self.confusion_matrix,
-                                                                          self.classification_report]
+    def insights(self):
+        insights_from_reports = [report.insights() for report in [self.metric_scores[self.target_metric],
+                                                                  self.scatter, self.confusion_matrix,
+                                                                  self.classification_report]
                                  if report is not None]
 
         return list(itertools.chain(self.separation_quality_insight(), *insights_from_reports))

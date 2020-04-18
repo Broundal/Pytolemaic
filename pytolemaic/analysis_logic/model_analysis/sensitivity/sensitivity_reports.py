@@ -64,7 +64,7 @@ class SensitivityStatsReport(Report):
     def n_zero(self):
         return self._n_zero
 
-    def insights_summary(self):
+    def insights(self):
 
         insights = []
 
@@ -129,7 +129,7 @@ class SensitivityVulnerabilityReport(Report):
     def too_many_features(self):
         return self._too_many_features
 
-    def insights_summary(self):
+    def insights(self):
 
         insights = []
         lvl1, lvl2, lvl3 = 0.1, 0.5, 0.9
@@ -227,8 +227,8 @@ class SensitivityOfFeaturesReport(Report):
     def stats_report(self) -> SensitivityStatsReport:
         return self._stats_report
 
-    def insights_summary(self):
-        stats_report_insights = self.stats_report.insights_summary()
+    def insights(self):
+        stats_report_insights = self.stats_report.insights()
         insights = []
         insights.append("The most important feature is '{}', followed by '{}' and '{}'."
                         .format(self.sorted_sensitivities[0][0],
@@ -312,10 +312,10 @@ class SensitivityFullReport(Report):
     def vulnerability_report(self) -> SensitivityVulnerabilityReport:
         return self._vulnerability_report
 
-    def insights_summary(self):
-        return list(itertools.chain(self.shuffle_report.insights_summary(),
-                                    [] if self.missing_report is None else self.missing_report.insights_summary(),
-                                    self.vulnerability_report.insights_summary()))
+    def insights(self):
+        return list(itertools.chain(self.shuffle_report.insights(),
+                                    [] if self.missing_report is None else self.missing_report.insights(),
+                                    self.vulnerability_report.insights()))
 
 
 if __name__ == '__main__':

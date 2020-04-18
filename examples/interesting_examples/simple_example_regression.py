@@ -62,7 +62,7 @@ def run():
     uncertainty = uncertainty_model.uncertainty(sample)  # uncertainty value
 
     print("Let's check for insights...")
-    print('\n'.join(pytrust.insights_summary()))
+    print('\n'.join(pytrust.insights()))
     print("Done!")
 
 

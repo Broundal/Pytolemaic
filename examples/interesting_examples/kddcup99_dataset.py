@@ -55,7 +55,7 @@ def run():
 
     print("Let's check for insights...")
     tic("insights_summary")
-    print('\n'.join(pytrust.insights_summary()))
+    print('\n'.join(pytrust.insights()))
     toc("insights_summary")
 
     print("\nLet's create a Lime explainer")
