@@ -1,7 +1,8 @@
 import unittest
 
 from examples.interesting_examples import adult_dataset, california_housing_dataset, kddcup99_dataset, \
-    prediction_uncertainty_adult_dataset, simple_example_classification, simple_example_regression
+    prediction_uncertainty_adult_dataset, simple_example_classification, simple_example_regression, \
+    prediction_uncertainty_california_dataset
 
 
 class TestInterestingExamples(unittest.TestCase):
@@ -14,14 +15,17 @@ class TestInterestingExamples(unittest.TestCase):
 
     # @unittest.skip("adult_dataset example - Takes time")
     def test_adult_dataset(self):
-        adult_dataset.run()
+        adult_dataset.run(fast=True)
 
     def test_adult_dataset_uncertainty(self):
         prediction_uncertainty_adult_dataset.run()
 
+    def test_california_dataset_uncertainty(self):
+        prediction_uncertainty_california_dataset.run()
+
     # @unittest.skip("california_housing_dataset example - Takes time")
     def test_california_housing(self):
-        california_housing_dataset.run()
+        california_housing_dataset.run(fast=True)
 
     # @unittest.skip("kddcup99 example - Takes time")
     def test_kddcup99(self):

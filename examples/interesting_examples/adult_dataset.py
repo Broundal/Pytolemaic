@@ -6,8 +6,7 @@ from pytolemaic.utils.general import GeneralUtils, tic, toc
 from pytolemaic.utils.metrics import Metrics
 
 
-def run():
-
+def run(fast=False):
     dataset = UCIAdult()
     classifier = dataset.get_model()
     train, test = dataset.as_dmd()
@@ -62,7 +61,7 @@ def run():
     toc("insights_summary")
 
     print("\nLet's create a Lime explainer")
-    lime_explainer = pytrust.create_lime_explainer(max_samples=64000)
+    lime_explainer = pytrust.create_lime_explainer(max_samples=16000 if fast else 64000)
 
     sample = test.values[0, :]
     print("And plot explanation for the first sample in test data: {}".format(sample))

@@ -1,7 +1,7 @@
 import numpy
 from matplotlib import pyplot as plt
 
-from examples.datasets.uci_adult import UCIAdult
+from examples.datasets.california_housing import CaliforniaHousing
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
@@ -9,27 +9,27 @@ from pytolemaic.utils.metrics import Metrics
 
 def run():
     # init
-    dataset = UCIAdult()
-    classifier = dataset.get_model()
+    dataset = CaliforniaHousing()
+    regressor = dataset.get_model()
     train, test = dataset.as_dmd()
 
-    test_1st_half, test_2nd_half = test.split(ratio=0.5)
+    test_1st_half, test_2nd_half = test.split(ratio=0.2)
 
-    metric = Metrics.recall
+    metric = Metrics.mae
 
     pytrust = PyTrust(
-        model=classifier,
+        model=regressor,
         xtest=test_1st_half,
         metric=metric)
 
     xtest2, ytest2 = test_2nd_half.values, test_2nd_half.target
 
-    method = 'confidence' # or 'probability'
+    method = 'mae'  # or 'probability'
     uncertainty_model = pytrust.create_uncertainty_model(method=method)
     yp = uncertainty_model.predict(xtest2)  # same as model.predict
-    uncertainty = uncertainty_model.uncertainty(xtest2) # uncertainty value
+    uncertainty = uncertainty_model.uncertainty(xtest2)  # uncertainty value
     print('y_true, y_pred, uncertainty')
-    print(numpy.concatenate([ytest2.reshape(-1,1), yp.reshape(-1,1), uncertainty.reshape(-1,1)], axis=1)[:10])
+    print(numpy.concatenate([ytest2.reshape(-1, 1), yp.reshape(-1, 1), uncertainty.reshape(-1, 1)], axis=1)[:10])
 
     # example
     plt.figure()
@@ -37,31 +37,33 @@ def run():
     mn, mx = 1, 0
 
     # uncertainty model may be based on 'confidence' or 'probability' for classification, and 'mae' or 'rmse' for regression
-    for method in ['confidence', 'probability']:
+    for method in ['mae', 'rmse']:
 
         # train uncertainty model
         uncertainty_model = pytrust.create_uncertainty_model(method=method)
         yp = uncertainty_model.predict(xtest2)  # same as model.predict
-        uncertainty = uncertainty_model.uncertainty(xtest2) # uncertainty value
+        uncertainty = uncertainty_model.uncertainty(xtest2)  # uncertainty value
 
         level_inds = numpy.digitize(uncertainty.ravel(), uncertainty_levels)
 
         performance = []
-        for ibin in range(len(uncertainty_levels)-1):
-            inds = level_inds == ibin+1
+        for ibin in range(len(uncertainty_levels) - 1):
+            inds = level_inds == ibin + 1
+            if not any(inds):
+                performance.append(0)
+            else:
+                subset_score = metric.function(y_true=ytest2[inds], y_pred=yp[inds])
+                performance.append(subset_score)
 
-            subset_score = metric.function(y_true=ytest2[inds], y_pred=yp[inds])
-            performance.append(subset_score)
-
-        uncertainty_levels_middle = (uncertainty_levels[1:] + uncertainty_levels[:-1])/2
+        uncertainty_levels_middle = (uncertainty_levels[1:] + uncertainty_levels[:-1]) / 2
 
         plt.figure(1)
-        plt.plot(uncertainty_levels_middle, performance, '*-b' if method == 'confidence' else '*-r')
+        plt.plot(uncertainty_levels_middle, performance, '*-b' if method == 'mae' else '*-r')
 
         plt.xlabel("Uncertainty level")
-        plt.ylabel("{} score".format(metric.name))
+        plt.ylabel("{} Score".format(metric.name))
         plt.title("{} score vs uncertainty level".format(metric.name))
-        plt.legend(['method=confidence', 'method=probability'], loc='upper right')
+        plt.legend(['method=mae', 'method=rmse'], loc='upper right')
 
         print(uncertainty_levels_middle)
         print(GeneralUtils.f3(performance))
@@ -73,6 +75,7 @@ def run():
     # emphasize bins
     for level in uncertainty_levels:
         plt.plot([level, level], [mn, mx], '-k')
+
 
 if __name__ == '__main__':
     run()
