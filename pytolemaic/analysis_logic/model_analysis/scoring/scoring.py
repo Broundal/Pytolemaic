@@ -1,3 +1,5 @@
+import multiprocessing
+
 import numpy
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.multiclass import unique_labels
@@ -136,7 +138,7 @@ class Scoring():
                                                               dmd_test=dmd_test)
 
         classifier = GeneralUtils.simple_imputation_pipeline(
-            estimator=RandomForestClassifier(n_estimators=100, n_jobs=-1))
+            estimator=RandomForestClassifier(n_estimators=100, n_jobs=multiprocessing.cpu_count() - 1))
         classifier.fit(train.values, train.target.ravel())
 
         yp = classifier.predict_proba(test.values)

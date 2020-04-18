@@ -14,9 +14,15 @@ from pytolemaic.utils.general import GeneralUtils
 
 
 class KDDCup99():
-    def __init__(self):
+    def __init__(self, subset=False):
 
         self._d = sklearn.datasets.fetch_kddcup99(return_X_y=False, percent10=True)
+
+        if subset:
+            n = 10000
+            inds = numpy.random.permutation(len(self._d['target']))[:n]
+            self._d['data'] = self._d['data'][inds, :]
+            self._d['target'] = self._d['target'][inds]
 
         self._xtrain, self._xtest, self._ytrain, self._ytest = None, None, None, None
         self.model = GeneralUtils.simple_imputation_pipeline(

@@ -1,3 +1,4 @@
+import multiprocessing
 import unittest
 
 import numpy
@@ -31,7 +32,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
             estimator = RandomForestRegressor
 
         model = GeneralUtils.simple_imputation_pipeline(
-            estimator(random_state=0, n_jobs=-1, n_estimators=10))
+            estimator(random_state=0, n_jobs=multiprocessing.cpu_count() - 1, n_estimators=10))
 
         return model
 

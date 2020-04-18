@@ -6,8 +6,8 @@ from pytolemaic.utils.general import tic, toc
 from pytolemaic.utils.metrics import Metrics
 
 
-def run():
-    dataset = KDDCup99()
+def run(fast=False):
+    dataset = KDDCup99(subset=fast)
     classifier = dataset.get_model()
     train, test = dataset.as_dmd()
 
@@ -24,27 +24,27 @@ def run():
 
     print("Let's analyze the dataset")
     tic("dataset_analysis_report")
-    dataset_analysis_report = pytrust.dataset_analysis_report()
+    dataset_analysis_report = pytrust.create_dataset_analysis_report()
     dataset_analysis_report.plot()
     toc("dataset_analysis_report")
 
     print("Let's calculate score report")
     tic("scoring_report")
-    scoring_report = pytrust.scoring_report()
+    scoring_report = pytrust.create_scoring_report()
     toc("scoring_report")
     print("\nNow let's deepdive into the report!")
     scoring_report_deepdive(scoring_report)
 
     print("\n\nNext we'd like to check feature sensitivity")
     tic("sensitivity_report")
-    sensitivity_report = pytrust.sensitivity_report()
+    sensitivity_report = pytrust.create_sensitivity_report()
     toc("sensitivity_report")
 
     print("\nNow let's deepdive into the report!")
     sensitivity_deepdive(sensitivity_report)
 
     print("\nFinally let's review overall quality score!")
-    quality_report = pytrust.quality_report()
+    quality_report = pytrust.create_quality_report()
 
     print("Overall quality of train data: {:0.3f}".format(quality_report.train_quality_report.train_set_quality))
     print("Overall quality of test data: {:0.3f}".format(quality_report.test_quality_report.test_set_quality))
@@ -55,11 +55,11 @@ def run():
 
     print("Let's check for insights...")
     tic("insights_summary")
-    print('\n'.join(pytrust.insights()))
+    print('\n'.join(pytrust.insights))
     toc("insights_summary")
 
     print("\nLet's create a Lime explainer")
-    lime_explainer = pytrust.create_lime_explainer(max_samples=64000)
+    lime_explainer = pytrust.create_lime_explainer(max_samples=16000 if fast else 64000)
 
     sample = test.values[0, :]
     print("And plot explanation for the first sample in test data: {}".format(sample))

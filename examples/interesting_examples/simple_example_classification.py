@@ -45,16 +45,16 @@ def run():
         splitter='stratified',
         metric='recall')
 
-    scoring_report = pytrust.scoring_report()
+    scoring_report = pytrust.create_scoring_report()
     scoring_report.plot()
 
-    sensitivity_report = pytrust.sensitivity_report()
+    sensitivity_report = pytrust.create_sensitivity_report()
     sensitivity_report.plot()
 
-    dataset_analysis_report = pytrust.dataset_analysis_report()
+    dataset_analysis_report = pytrust.create_dataset_analysis_report()
     dataset_analysis_report.plot()
 
-    quality_report = pytrust.quality_report()
+    quality_report = pytrust.create_quality_report()
     quality_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
@@ -66,7 +66,7 @@ def run():
     uncertainty = uncertainty_model.uncertainty(sample)  # uncertainty value
 
     print("Let's check for insights...")
-    print('\n'.join(pytrust.insights()))
+    print('\n'.join(pytrust.insights))
     print("Done!")
 
 

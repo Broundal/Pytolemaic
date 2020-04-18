@@ -45,7 +45,7 @@ def run():
         metric=metric,
         splitter=splitter)
 
-    scoring_report = pytrust.scoring_report()
+    scoring_report = pytrust.create_scoring_report()
 
     score_value = scoring_report.metric_scores[metric].value
     ci_low = scoring_report.metric_scores[metric].ci_low

@@ -42,7 +42,16 @@ class DMD():
     # SAMPLE_WEIGHTS = '__SAMPLE_WEIGHTS__'
 
     def __init__(self, x, y=None, columns_meta=None, samples_meta=None,
-                 splitter=ShuffleSplitter, labels=None, categorical_encoding=None):
+                 splitter=ShuffleSplitter, labels=None, categorical_encoding=None,
+                 feature_names=None, feature_types=None):
+
+        if (feature_names or feature_types) and not columns_meta:
+            columns_meta = {}
+
+        if feature_names:
+            columns_meta[self.FEATURE_NAMES] = feature_names
+        if feature_types:
+            columns_meta[self.FEATURE_TYPES] = feature_types
 
         self._x = pandas.DataFrame(x)
         if y is not None:

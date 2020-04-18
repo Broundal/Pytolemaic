@@ -1,5 +1,3 @@
-import itertools
-
 import numpy
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis
@@ -9,11 +7,13 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
+from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityFullReport
 from pytolemaic.analysis_logic.prediction_analysis.lime_report import LimeExplainer
 from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
     ModelQualityReport
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
-    UncertaintyModelClassifier, UncertaintyModelRegressor
+    UncertaintyModelClassifier, UncertaintyModelRegressor, UncertaintyModelBase
+from pytolemaic.pytrust_report import PyTrustReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
 from pytolemaic.utils.general import GeneralUtils
@@ -100,7 +100,7 @@ class PyTrust():
             raise ValueError("Model must support predict() function")
 
     @cache
-    def sensitivity_report(self):
+    def create_sensitivity_report(self) -> SensitivityFullReport:
         self.sensitivity.calculate_sensitivity(
             model=self.model, dmd_test=self.test, dmd_train=self.train, metric=self.metric)
 
@@ -138,7 +138,7 @@ class PyTrust():
         return y_proba_test
 
     @cache
-    def scoring_report(self) -> ScoringFullReport:
+    def create_scoring_report(self) -> ScoringFullReport:
         metrics = Metrics.supported_metrics()
 
         self.scoring = Scoring(metrics=metrics)
@@ -163,12 +163,12 @@ class PyTrust():
                                  classification_report=classification_report)
 
     @cache
-    def quality_report(self) -> QualityReport:
-        scoring_report = self.scoring_report()
+    def create_quality_report(self) -> QualityReport:
+        scoring_report = self.create_scoring_report()
 
         test_set_report = TestSetQualityReport(scoring_report=scoring_report)
 
-        sensitivity_report = self.sensitivity_report()
+        sensitivity_report = self.create_sensitivity_report()
         train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
         model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report,
                                                   scoring_report=scoring_report)
@@ -176,7 +176,7 @@ class PyTrust():
         return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report,
                              model_quality_report=model_quality_report)
 
-    def create_uncertainty_model(self, method='default'):
+    def create_uncertainty_model(self, method='default') -> UncertaintyModelBase:
         if method not in self._uncertainty_models:
 
             if self.is_classification:
@@ -202,13 +202,34 @@ class PyTrust():
         return lime_explainer
 
     @cache
-    def dataset_analysis_report(self, **kwargs) -> DatasetAnalysisReport:
+    def create_dataset_analysis_report(self, **kwargs) -> DatasetAnalysisReport:
         da = DatasetAnalysis(problem_Type=CLASSIFICATION if self.is_classification else REGRESSION)
         report = da.dataset_analysis_report(dataset=self.train)
         return report
 
-    @cache
+    def create_pytrust_report(self):
+        return PyTrustReport(self)
+
+    @property
+    def sensitivity_report(self):
+        return self.create_sensitivity_report()
+
+    @property
+    def scoring_report(self):
+        return self.create_scoring_report()
+
+    @property
+    def quality_report(self):
+        return self.create_quality_report()
+
+    @property
+    def dataset_analysis_report(self):
+        return self.create_dataset_analysis_report()
+
+    @property
+    def report(self):
+        return self.create_pytrust_report()
+
+    @property
     def insights(self) -> list:
-        return list(itertools.chain(self.dataset_analysis_report().insights(),
-                                    self.scoring_report().insights(),
-                                    self.sensitivity_report().insights()))
+        return self.report.insights()

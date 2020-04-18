@@ -25,4 +25,4 @@ class TestInterestingExamples(unittest.TestCase):
 
     # @unittest.skip("kddcup99 example - Takes time")
     def test_kddcup99(self):
-        kddcup99_dataset.run()
+        kddcup99_dataset.run(fast=True)

@@ -199,12 +199,13 @@ class DatasetAnalysisReport(Report):
                    missing_values=self.missing_values_report.to_dict())
         return self._printable_dict(out, printable=printable)
 
-    def to_dict_meaning(self):
+    @classmethod
+    def to_dict_meaning(cls):
         return dict(
             few_class_representatives='{feature_name: {class: instances_count}} : listing categorical features that has at least 1 class which is under-represented (less than 10 instances).',
             outliers_count='{feature_name: {n-sigma: outliers_info}} : listing numerical features that has more outliers than is expected with respect to n-sigma. '
                            'E.g. for 3-sigma we expect ceil(0.0027 x n_samples) outliers.',
-            missing_values=self.missing_values_report.to_dict_meaning())
+            missing_values=MissingValuesReport.to_dict_meaning())
 
     def _plot_class_counts(self):
         if len(self.class_counts) == 0:

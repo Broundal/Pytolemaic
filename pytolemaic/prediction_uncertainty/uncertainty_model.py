@@ -1,3 +1,5 @@
+import multiprocessing
+
 import numpy
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
@@ -71,7 +73,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             model=model, uncertainty_method=uncertainty_method,
             ptype=REGRESSION, supported_methods=['mae', 'rmse'])
 
-    def fit_uncertainty_model(self, dmd_test, n_jobs=-1, **kwargs):
+    def fit_uncertainty_model(self, dmd_test, n_jobs=multiprocessing.cpu_count() - 1, **kwargs):
 
         if self.uncertainty_method in ['mae']:
             estimator = RandomForestRegressor(
@@ -128,7 +130,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
                                                              'confidence']
                                                          )
 
-    def fit_uncertainty_model(self, dmd_test, n_jobs=-1,
+    def fit_uncertainty_model(self, dmd_test, n_jobs=multiprocessing.cpu_count() - 1,
                               **kwargs):
 
         if self.uncertainty_method in ['probability']:
