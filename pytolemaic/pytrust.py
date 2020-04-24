@@ -164,11 +164,11 @@ class PyTrust():
 
     @cache
     def create_quality_report(self) -> QualityReport:
-        scoring_report = self.create_scoring_report()
+        scoring_report = self.scoring_report
 
         test_set_report = TestSetQualityReport(scoring_report=scoring_report)
 
-        sensitivity_report = self.create_sensitivity_report()
+        sensitivity_report = self.sensitivity_report
         train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
         model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report,
                                                   scoring_report=scoring_report)

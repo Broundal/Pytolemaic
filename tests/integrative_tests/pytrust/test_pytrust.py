@@ -80,7 +80,7 @@ class TestSensitivity(unittest.TestCase):
                                               range(train.n_features)]},
             metric=metric)
 
-        sensitivity_report = pytrust.create_sensitivity_report()
+        sensitivity_report = pytrust.sensitivity_report
         print(sensitivity_report.to_dict())
         self.assertTrue(isinstance(sensitivity_report, SensitivityFullReport))
         for key, value in sensitivity_report.__dict__.items():
@@ -100,7 +100,7 @@ class TestSensitivity(unittest.TestCase):
                                               range(train.n_features)]},
             metric=metric)
 
-        sensitivity_report2 = pytrust.create_sensitivity_report()
+        sensitivity_report2 = pytrust.sensitivity_report
         pprint(sensitivity_report.to_dict())
         self.maxDiff = None
         self.assertEqual(sensitivity_report2.shuffle_report.sensitivities, sensitivity_report.shuffle_report.sensitivities)
@@ -110,7 +110,7 @@ class TestSensitivity(unittest.TestCase):
 
         pytrust = self.get_pytrust(is_classification=True)
 
-        scoring_report = pytrust.create_scoring_report()
+        scoring_report = pytrust.scoring_report
 
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == CLASSIFICATION:
@@ -123,7 +123,7 @@ class TestSensitivity(unittest.TestCase):
 
         pytrust = self.get_pytrust(is_classification=False)
 
-        scoring_report = pytrust.create_scoring_report()
+        scoring_report = pytrust.scoring_report
         for metric in Metrics.supported_metrics().values():
             if metric.ptype == REGRESSION:
                 metric_report = scoring_report.metric_scores[metric.name]

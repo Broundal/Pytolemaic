@@ -43,7 +43,7 @@ def run():
         metric=metric,
         splitter=splitter)
 
-    sensitivity_report = pytrust.create_sensitivity_report()
+    sensitivity_report = pytrust.sensitivity_report
     pprint(sensitivity_report.to_dict(printable=True), width=120)
     pprint(sensitivity_report.to_dict_meaning(), width=120)
 

@@ -24,27 +24,26 @@ def run(fast=False):
 
     print("Let's analyze the dataset")
     tic("dataset_analysis_report")
-    dataset_analysis_report = pytrust.create_dataset_analysis_report()
-    dataset_analysis_report.plot()
+    pytrust.dataset_analysis_report.plot()
     toc("dataset_analysis_report")
 
     print("Let's calculate score report")
     tic("scoring_report")
-    scoring_report = pytrust.create_scoring_report()
+    scoring_report = pytrust.scoring_report
     toc("scoring_report")
     print("\nNow let's deepdive into the report!")
     scoring_report_deepdive(scoring_report)
 
     print("\n\nNext we'd like to check feature sensitivity")
     tic("sensitivity_report")
-    sensitivity_report = pytrust.create_sensitivity_report()
+    sensitivity_report = pytrust.sensitivity_report
     toc("sensitivity_report")
 
     print("\nNow let's deepdive into the report!")
     sensitivity_deepdive(sensitivity_report)
 
     print("\nFinally let's review overall quality score!")
-    quality_report = pytrust.create_quality_report()
+    quality_report = pytrust.quality_report
 
     print("Overall quality of train data: {:0.3f}".format(quality_report.train_quality_report.train_set_quality))
     print("Overall quality of test data: {:0.3f}".format(quality_report.test_quality_report.test_set_quality))

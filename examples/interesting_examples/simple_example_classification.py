@@ -45,17 +45,13 @@ def run():
         splitter='stratified',
         metric='recall')
 
-    scoring_report = pytrust.create_scoring_report()
-    scoring_report.plot()
+    pytrust.scoring_report.plot()
 
-    sensitivity_report = pytrust.create_sensitivity_report()
-    sensitivity_report.plot()
+    pytrust.sensitivity_report.plot()
 
-    dataset_analysis_report = pytrust.create_dataset_analysis_report()
-    dataset_analysis_report.plot()
+    pytrust.dataset_analysis_report.plot()
 
-    quality_report = pytrust.create_quality_report()
-    quality_report.plot()
+    pytrust.quity_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
     explainer = pytrust.create_lime_explainer(max_samples=64000)
