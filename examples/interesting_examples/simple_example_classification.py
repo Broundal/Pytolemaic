@@ -51,7 +51,7 @@ def run():
 
     pytrust.dataset_analysis_report.plot()
 
-    pytrust.quity_report.plot()
+    pytrust.quality_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
     explainer = pytrust.create_lime_explainer(max_samples=64000)
