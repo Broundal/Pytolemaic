@@ -41,20 +41,16 @@ def run():
         xtest=xtest, ytest=ytest,
         columns_meta={DMD.FEATURE_NAMES: feature_names},
         metric='mae')
-    scoring_report = pytrust.scoring_report
-    scoring_report.plot()
+    pytrust.scoring_report.plot()
 
-    sensitivity_report = pytrust.sensitivity_report
-    sensitivity_report.plot()
+    pytrust.sensitivity_report.plot()
 
-    dataset_analysis_report = pytrust.dataset_analysis_report
-    dataset_analysis_report.plot()
+    pytrust.dataset_analysis_report.plot()
 
-    quality_report = pytrust.quality_report
-    quality_report.plot()
+    pytrust.quality_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
-    explainer = pytrust.create_lime_explainer(max_samples=64000)
+    explainer = pytrust.create_lime_explainer(max_samples=16000)
     explainer.explain(sample=sample)
 
     uncertainty_model = pytrust.create_uncertainty_model(method='default')

@@ -54,7 +54,7 @@ def run():
     pytrust.quality_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
-    explainer = pytrust.create_lime_explainer(max_samples=64000)
+    explainer = pytrust.create_lime_explainer(max_samples=16000)
     explainer.explain(sample=sample)
 
     uncertainty_model = pytrust.create_uncertainty_model(method='default')
