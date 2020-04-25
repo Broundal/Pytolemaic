@@ -197,7 +197,7 @@ class SensitivityAnalysis():
         score = np.mean(deltas) / max(deltas)
         return score
 
-    def calculate_sensitivity(self, model, dmd_test: DMD, metric: str, dmd_train=None):
+    def calculate_sensitivity(self, model, dmd_test: DMD, metric: str, dmd_train=None, **kwargs):
         self.shuffled_sensitivity = self.sensitivity_analysis(
             model=model,
             dmd_train=dmd_train,
@@ -221,7 +221,7 @@ class SensitivityAnalysis():
 
             self.missing_sensitivity = None
 
-    def sensitivity_report(self) -> SensitivityFullReport:
+    def sensitivity_report(self, **kwargs) -> SensitivityFullReport:
 
         vulnerability_report = self._vulnerability_report(
             shuffled_sensitivity=self.shuffled_sensitivity,

@@ -99,12 +99,121 @@ class PyTrust():
         if not hasattr(self.model, 'predict'):
             raise ValueError("Model must support predict() function")
 
-    @cache
-    def create_sensitivity_report(self) -> SensitivityFullReport:
-        self.sensitivity.calculate_sensitivity(
-            model=self.model, dmd_test=self.test, dmd_train=self.train, metric=self.metric)
+    # region report classmethods
+    @classmethod
+    def create_sensitivity_report(cls, model, train: DMD, test: DMD, metric: str,
+                                  sensitivity: SensitivityAnalysis = None, **kwargs) -> SensitivityFullReport:
+        sensitivity = sensitivity or SensitivityAnalysis()
+        sensitivity.calculate_sensitivity(
+            model=model, dmd_test=test, dmd_train=train, metric=metric, **kwargs)
 
-        return self.sensitivity.sensitivity_report()
+        return sensitivity.sensitivity_report(**kwargs)
+
+    @classmethod
+    def create_scoring_report(cls, model, train: DMD, test: DMD, metric: str, y_pred=None, y_proba=None,
+                              scoring: Scoring = None, **kwargs) -> ScoringFullReport:
+        metrics = Metrics.supported_metrics()
+
+        scoring = scoring or Scoring(metrics=metrics)
+
+        score_values_report, confusion_matrix, scatter, classification_report = \
+            scoring.score_value_report(model=model,
+                                       dmd_test=test,
+                                       labels=test.labels,
+                                       y_pred=y_pred,
+                                       y_proba=y_proba)
+
+        if train is not None and test is not None:
+            separation_quality = scoring.separation_quality(dmd_train=train, dmd_test=test)
+        else:
+            separation_quality = numpy.nan
+
+        return ScoringFullReport(target_metric=metric,
+                                 metric_reports=score_values_report,
+                                 separation_quality=separation_quality,
+                                 confusion_matrix=confusion_matrix,
+                                 scatter=scatter,
+                                 classification_report=classification_report)
+
+    @classmethod
+    def create_quality_report(cls, scoring_report: ScoringFullReport,
+                              sensitivity_report: SensitivityFullReport) -> QualityReport:
+        test_set_report = TestSetQualityReport(scoring_report=scoring_report)
+
+        train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
+        model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report,
+                                                  scoring_report=scoring_report)
+
+        return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report,
+                             model_quality_report=model_quality_report)
+
+    @classmethod
+    def create_dataset_analysis_report(cls, train: DMD, is_classification, **kwargs) -> DatasetAnalysisReport:
+        da = DatasetAnalysis(problem_Type=CLASSIFICATION if is_classification else REGRESSION)
+        report = da.dataset_analysis_report(dataset=train)
+        return report
+
+    @classmethod
+    def create_pytrust_report(cls, pytrust):
+        return PyTrustReport(pytrust=pytrust)
+
+    # endregion
+
+    # region reports
+    def _create_sensitivity_report(self) -> SensitivityFullReport:
+        return self.create_sensitivity_report(model=self.model, train=self.train, test=self.test, metric=self.metric,
+                                              sensitivity=self.sensitivity)
+
+    def _create_scoring_report(self) -> ScoringFullReport:
+        metrics = Metrics.supported_metrics()
+
+        self.scoring = Scoring(metrics=metrics)
+
+        return self.create_scoring_report(model=self.model, train=self.train, test=self.test, metric=self.metric,
+                                          y_pred=self.y_pred_test, y_proba=self.y_proba_test, scoring=self.scoring)
+
+    def _create_quality_report(self) -> QualityReport:
+        return self.create_quality_report(scoring_report=self.scoring_report,
+                                          sensitivity_report=self.sensitivity_report)
+
+    def _create_dataset_analysis_report(self, **kwargs) -> DatasetAnalysisReport:
+        return self.create_dataset_analysis_report(train=self.train, is_classification=self.is_classification)
+
+    def _create_pytrust_report(self):
+        return self.create_pytrust_report(pytrust=self)
+
+    # endregion
+
+    # region on predict
+
+    def create_uncertainty_model(self, method='default') -> UncertaintyModelBase:
+        if method not in self._uncertainty_models:
+
+            if self.is_classification:
+                method = 'confidence' if method == 'default' else method
+                uncertainty_model = UncertaintyModelClassifier(
+                    model=self.model,
+                    uncertainty_method=method)
+            else:
+                method = 'mae' if method == 'default' else method
+                uncertainty_model = UncertaintyModelRegressor(
+                    model=self.model,
+                    uncertainty_method=method)
+
+            uncertainty_model.fit(dmd_test=self.test)
+            self._uncertainty_models[method] = uncertainty_model
+
+        return self._uncertainty_models[method]
+
+    @cache
+    def create_lime_explainer(self, **kwargs):
+        lime_explainer = LimeExplainer(n_features_to_plot=20, **kwargs)
+        lime_explainer.fit(self.train, model=self.model)
+        return lime_explainer
+
+    # endregion
+
+    # region properties
 
     @property
     @cache
@@ -137,99 +246,34 @@ class PyTrust():
         y_proba_test = self.model.predict_proba(test)
         return y_proba_test
 
-    @cache
-    def create_scoring_report(self) -> ScoringFullReport:
-        metrics = Metrics.supported_metrics()
-
-        self.scoring = Scoring(metrics=metrics)
-
-        score_values_report, confusion_matrix, scatter, classification_report = \
-            self.scoring.score_value_report(model=self.model,
-                                            dmd_test=self.test,
-                                            labels=self.test.labels,
-                                            y_pred=self.y_pred_test,
-                                            y_proba=self.y_proba_test)
-
-        if self.train is not None and self.test is not None:
-            separation_quality = self.scoring.separation_quality(dmd_train=self.train, dmd_test=self.test)
-        else:
-            separation_quality = numpy.nan
-
-        return ScoringFullReport(target_metric=self.metric,
-                                 metric_reports=score_values_report,
-                                 separation_quality=separation_quality,
-                                 confusion_matrix=confusion_matrix,
-                                 scatter=scatter,
-                                 classification_report=classification_report)
-
-    @cache
-    def create_quality_report(self) -> QualityReport:
-        scoring_report = self.scoring_report
-
-        test_set_report = TestSetQualityReport(scoring_report=scoring_report)
-
-        sensitivity_report = self.sensitivity_report
-        train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
-        model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report,
-                                                  scoring_report=scoring_report)
-
-        return QualityReport(train_quality_report=train_set_report, test_quality_report=test_set_report,
-                             model_quality_report=model_quality_report)
-
-    def create_uncertainty_model(self, method='default') -> UncertaintyModelBase:
-        if method not in self._uncertainty_models:
-
-            if self.is_classification:
-                method = 'confidence' if method == 'default' else method
-                uncertainty_model = UncertaintyModelClassifier(
-                    model=self.model,
-                    uncertainty_method=method)
-            else:
-                method = 'mae' if method == 'default' else method
-                uncertainty_model = UncertaintyModelRegressor(
-                    model=self.model,
-                    uncertainty_method=method)
-
-            uncertainty_model.fit(dmd_test=self.test)
-            self._uncertainty_models[method] = uncertainty_model
-
-        return self._uncertainty_models[method]
-
-    @cache
-    def create_lime_explainer(self, **kwargs):
-        lime_explainer = LimeExplainer(n_features_to_plot=20, **kwargs)
-        lime_explainer.fit(self.train, model=self.model)
-        return lime_explainer
-
-    @cache
-    def create_dataset_analysis_report(self, **kwargs) -> DatasetAnalysisReport:
-        da = DatasetAnalysis(problem_Type=CLASSIFICATION if self.is_classification else REGRESSION)
-        report = da.dataset_analysis_report(dataset=self.train)
-        return report
-
-    def create_pytrust_report(self):
-        return PyTrustReport(self)
-
     @property
+    @cache
     def sensitivity_report(self):
-        return self.create_sensitivity_report()
+        return self._create_sensitivity_report()
 
     @property
+    @cache
     def scoring_report(self):
-        return self.create_scoring_report()
+        return self._create_scoring_report()
 
     @property
+    @cache
     def quality_report(self):
-        return self.create_quality_report()
+        return self._create_quality_report()
 
     @property
+    @cache
     def dataset_analysis_report(self):
-        return self.create_dataset_analysis_report()
+        return self._create_dataset_analysis_report()
 
     @property
+    @cache
     def report(self):
-        return self.create_pytrust_report()
+        return self._create_pytrust_report()
 
     @property
+    @cache
     def insights(self) -> list:
         return self.report.insights()
+
+    #endregion
