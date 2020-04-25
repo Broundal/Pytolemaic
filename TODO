@@ -5,8 +5,8 @@ Backlog:
 Small:
 ** Metrics - micro / binary / additional
 ** Uncertainty methods - prediction intervals regression - xgboost quantiles
-** raise insights to user when there are important insights he should look intp
-** provide calibration curve for uncertainty models
+** [Done] raise insights to user when there are important insights he should look intp
+** [Done] provide calibration curve for uncertainty models
 ** make separation quality into a report, and add sensitivity analysis for the separation classifier, and connect it to insights.
 ** add cross-report insights - e.g. features sensitive to missing values that also has many missing values
 ** add uncertainty of model to uncertainty predictions
@@ -20,7 +20,7 @@ Big:
                     - Check if more data is required, Find areas with not enough samples
                     - Find anomalies / outliers in data
                     - Find anomalies / outliers in target
-** Uncertainty methods - out of distribution of sample
+** Uncertainty methods - sample out of distribution
 
 
 ** Advanced ML - group id, sample weight
