@@ -7,7 +7,7 @@ from pytolemaic.pytrust import PyTrust
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
-from resources.datasets import LinearClassificationDataset
+from resources.datasets.linear import LinearClassificationDataset
 
 
 def run():

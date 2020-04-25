@@ -3,7 +3,7 @@ from pprint import pprint
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.general import tic, toc
 from pytolemaic.utils.metrics import Metrics
-from resources.datasets import KDDCup99
+from resources.datasets.kddcup99 import KDDCup99
 
 
 def run(fast=False):

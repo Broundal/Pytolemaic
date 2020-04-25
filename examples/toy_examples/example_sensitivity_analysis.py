@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
-from resources.datasets import LinearRegressionDataset
+from resources.datasets.linear import LinearRegressionDataset
 
 
 def run():

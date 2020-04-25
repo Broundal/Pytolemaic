@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.dmd import DMD
-from resources.datasets import LinearRegressionDataset, LinearClassificationDataset
+from resources.datasets.linear import LinearRegressionDataset, LinearClassificationDataset
 
 
 def run():

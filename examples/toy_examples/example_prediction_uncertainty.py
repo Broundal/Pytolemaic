@@ -2,7 +2,7 @@ import numpy
 
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.metrics import Metrics
-from resources.datasets import LinearClassificationDataset
+from resources.datasets.linear import LinearClassificationDataset
 
 
 def run():

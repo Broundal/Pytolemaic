@@ -3,7 +3,7 @@ from pprint import pprint
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.general import GeneralUtils, tic, toc
 from pytolemaic.utils.metrics import Metrics
-from resources.datasets import UCIAdult
+from resources.datasets.uci_adult import UCIAdult
 
 
 def run(fast=False):

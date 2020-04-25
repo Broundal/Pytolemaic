@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-from resources.datasets import UCIAdult
+from resources.datasets.uci_adult import UCIAdult
 
 
 def run():
