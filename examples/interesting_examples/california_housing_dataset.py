@@ -2,9 +2,9 @@ from pprint import pprint
 
 import numpy
 
-from examples.datasets.california_housing import CaliforniaHousing
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.metrics import Metrics
+from resources.datasets.california_housing import CaliforniaHousing
 
 
 def run(fast=False):

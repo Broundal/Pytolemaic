@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 
-from examples.datasets.linear import LinearRegressionDataset, LinearClassificationDataset
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.dmd import DMD
+from resources.datasets import LinearRegressionDataset, LinearClassificationDataset
 
 
 def run():

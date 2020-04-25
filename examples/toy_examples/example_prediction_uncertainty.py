@@ -1,8 +1,8 @@
 import numpy
 
-from examples.datasets.linear import LinearClassificationDataset
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.metrics import Metrics
+from resources.datasets import LinearClassificationDataset
 
 
 def run():

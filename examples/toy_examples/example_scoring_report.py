@@ -2,12 +2,12 @@ from pprint import pprint
 
 from matplotlib import pyplot as plt
 
-from examples.datasets.linear import LinearClassificationDataset
 from pytolemaic.pytrust import PyTrust
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.metrics import Metrics
+from resources.datasets import LinearClassificationDataset
 
 
 def run():

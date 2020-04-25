@@ -5,7 +5,6 @@ from sklearn.ensemble import RandomForestRegressor
 
 from pytolemaic.utils.constants import FeatureTypes
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.general import GeneralUtils
 
 
 class CaliforniaHousing():

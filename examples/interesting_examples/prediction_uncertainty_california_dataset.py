@@ -1,10 +1,10 @@
 import numpy
 from matplotlib import pyplot as plt
 
-from examples.datasets.california_housing import CaliforniaHousing
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+from resources.datasets.california_housing import CaliforniaHousing
 
 
 def run():

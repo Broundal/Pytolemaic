@@ -1,9 +1,9 @@
 from pprint import pprint
 
-from examples.datasets.uci_adult import UCIAdult
 from pytolemaic.pytrust import PyTrust
 from pytolemaic.utils.general import GeneralUtils, tic, toc
 from pytolemaic.utils.metrics import Metrics
+from resources.datasets import UCIAdult
 
 
 def run(fast=False):
