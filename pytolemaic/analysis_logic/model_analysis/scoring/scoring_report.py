@@ -653,8 +653,11 @@ class ScoringMetricReport(Report):
         ci_low = Metrics.metric_as_loss(value=self.ci_low, metric=self.metric)
         ci_high = Metrics.metric_as_loss(value=self.ci_high, metric=self.metric)
 
-        ci_ratio = abs(ci_high - ci_low) / (ci_high + ci_low) * 2
-        return ci_ratio
+        if ci_low == ci_high:
+            return 0
+        else:
+            ci_ratio = abs(ci_high - ci_low) / (ci_high + ci_low) * 2
+            return ci_ratio
 
 
 class ScoringFullReport(Report):
