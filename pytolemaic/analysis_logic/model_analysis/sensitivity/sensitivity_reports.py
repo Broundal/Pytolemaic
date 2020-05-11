@@ -241,7 +241,7 @@ class SensitivityOfFeaturesReport(Report):
             else:
                 list_of_features = "\n\t" + ", ".join(["'{}'".format(feature) for feature in zero_sensitivity])
 
-            insights.append("The following features can be discarded due to 0 sensitivity:{}".format(list_of_features))
+            insights.append("The following features has 0 sensitivity:{}".format(list_of_features))
 
         if self.stats_report.n_very_low - self.stats_report.n_zero > 0:
             very_low_sensitivity = [feature for feature, value in
