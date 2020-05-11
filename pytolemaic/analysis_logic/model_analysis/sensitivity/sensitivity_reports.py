@@ -1,6 +1,5 @@
 import itertools
 
-import numpy
 from matplotlib import pyplot as plt
 
 from pytolemaic.utils.base_report import Report
@@ -70,7 +69,7 @@ class SensitivityStatsReport(Report):
         insights = []
 
         lvl = 0.5
-        sentence = "More than {} of features have".format(int(numpy.ceil(lvl * self.n_features)))
+        sentence = "More than {} of features have".format(int(lvl * self.n_features))
         if self.n_zero > lvl * self.n_features:
             insights.append("{} no sensitivity at all".format(sentence))
         elif self.n_very_low > lvl * self.n_features:
