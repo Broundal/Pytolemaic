@@ -1,5 +1,6 @@
 import itertools
 
+import numpy
 from matplotlib import pyplot as plt
 
 from pytolemaic.utils.base_report import Report
@@ -288,6 +289,12 @@ class DatasetAnalysisReport(Report):
             sentence = "Feature '{}' has {} outliers with respect to {} - a {} range." \
                 .format(feature_name, n_sigma_info['n_outliers'], n_sigma_range, max_n_sigma)
             insights.append(sentence)
+
+            log10_plus_one = numpy.log10(numpy.round(n_sigma_info['max'] + 1))
+
+            if n_sigma_info['max'] >= 99 and log10_plus_one == int(log10_plus_one):
+                insights.append("Feature '{}' has a maximal value of {} which doesn't seem to be a legit value".format(
+                    feature_name, n_sigma_info['max']))
 
         return self._add_cls_name_prefix(insights)
 

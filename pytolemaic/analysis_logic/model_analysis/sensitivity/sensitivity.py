@@ -198,6 +198,7 @@ class SensitivityAnalysis():
         return score
 
     def calculate_sensitivity(self, model, dmd_test: DMD, metric: str, dmd_train=None, **kwargs):
+        dmd_test = dmd_test or dmd_train
         self.shuffled_sensitivity = self.sensitivity_analysis(
             model=model,
             dmd_train=dmd_train,

@@ -91,6 +91,7 @@ class DatasetAnalysis():
 
             for sigma in self._outliers_n_sigma:
                 mean, std = self._calc_mean_and_std(sigma, vec)
+                mn, mx = numpy.min(vec), numpy.max(vec)
 
                 expected_outliers = expected_outliers_per_sigma[sigma]
                 n_outliers = numpy.sum(vec > mean + sigma * std) + numpy.sum(vec < mean - sigma * std)
@@ -102,7 +103,9 @@ class DatasetAnalysis():
                                                                            n_sigma=sigma,
                                                                            expected_outliers=expected_outliers,
                                                                            mean=mean,
-                                                                           std=std)
+                                                                           std=std,
+                                                                           min=mn,
+                                                                           max=mx)
                     # n_sigma = '{}-sigma'.format(sigma)
                     # if n_sigma not in out:
                     #     out[n_sigma] = {}

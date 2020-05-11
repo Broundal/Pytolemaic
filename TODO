@@ -3,14 +3,14 @@ Backlog:
 -----------
 
 Small:
-** Metrics - micro / binary / additional
-** Uncertainty methods - prediction intervals regression - xgboost quantiles
-** [Done] raise insights to user when there are important insights he should look intp
+** [Done] raise insights to user when there are important insights he should look into
 ** [Done] provide calibration curve for uncertainty models
 ** make separation quality into a report, and add sensitivity analysis for the separation classifier, and connect it to insights.
 ** add cross-report insights - e.g. features sensitive to missing values that also has many missing values
 ** add uncertainty of model to uncertainty predictions
 ** analyze which areas of the feature space is more prone to errors (either using uncertainty estimator, or basic analysis)
+** Metrics - micro / binary / additional
+** Uncertainty methods - prediction intervals regression - xgboost quantiles
 
 Big:
 ** Readable report (e.g. pdf)

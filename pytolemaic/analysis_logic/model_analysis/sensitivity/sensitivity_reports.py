@@ -69,13 +69,13 @@ class SensitivityStatsReport(Report):
         insights = []
 
         lvl = 0.5
-        sentence = "More than {} of features have".format(lvl * self.n_features)
+        sentence = "More than {} of features have".format(self.n_features)
         if self.n_zero > lvl * self.n_features:
             insights.append("{} no sensitivity at all".format(sentence))
         elif self.n_very_low > lvl * self.n_features:
-            insights.append("{} very little sensitivity".format(sentence))
+            insights.append("{} very low sensitivity".format(sentence))
         elif self.n_low > lvl * self.n_features:
-            insights.append("{} little sensitivity".format(sentence))
+            insights.append("{} low sensitivity".format(sentence))
 
         # insights = self._add_cls_name_prefix(insights)
 
