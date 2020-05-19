@@ -1,7 +1,7 @@
 import numpy
 
-from pytolemaic.pytrust import PyTrust
-from pytolemaic.utils.metrics import Metrics
+from pytolemaic import Metrics
+from pytolemaic import PyTrust
 from resources.datasets.linear import LinearClassificationDataset
 
 

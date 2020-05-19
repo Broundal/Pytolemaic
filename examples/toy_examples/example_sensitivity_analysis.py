@@ -2,9 +2,9 @@ from pprint import pprint
 
 from matplotlib import pyplot as plt
 
-from pytolemaic.pytrust import PyTrust
-from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.metrics import Metrics
+from pytolemaic import DMD
+from pytolemaic import Metrics
+from pytolemaic import PyTrust
 from resources.datasets.linear import LinearRegressionDataset
 
 

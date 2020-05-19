@@ -1,8 +1,8 @@
 from pprint import pprint
 
-from pytolemaic.pytrust import PyTrust
+from pytolemaic import Metrics
+from pytolemaic import PyTrust
 from pytolemaic.utils.general import tic, toc
-from pytolemaic.utils.metrics import Metrics
 from resources.datasets.kddcup99 import KDDCup99
 
 

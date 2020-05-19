@@ -1,10 +1,10 @@
 from pprint import pprint
 
-from pytolemaic.pytrust import PyTrust
+from pytolemaic import Metrics
+from pytolemaic import PyTrust
 ## For this example we create train/test data representing a linear function
 # both numpy and pandas.DataFrame is ok.
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.metrics import Metrics
 from resources.datasets.linear import LinearRegressionDataset
 
 
