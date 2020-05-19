@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 
-from pytolemaic.pytrust import PyTrust
-from pytolemaic.utils.dmd import DMD
+from pytolemaic import PyTrust
 from resources.datasets.linear import LinearRegressionDataset, LinearClassificationDataset
 
 
@@ -19,13 +18,11 @@ def run():
         estimator = dataset.get_model()
 
         # set the feature names names
-        columns_meta = {DMD.FEATURE_NAMES: columns_names}
-
         pytrust = PyTrust(
             model=estimator,
             xtrain=xtrain, ytrain=ytrain,
             xtest=xtest, ytest=ytest,
-            columns_meta=columns_meta)
+            feature_names=columns_names)
 
         sample = xtest[0, :]
 

@@ -396,10 +396,12 @@ class SklearnClassificationReport(Report):
 
 
 class ConfusionMatrixReport(Report):
-    def __init__(self, y_true, y_pred, labels=None):
+    def __init__(self, y_true, y_pred, labels: list = None):
         self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred,
                                                   labels=unique_labels(y_true, y_pred)).tolist()
         self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+        if isinstance(self._labels, numpy.ndarray):
+            self._labels = self._labels.tolist()
 
     @property
     def labels(self):
@@ -431,7 +433,7 @@ class ConfusionMatrixReport(Report):
             )
 
     @classmethod
-    def _plot_confusion_matrix(cls, confusion_matrix, labels, title,
+    def _plot_confusion_matrix(cls, confusion_matrix, labels: list, title,
                                ax, cmap=plt.cm.Greens):
 
         cm = numpy.array(confusion_matrix)
@@ -441,7 +443,7 @@ class ConfusionMatrixReport(Report):
 
         ax.set(xticks=[-0.5] + numpy.arange(cm.shape[1]).tolist() + [cm.shape[1] - 0.5],
                yticks=[-0.5] + numpy.arange(cm.shape[0]).tolist() + [cm.shape[0] - 0.5],
-               xticklabels=[''] + labels.tolist(), yticklabels=[''] + labels.tolist(),
+               xticklabels=[''] + labels, yticklabels=[''] + labels,
                title=title,
                ylabel='True labels',
                xlabel='Predicted labels')

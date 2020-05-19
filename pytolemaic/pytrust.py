@@ -37,15 +37,41 @@ class PyTrust():
 
     def __init__(self, model,
                  xtrain=None, ytrain=None,
-                 sample_meta_train=None,
+                 sample_meta_train: dict = None,
 
                  xtest=None, ytest=None,
-                 sample_meta_test=None,
+                 sample_meta_test: dict = None,
 
-                 columns_meta=None,
+                 columns_meta: dict = None,
+
+                 feature_names: list = None,
+                 feature_types: list = None,
+                 categorical_encoding: dict = None,
                  metric: [str, Metric] = None,
-                 splitter='shuffled',
-                 labels=None):
+                 splitter: str = 'shuffled',
+                 target_labels: dict = None):
+        """
+
+        :param model: Model trained on training data provided
+
+        :param xtrain: X training data. if DMD is provided, ytrain and any additional metadata is ignored.
+        :param ytrain: Y training data.
+        :param sample_meta_train: generic way to provide meta information on each sample in train data (e.g. sample weight) {key : [list of values]}.
+
+        :param xtest: X test data. if DMD is provided, ytest and any additional metadata is ignored..
+        :param ytest: Y test data. if DMD is provided,
+        :param sample_meta_test: generic way to provide meta information on each sample in test data (e.g. sample weight) {key : [list of values]}.
+
+        :param columns_meta: generic way to provide meta information on each feature (e.g. feature name) {key : [list of values]}.
+        :param feature_names: feature name for each feature
+        :param feature_types: feature type for each feature: NUMERICAL or CATEGORICAL
+        :param categorical_encoding: For each column of categorical feature type, provide a dictionary of the structure
+        {index: class name}. This information will allow providing more readable reports.
+
+        :param metric: Target metric
+        :param splitter: Splitter
+        :param target_labels: categorical encoding for target variable in the format of {index: class name}.
+        """
         self.model = model
 
         if isinstance(splitter, str):
@@ -67,16 +93,22 @@ class PyTrust():
             self.train = DMD(x=xtrain, y=ytrain,
                              samples_meta=sample_meta_train,
                              columns_meta=columns_meta,
+                             feature_names=feature_names,
+                             feature_types=feature_types,
+                             categorical_encoding=categorical_encoding,
                              splitter=splitter,
-                             labels=labels)
+                             target_labels=target_labels)
 
         self.test = xtest
         if self.test is not None and not isinstance(self.test, DMD):
             self.test = DMD(x=xtest, y=ytest,
                             samples_meta=sample_meta_test,
                             columns_meta=columns_meta,
+                            feature_names=feature_names,
+                            feature_types=feature_types,
+                            categorical_encoding=categorical_encoding,
                             splitter=splitter,
-                            labels=labels)
+                            target_labels=target_labels)
 
         if metric is None:
             if GeneralUtils.is_classification(model):

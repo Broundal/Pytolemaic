@@ -37,13 +37,13 @@ class DMD():
     FEATURE_NAMES = '__FEATURE_NAMES__'
     FEATURE_TYPES = '__FEATURE_TYPES__'
     INDEX = '__INDEX__'
-    CATEGOICAL_ENCODING = 'CATEGOICAL_ENCODING'
+    CATEGOICAL_ENCODING = '__CATEGOICAL_ENCODING__'
 
     # SAMPLE_WEIGHTS = '__SAMPLE_WEIGHTS__'
 
-    def __init__(self, x, y=None, columns_meta=None, samples_meta=None,
-                 splitter=ShuffleSplitter, labels=None, categorical_encoding=None,
-                 feature_names=None, feature_types=None):
+    def __init__(self, x, y=None, columns_meta: dict = None, samples_meta: dict = None,
+                 splitter=ShuffleSplitter, target_labels: dict = None, categorical_encoding: dict = None,
+                 feature_names: list = None, feature_types: list = None):
 
         if (feature_names or feature_types) and not columns_meta:
             columns_meta = {}
@@ -64,11 +64,14 @@ class DMD():
         self._splitter = splitter
 
         # meta data
-        if labels is not None:
-            if self._y.values.max() >= len(labels):
+        if target_labels is not None:
+            if self._y.values.max() >= len(target_labels):
                 raise ValueError("Labels should be given to all classes")
 
-        self._labels = labels
+        if isinstance(target_labels, list):
+            target_labels = {i: cls_ for i, cls_ in enumerate(target_labels)}
+
+        self._target_encoding = target_labels
 
         self._categorical_encoding_by_name = categorical_encoding or {}
         self._categorical_encoding_by_ind = self._validate_categorical_encoding()
@@ -228,7 +231,16 @@ class DMD():
 
     @property
     def labels(self):
-        return self._labels
+        """
+        :return: classes ordered by encoding.
+        """
+        if self._target_encoding is None:
+            return None
+
+        encoding = self._target_encoding  # {index: cls_}
+        inv_encoding = {cls_: index for index, cls_ in encoding.items()}
+        labels = sorted(inv_encoding.keys(), key=lambda cls_: inv_encoding[cls_])
+        return labels
 
     @property
     def categorical_features(self):

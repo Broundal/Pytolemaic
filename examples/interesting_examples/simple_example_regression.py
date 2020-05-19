@@ -4,8 +4,7 @@ import sklearn.model_selection
 from matplotlib import pyplot as plt
 from sklearn.tree import DecisionTreeRegressor
 
-from pytolemaic.pytrust import PyTrust
-from pytolemaic.utils.dmd import DMD
+from pytolemaic import PyTrust
 
 
 def run():
@@ -39,7 +38,7 @@ def run():
         model=estimator,
         xtrain=xtrain, ytrain=ytrain,
         xtest=xtest, ytest=ytest,
-        columns_meta={DMD.FEATURE_NAMES: feature_names},
+        feature_names=feature_names,
         metric='mae')
     pytrust.scoring_report.plot()
 

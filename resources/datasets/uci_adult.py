@@ -49,7 +49,7 @@ class UCIAdult():
                     self.xencoders.append(None)
 
             self.yencoder = LabelEncoder().fit(df['target'])
-            self._labels = self.yencoder.classes_
+            self._labels = {i: cls_ for i, cls_ in enumerate(self.yencoder.classes_)}
             self.categorical_encoding['target'] = {i: cls_ for i, cls_ in enumerate(self.labels)}
 
         for i, col in enumerate(self.column_names()):
@@ -97,13 +97,13 @@ class UCIAdult():
         train = DMD(x=self.training_data[0], y=self.training_data[1],
                     samples_meta=None, columns_meta={DMD.FEATURE_NAMES: self.column_names(),
                                                      DMD.FEATURE_TYPES: self.feature_types()},
-                    labels=self.labels,
+                    target_labels=self.labels,
                     categorical_encoding=self.categorical_encoding)
 
         test = DMD(x=self.testing_data[0], y=self.testing_data[1],
                    samples_meta=None, columns_meta={DMD.FEATURE_NAMES: self.column_names(),
                                                     DMD.FEATURE_TYPES: self.feature_types()},
-                   labels=self.labels,
+                   target_labels=self.labels,
                    categorical_encoding=self.categorical_encoding)
         return train, test
 
