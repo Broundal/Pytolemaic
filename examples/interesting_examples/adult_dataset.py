@@ -25,6 +25,8 @@ def run(fast=False):
     print("Let's analyze the dataset")
     tic("dataset_analysis_report")
     dataset_analysis_report = pytrust.dataset_analysis_report
+    pprint(dataset_analysis_report.to_dict(printable=True))
+    print('\n'.join(dataset_analysis_report.insights()))
     toc("dataset_analysis_report")
 
     dataset_analysis_report.plot()

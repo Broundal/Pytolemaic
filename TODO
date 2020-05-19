@@ -11,6 +11,7 @@ Small:
 ** analyze which areas of the feature space is more prone to errors (either using uncertainty estimator, or basic analysis)
 ** Metrics - micro / binary / additional
 ** Uncertainty methods - prediction intervals regression - xgboost quantiles
+** add meta-data to dataset analysis report (feature types, names, base types, etc.)
 
 Big:
 ** Readable report (e.g. pdf)

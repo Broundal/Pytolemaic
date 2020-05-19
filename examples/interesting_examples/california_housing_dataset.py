@@ -29,6 +29,7 @@ def run(fast=False):
     print("Let's analyze the dataset")
     print("Calculating...")
     pytrust.dataset_analysis_report.plot()
+    print('\n'.join(pytrust.dataset_analysis_report.insights()))
     print("Calculating... Done")
 
     print("Let's calculate score report")
