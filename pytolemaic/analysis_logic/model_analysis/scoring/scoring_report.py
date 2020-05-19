@@ -62,7 +62,7 @@ class ROCCurveReport(Report):
         for class_index, label in enumerate(self.labels):
             fpr, tpr = self._roc_curve[label]['fpr'], self._roc_curve[label]['tpr']
             roc_auc = self.auc[label]
-            viz = RocCurveDisplay(fpr, tpr, roc_auc, 'Classifier')
+            viz = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name='Classifier')
 
             viz.plot(ax=ax, name=label, color=possible_colors[class_index])
 
