@@ -52,6 +52,16 @@ class DatasetAnalysis():
                 classes_ = set(vec)
                 counts = [sum(vec == class_) for class_ in classes_]
 
+            if i in dataset.categorical_encoding_by_icols:
+                encoding = dataset.categorical_encoding_by_icols[i]
+            elif i == target_index and dataset.target_encoding is not None:
+                encoding = dataset.target_encoding
+            else:
+                encoding = None
+
+            if encoding is not None:
+                classes_ = [encoding[i] for i in classes_]
+
             if min(counts) <= self._class_count_threshold:
                 out[feature_names[i]] = {class_: count for class_, count in zip(classes_, counts) if
                                          count <= self._class_count_threshold}
