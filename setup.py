@@ -12,9 +12,16 @@ with open(os.path.join(this_dir, 'requirements.txt'), 'r') as fp:
 with open(os.path.join(this_dir, "README.md"), "r") as fh:
     long_description = fh.read()
 
-from pytolemaic.version import version
+# replacing import with text parsing to avoid importing any other packages listed in the __init__.py
+# from pytolemaic.version import version
+with open("pytolemaic/version.py") as fh:
+    last_line = fh.readlines()[-1]
+    if 'version' not in last_line:
+        raise ValueError("version number must appear the last line of the version.py file")
+    version = last_line.split()[-1].strip("\"'")
 
-print("Installing the following pytolemaic packages: {}".format(find_packages(exclude=['tests', 'scripts', 'examples'])))
+print(
+    "Installing the following pytolemaic packages: {}".format(find_packages(exclude=['tests', 'scripts', 'examples'])))
 
 setup(
     name='pytolemaic',
