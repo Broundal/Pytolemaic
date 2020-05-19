@@ -136,8 +136,9 @@ class PrecisionRecallCurveReport(Report):
             recall = self._recall_precision_curve[label]['recall']
             average_precision = self._average_precision[label]
 
-            viz = PrecisionRecallDisplay(precision, recall, average_precision,
-                                         'Classifier')
+            viz = PrecisionRecallDisplay(precision=precision, recall=recall, average_precision=average_precision,
+                                         estimator_name='Classifier')
+
             viz.plot(ax=ax, name=label, color=possible_colors[class_index])
 
     def insights(self):
