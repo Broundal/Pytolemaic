@@ -90,7 +90,7 @@ class DMD():
                 "When setting categorical_encoding you must also specify which feature is categorical through columns_meta")
 
         feature_names = self.feature_names
-        values = self.values
+        values = self.values.astype(float, copy=False)
         for icol in categorical_features:
             if feature_names[icol] not in categorical_encoding:
                 raise ValueError("No categorical names are set for feature #{}:{}".format(icol, feature_names[icol]))
@@ -218,14 +218,14 @@ class DMD():
 
     @property
     def values(self):
-        return self._x.values.astype(float, copy=False)
+        return self._x.values
 
     @property
     def target(self):
         if self._y is None:
             return None
         else:
-            return self._y.values.reshape(-1, 1).astype(float, copy=False)
+            return self._y.values
 
     @property
     def splitter(self):
@@ -330,9 +330,11 @@ class DMD():
                             logging.warning(e)
                             classes = xencoders[i].classes_
                             mask = numpy.array([x in classes for x in df_test[feature_name].astype(str)])
-                            df_test[feature_name][mask] = xencoders[i].transform(
-                                df_test[feature_name].astype(str)[mask])
-                            df_test[feature_name][~mask] = -1
+
+                            new_values = numpy.zeros(mask.shape)
+                            new_values[mask] = xencoders[i].transform(df_test[feature_name].astype(str)[mask])
+                            new_values[~mask] = -1
+                            df_test[feature_name] = new_values
 
                 if yencoder:
                     df_test[target_name] = yencoder.transform(df_test[target_name].astype(str))
@@ -348,6 +350,7 @@ class DMD():
             else:
                 dmd_train, dmd_test = dmd_train.split(ratio=split_ratio)
         else:
+
             dmd_test = DMD(x=df_test[feature_names], y=df_test[target_name], splitter=splitter,
                            target_labels=target_labels, categorical_encoding=categorical_encoding_dict,
                            feature_names=feature_names, feature_types=feature_types)
