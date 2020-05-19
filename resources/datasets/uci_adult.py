@@ -23,8 +23,6 @@ class UCIAdult():
             RandomForestClassifier(random_state=0, n_estimators=100, n_jobs=3))
 
     def column_names(self):
-        # 1st has no importance, while 3rd has double importance
-
         return ['age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status', 'occupation',
                 'relationship', 'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country']
 
@@ -83,7 +81,7 @@ class UCIAdult():
     def testing_data(self):
         if self._xtest is None:
             df = pandas.read_csv(adult_test_path)
-            df = self._encode_data(df, fit=True)
+            df = self._encode_data(df, fit=False)
             ytest = df[['target']]
             xtest = df.drop(['target'], axis=1)
             self._xtest, self._ytest = xtest, ytest
