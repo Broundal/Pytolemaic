@@ -147,7 +147,9 @@ class DMD():
                    columns_meta=copy.deepcopy(self._columns_meta),
                    samples_meta=copy.deepcopy(
                        self._samples_meta.iloc[indices, :]),
-                   splitter=self.splitter)
+                   splitter=self.splitter,
+                   target_labels=self.target_encoding,
+                   categorical_encoding=self.categorical_encoding_by_feature_name)
 
     def split(self, ratio, return_indices=False):
 
@@ -232,11 +234,15 @@ class DMD():
         return self._splitter
 
     @property
-    def labels(self):
+    def target_encoding(self) -> dict:
+        return self._target_encoding  # {index: cls_}
+
+    @property
+    def labels(self) -> list:
         """
-        :return: classes ordered by encoding.
+        :return: class names ordered by encoding.
         """
-        if self._target_encoding is None:
+        if self.target_encoding is None:
             return None
 
         encoding = self._target_encoding  # {index: cls_}
@@ -276,7 +282,7 @@ class DMD():
         if categorical_encoding:
             if feature_types is None:
                 raise ValueError("categorical_encoding requires feature types")
-
+            logging.info("Categorical Encoding")
             # fit
             jibrish_value = '!@#$%^&*()'
             df_train = copy.deepcopy(df_train)
@@ -290,6 +296,8 @@ class DMD():
             xencoders = []
             categorical_encoding_dict = {}
             for i, feature_name in enumerate(feature_names):
+                logging.info("Fit encoding for feature {}".format(feature_name))
+
                 if feature_types[i] == FeatureTypes.categorical:
                     le = LabelEncoder().fit(df_train[feature_name].astype(str))
                     xencoders.append(le)
@@ -307,6 +315,7 @@ class DMD():
             # transform train
             for i, feature_name in enumerate(feature_names):
                 if feature_types[i] == FeatureTypes.categorical:
+                    logging.info("Encode train: feature {}".format(feature_name))
                     df_train[feature_name] = xencoders[i].transform(df_train[feature_name].astype(str))
 
             if yencoder:
@@ -324,6 +333,8 @@ class DMD():
 
                 for i, feature_name in enumerate(feature_names):
                     if feature_types[i] == FeatureTypes.categorical:
+                        logging.info("Encode test: feature {}".format(feature_name))
+
                         try:
                             df_test[feature_name] = xencoders[i].transform(df_test[feature_name].astype(str))
                         except ValueError as e:
@@ -340,6 +351,8 @@ class DMD():
                     df_test[target_name] = yencoder.transform(df_test[target_name].astype(str))
 
                 df_test[nan_mask] = numpy.nan
+
+        logging.info("Creating DMDs")
 
         dmd_train = DMD(x=df_train[feature_names], y=df_train[target_name], splitter=splitter,
                         target_labels=target_labels, categorical_encoding=categorical_encoding_dict,
