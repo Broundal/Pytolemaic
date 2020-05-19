@@ -271,7 +271,12 @@ class DatasetAnalysisReport(Report):
             if len(class_counts) == 1:
                 list_of_classes = ": " + list_of_classes[0]
             else:
-                list_of_classes = ". List of classes:\n\t" + ",\n\t".join(list_of_classes)
+                n_lines_to_show = 5
+                if len(list_of_classes) > n_lines_to_show:
+                    suffix = '\n\t... {} more.'.format(len(list_of_classes) - n_lines_to_show)
+                else:
+                    suffix = ''
+                list_of_classes = ". List of classes:\n\t" + ",\n\t".join(list_of_classes[:n_lines_to_show]) + suffix
 
             insights.append("{}{}".format(sentence, list_of_classes))
 

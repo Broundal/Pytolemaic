@@ -1,8 +1,8 @@
 import unittest
 
-from examples.interesting_examples import adult_dataset, california_housing_dataset, kddcup99_dataset, \
-    prediction_uncertainty_adult_dataset, simple_example_classification, simple_example_regression, \
-    prediction_uncertainty_california_dataset
+from examples.interesting_examples import adult_example, california_housing_example, kddcup99_example, \
+    prediction_uncertainty_adult_example, simple_example_classification, simple_example_regression, \
+    prediction_uncertainty_california_example, titanic_example
 
 
 class TestInterestingExamples(unittest.TestCase):
@@ -15,18 +15,21 @@ class TestInterestingExamples(unittest.TestCase):
 
     # @unittest.skip("adult_dataset example - Takes time")
     def test_adult_dataset(self):
-        adult_dataset.run(fast=True)
+        adult_example.run(fast=True)
 
     def test_adult_dataset_uncertainty(self):
-        prediction_uncertainty_adult_dataset.run()
+        prediction_uncertainty_adult_example.run()
 
     def test_california_dataset_uncertainty(self):
-        prediction_uncertainty_california_dataset.run()
+        prediction_uncertainty_california_example.run()
 
     # @unittest.skip("california_housing_dataset example - Takes time")
     def test_california_housing(self):
-        california_housing_dataset.run(fast=True)
+        california_housing_example.run(fast=True)
 
     # @unittest.skip("kddcup99 example - Takes time")
     def test_kddcup99(self):
-        kddcup99_dataset.run(fast=True)
+        kddcup99_example.run(fast=True)
+
+    def test_titanic(self):
+        titanic_example.run(fast=True)
