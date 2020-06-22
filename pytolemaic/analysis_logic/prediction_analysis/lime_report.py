@@ -1,7 +1,11 @@
 import logging
 
 import numpy
-from lime.lime_tabular import LimeTabularExplainer
+try:
+    from lime.lime_tabular import LimeTabularExplainer
+except Exception as e:
+    print("Exception: Failed to import lime module:", e.msg)
+
 from matplotlib import pyplot as plt
 from sklearn.linear_model import ElasticNet
 from sklearn.utils.multiclass import unique_labels
