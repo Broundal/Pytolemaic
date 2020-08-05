@@ -16,7 +16,7 @@ from pytolemaic.utils.metrics import Metrics
 
 class ROCCurveReport(Report):
     def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
-        self._labels = labels if labels is not None else unique_labels(y_true)
+        self._labels = labels if labels is not None else unique_labels(y_true).tolist()
         self._roc_curve = {}
         self._auc = {}
         for class_index, label in enumerate(self.labels):
@@ -42,7 +42,7 @@ class ROCCurveReport(Report):
     def to_dict(self, printable=False):
         out = dict(roc_curve=self.roc_curve,
                     auc=self.auc,
-                    labels=self.labels.tolist())
+                    labels=self.labels)
         return self._printable_dict(out, printable=printable)
 
     @classmethod
@@ -87,7 +87,7 @@ class ROCCurveReport(Report):
 
 class PrecisionRecallCurveReport(Report):
     def __init__(self, y_true, y_proba, labels=None, sample_weight=None):
-        self._labels = labels if labels is not None else unique_labels(y_true)
+        self._labels = labels if labels is not None else unique_labels(y_true).tolist().tolist()
         self._recall_precision_curve = {}
         self._average_precision = {}
         for class_index, label in enumerate(self.labels):
@@ -114,7 +114,7 @@ class PrecisionRecallCurveReport(Report):
     def to_dict(self, printable=False):
         out = dict(recall_precision_curve=self.recall_precision_curve,
                     average_precision=self.average_precision,
-                    labels=self.labels.tolist())
+                    labels=self.labels)
         return self._printable_dict(out, printable=printable)
 
     @classmethod
@@ -148,7 +148,7 @@ class PrecisionRecallCurveReport(Report):
 class CalibrationCurveReport(Report):
     def __init__(self, y_true, y_proba, labels=None, sample_weight=None,
                  n_bins=10):
-        self._labels = labels if labels is not None else unique_labels(y_true)
+        self._labels = labels if labels is not None else unique_labels(y_true).tolist()
         self._calibration_curve = {}
         self._brier_loss = {}
         self._y_proba = y_proba
@@ -186,7 +186,7 @@ class CalibrationCurveReport(Report):
     def to_dict(self, printable=False):
         out = dict(calibration_curve=self.calibration_curve,
                    brier_loss=self.brier_loss,
-                   labels=self.labels.tolist())
+                   labels=self.labels)
         return self._printable_dict(out, printable=printable)
 
     @classmethod
@@ -264,7 +264,7 @@ class SklearnClassificationReport(Report):
     def __init__(self, y_true, y_pred, y_proba, labels=None,
                  sample_weight=None, digits=3):
         self._labels = labels if labels is not None else unique_labels(y_true,
-                                                                       y_pred)
+                                                                       y_pred).tolist()
 
         self._sample_weight = sample_weight
 
@@ -323,7 +323,7 @@ class SklearnClassificationReport(Report):
             roc_curve=self.roc_curve.to_dict(),
             precision_recall_curve=self.precision_recall_curve.to_dict(),
             calibration_curve=self.calibration_curve.to_dict(),
-            labels=self.labels.tolist())
+            labels=self.labels)
         return self._printable_dict(out, printable=printable)
 
     @classmethod
@@ -399,7 +399,7 @@ class ConfusionMatrixReport(Report):
     def __init__(self, y_true, y_pred, labels: list = None):
         self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred,
                                                   labels=unique_labels(y_true, y_pred)).tolist()
-        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+        self._labels = labels if labels is not None else unique_labels(y_true, y_pred).tolist()
         if isinstance(self._labels, numpy.ndarray):
             self._labels = self._labels.tolist()
 
