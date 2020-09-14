@@ -320,7 +320,7 @@ class SklearnClassificationReport(Report):
     def to_dict(self, printable=False):
         out = dict(
             sklearn_performance_summary=self.sklearn_performance_summary,
-            roc_curve=self.roc_curve.to_dict(),
+            roc_curve=self.roc_curve.to_dict(printable=printable),
             precision_recall_curve=self.precision_recall_curve.to_dict(printable=printable),
             calibration_curve=self.calibration_curve.to_dict(printable=printable),
             labels=self.labels)
@@ -690,7 +690,7 @@ class ScoringFullReport(Report):
         plt.tight_layout()
 
     def to_dict(self, printable=False):
-        metric_scores = {k: v.to_dict() for k, v in self.metric_scores.items()}
+        metric_scores = {k: v.to_dict(printable=printable) for k, v in self.metric_scores.items()}
         for v in metric_scores.values():
             v.pop('metric', None)
 
