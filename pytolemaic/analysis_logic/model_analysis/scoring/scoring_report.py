@@ -698,9 +698,11 @@ class ScoringFullReport(Report):
             metric_scores=metric_scores,
             target_metric=self.target_metric,
             separation_quality=self.separation_quality,
-            scatter=None if self.scatter is None else self.scatter.to_dict(),
-            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(),
-            classification_report=None if self.classification_report is None else self.classification_report.to_dict()
+            scatter=None if self.scatter is None else self.scatter.to_dict(printable=printable),
+            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(
+                printable=printable),
+            classification_report=None if self.classification_report is None else self.classification_report.to_dict(
+                printable=printable)
         )
         return self._printable_dict(out, printable=printable)
 
