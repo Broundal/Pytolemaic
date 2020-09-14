@@ -186,7 +186,7 @@ class PyTrust():
         return report
 
     @classmethod
-    def create_pytrust_report(cls, pytrust):
+    def create_pytrust_report(cls, pytrust) -> PyTrustReport:
         return PyTrustReport(pytrust=pytrust)
 
     # endregion
@@ -280,27 +280,27 @@ class PyTrust():
 
     @property
     @cache
-    def sensitivity_report(self):
+    def sensitivity_report(self)-> SensitivityFullReport:
         return self._create_sensitivity_report()
 
     @property
     @cache
-    def scoring_report(self):
+    def scoring_report(self)-> ScoringFullReport:
         return self._create_scoring_report()
 
     @property
     @cache
-    def quality_report(self):
+    def quality_report(self)-> QualityReport:
         return self._create_quality_report()
 
     @property
     @cache
-    def dataset_analysis_report(self):
+    def dataset_analysis_report(self)->DatasetAnalysisReport:
         return self._create_dataset_analysis_report()
 
     @property
     @cache
-    def report(self):
+    def report(self)->PyTrustReport:
         return self._create_pytrust_report()
 
     @property

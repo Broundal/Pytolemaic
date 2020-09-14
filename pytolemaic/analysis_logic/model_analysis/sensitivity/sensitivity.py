@@ -76,7 +76,7 @@ class SensitivityAnalysis():
         for i, name in enumerate(dmd_test.feature_names):
             if dmd_test.n_samples > self.max_samples_to_use:
                 rs = numpy.random.RandomState(i)
-                subset = rs.permutation(self.max_samples_to_use)
+                subset = rs.permutation(dmd_test.n_samples)[:self.max_samples_to_use]
                 dmd_test_ = dmd_test.split_by_indices(subset)
                 y_pred_ = y_pred[subset]
             else:

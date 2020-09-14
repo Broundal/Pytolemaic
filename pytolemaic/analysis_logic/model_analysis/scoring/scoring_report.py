@@ -399,12 +399,12 @@ class ConfusionMatrixReport(Report):
     def __init__(self, y_true, y_pred, labels: list = None):
         self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred,
                                                   labels=unique_labels(y_true, y_pred)).tolist()
-        self._labels = labels if labels is not None else unique_labels(y_true, y_pred)
+        self._labels = labels if labels is not None else unique_labels(y_true, y_pred).tolist()
         if isinstance(self._labels, numpy.ndarray):
             self._labels = self._labels.tolist()
 
     @property
-    def labels(self):
+    def labels(self)->list:
         return self._labels
 
     @property
@@ -698,11 +698,9 @@ class ScoringFullReport(Report):
             metric_scores=metric_scores,
             target_metric=self.target_metric,
             separation_quality=self.separation_quality,
-            scatter=None if self.scatter is None else self.scatter.to_dict(printable=printable),
-            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(
-                printable=printable),
-            classification_report=None if self.classification_report is None else self.classification_report.to_dict(
-                printable=printable)
+            scatter=None if self.scatter is None else self.scatter.to_dict(),
+            confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(),
+            classification_report=None if self.classification_report is None else self.classification_report.to_dict()
         )
         return self._printable_dict(out, printable=printable)
 

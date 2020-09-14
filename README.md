@@ -21,8 +21,9 @@ pip install pytolemaic
 The package contains the following functionalities:
 
 #### On model creation
+- **Dataset Analysis**: Analysis aimed to detect issues in the dataset.
 - **Sensitivity Analysis**: Calculation of feature importance for given model, either via sensitivity to feature value or sensitivity to missing values. 
-- **Vulnerability report**: based on the feature sensitivity we measure model's vulnerability in respect to imputation, leakage, and # of features.
+- **Vulnerability report**: Based on the feature sensitivity we measure model's vulnerability in respect to imputation, leakage, and # of features.
 - **Scoring report**: Report model's score on test data with confidence interval.
 - **separation quality**: Measure whether train and test data comes from the same distribution.
 - **Overall quality**: Provides overall quality measures
@@ -34,6 +35,42 @@ The package contains the following functionalities:
 
 
 ## How to use: 
+
+```
+   pytrust = PyTrust(
+       model=estimator,
+       xtrain=xtrain, ytrain=ytrain,
+       xtest=xtest, ytest=ytest)
+   
+   # dataset analysis report
+   dataset_analysis_report = pytrust.dataset_analysis_report
+   
+   # feature sensitivity report
+   sensitivity_report = pytrust.sensitivity_report
+   
+   # model's performance report
+   scoring_report = pytrust.scoring_report
+   
+   # overall model's quality report
+   quality_report = pytrust.quality_report
+   
+   for report in [dataset_analysis_report, sensitivity_report, scoring_report, quality_report]:
+       report.plot() # plot graphs
+       pprint(report.to_dict(printable=True)) # export report as a dictionary
+       pprint(report.to_dict_meaning()) # print documentation for above dictionary
+          
+   
+   # Insights & issues discovered in your data/model
+   insights = pytrust.insights
+   
+   # estimate uncertainty of a prediction
+   uncertainty_model = pytrust.create_uncertainty_model()
+   
+   # explain a prediction with Lime
+   create_lime_explainer = pytrust.create_lime_explainer()
+   
+```
+
 Examples on toy dataset can be found in [/examples/toy_examples/](./examples/toy_examples/)
 Examples on 'real-life' datasets can be found in [/examples/interesting_examples/](./examples/interesting_examples/) 
 
