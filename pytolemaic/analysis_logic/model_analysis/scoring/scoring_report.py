@@ -443,7 +443,7 @@ class ConfusionMatrixReport(Report):
 
         ax.set(xticks=[-0.5] + numpy.arange(cm.shape[1]).tolist() + [cm.shape[1] - 0.5],
                yticks=[-0.5] + numpy.arange(cm.shape[0]).tolist() + [cm.shape[0] - 0.5],
-               xticklabels=[''] + labels, yticklabels=[''] + labels,
+               xticklabels=[''] + labels + [''], yticklabels=[''] + labels + [''],
                title=title,
                ylabel='True labels',
                xlabel='Predicted labels')
