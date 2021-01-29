@@ -256,7 +256,14 @@ class DMD():
             return None
         else:
             return numpy.arange(self.n_features)[
-                self._columns_meta[self.FEATURE_TYPES].values.ravel() == FeatureTypes.categorical]
+                self.feature_types == FeatureTypes.categorical]
+
+    @property
+    def feature_types(self):
+        if self.FEATURE_TYPES not in self._columns_meta.columns:
+            return None
+        else:
+            return self._columns_meta[self.FEATURE_TYPES].values.ravel()
 
     @property
     def categorical_encoding_by_feature_name(self):
