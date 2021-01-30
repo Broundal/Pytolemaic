@@ -259,6 +259,14 @@ class DMD():
                 self.feature_types == FeatureTypes.categorical]
 
     @property
+    def numerical_features(self):
+        if self.FEATURE_TYPES not in self._columns_meta.columns:
+            return None
+        else:
+            return numpy.arange(self.n_features)[
+                self.feature_types == FeatureTypes.numerical]
+
+    @property
     def feature_types(self):
         if self.FEATURE_TYPES not in self._columns_meta.columns:
             return None
