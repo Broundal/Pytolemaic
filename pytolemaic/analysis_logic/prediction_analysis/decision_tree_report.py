@@ -28,7 +28,7 @@ class DecisionTreeExplainer():
         self.explanation_depth = explanation_depth
         self.min_samples_leaf = min_samples_leaf
         self.is_classification = None
-        self.dt: BaseDecisionTree = None
+        self.dt = None
         self.train_data_stats = None
         self.model = None
         self.cache = None
