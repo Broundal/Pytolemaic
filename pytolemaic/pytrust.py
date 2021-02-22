@@ -311,9 +311,10 @@ class PyTrust():
         return self.report.insights()
 
     @classmethod
-    def print_initialization_example(self):
+    def print_initialization_example(cls):
         example = \
             """
+        # example for initializing PyTrust object. In this example, All fields other than model, xtrain, ytrain are optional.
         PyTrust(model=model,
                 xtrain=X_train,
                 ytrain=y_train,
@@ -324,12 +325,15 @@ class PyTrust():
                 target_labels={0:'dog', 1:'cat'}, # for classification
                 categorical_encoding=[{0:'blue', 1:'red', 2:'yellow'} for i in range(X_train.shape[1])]                                
                 )
+                
+        # See usage example below:\n
         """
         print(example)
+        example += cls.print_usage_example()
         return example
 
     @classmethod
-    def print_usage_example(self, report_types=('report',), plot=True, insights=True, to_dict=True,
+    def print_usage_example(cls, report_types=('report',), plot=True, insights=True, to_dict=True,
                             to_dict_meaning=True):
         def plot_usage(prefix):
             return "# Plotting relevant graphs:\n" \
@@ -344,14 +348,14 @@ class PyTrust():
             return "# Prints all information gathered, either full (default) or in readable form (printable=True)\n" \
                    "pprint({}.to_dict())\n" \
                    "or\n" \
-                   "pprint({}.to_dict(printable=True))\n".format(prefix, prefix)
+                   "pprint({}.to_dict(printable=True))".format(prefix, prefix)
 
         def to_dict_meaning_usage(prefix):
             return "# Prints explanation for every field within the dict returned by to_dict()\n" \
                    "pprint({}.to_dict_meaning())".format(prefix)
 
         def add_components_msgs(prefix, plot=True, insights=True, to_dict=True, to_dict_meaning=True):
-            msgs = ['']
+            msgs = []
             if plot:
                 msgs.append(plot_usage(prefix=prefix))
 
@@ -364,18 +368,23 @@ class PyTrust():
             if to_dict_meaning:
                 msgs.append(to_dict_meaning_usage(prefix=prefix))
 
-            return "\n* ".join(msgs)
+            return "\n\n".join(msgs)
 
         example = []
         for report in report_types:
             if report not in ['report']:
                 raise NotImplementedError(report)
 
+            example.append('\n*****  pytrust.{}  ******\n'.format(report))
+
             if report == 'report':
-                msg = add_components_msgs(prefix="pytrust.report")
+                msg = add_components_msgs(prefix="pytrust.report",
+                                          plot=plot, insights=insights,
+                                          to_dict=to_dict, to_dict_meaning=to_dict_meaning)
                 if msg:
                     example.append(msg)
-                    example.append('\n')
+
+            example.append('\n**************\n')
 
         example = "\n".join(example)
         print(example)
