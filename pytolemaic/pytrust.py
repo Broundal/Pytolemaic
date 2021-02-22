@@ -89,6 +89,16 @@ class PyTrust():
             else:
                 raise NotImplementedError("splitter='{}' is not supported".format(splitter))
 
+        if ytrain is not None:
+            shape = getattr(ytrain, 'shape', (1, 1))
+            if len(shape) == 2 and shape[1] > 1:
+                raise NotImplementedError("Pytrust does not support multilabel (ytrain.shape[1]>1) analysis. "
+                                          "In order to use Pytolemaic package, please wrap you model so model.predict(X) will return a single vector. ")
+        if ytest is not None:
+            shape = getattr(ytest, 'shape', (1, 1))
+            if len(shape) == 2 and shape[1] > 1:
+                raise NotImplementedError("Pytrust does not support multilabel (ytest.shape[1]>1) analysis. "
+                                          "In order to use Pytolemaic package, please wrap you model so model.predict(X) will return a single vector. ")
 
         self.train = xtrain
         if self.train is not None and not isinstance(self.train, DMD):
