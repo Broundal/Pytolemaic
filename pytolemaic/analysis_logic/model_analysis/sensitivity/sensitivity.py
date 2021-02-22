@@ -217,7 +217,7 @@ class SensitivityAnalysis():
                 raw_scores=False)
         except:
             logging.error(
-                "Failed to calculate sensitivity with {} method... Does your model handle missing values?".format(
+                "Failed to calculate sensitivity with {} method. This is expected if your model cannot handle missing values.".format(
                     SensitivityTypes.missing))
 
             self.missing_sensitivity = None
