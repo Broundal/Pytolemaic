@@ -14,7 +14,7 @@ from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQual
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier, UncertaintyModelRegressor, UncertaintyModelBase
 from pytolemaic.pytrust_report import PyTrustReport
-from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
+from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION, FeatureTypes
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics, Metric
@@ -34,6 +34,8 @@ def cache(func):
 
 
 class PyTrust():
+    numerical = FeatureTypes.numerical
+    categorical = FeatureTypes.categorical
 
     def __init__(self, model,
                  xtrain=None, ytrain=None,
@@ -300,7 +302,7 @@ class PyTrust():
 
     @property
     @cache
-    def report(self)->PyTrustReport:
+    def report(self) -> PyTrustReport:
         return self._create_pytrust_report()
 
     @property
@@ -308,4 +310,75 @@ class PyTrust():
     def insights(self) -> list:
         return self.report.insights()
 
-    #endregion
+    @classmethod
+    def print_initialization_example(self):
+        example = \
+            """
+        PyTrust(model=model,
+                xtrain=X_train,
+                ytrain=y_train,
+                xtest=X_test,
+                ytest=Y_test,
+                feature_names=['Feature_#{}'.format(i) for i in range(X_train.shape[1])],
+                feature_types=[PyTrust.categorical for i in range(X_train.shape[1])],
+                target_labels={0:'dog', 1:'cat'}, # for classification
+                categorical_encoding=[{0:'blue', 1:'red', 2:'yellow'} for i in range(X_train.shape[1])]                                
+                )
+        """
+        print(example)
+        return example
+
+    @classmethod
+    def print_usage_example(self, report_types=('report',), plot=True, insights=True, to_dict=True,
+                            to_dict_meaning=True):
+        def plot_usage(prefix):
+            return "# Plotting relevant graphs:\n" \
+                   "{}.plot()\n" \
+                   "plt.show()".format(prefix)
+
+        def insights_usage(prefix):
+            return "# Printing useful insights & hints. Short and to the point.\n" \
+                   "pprint({}.insights())".format(prefix)
+
+        def to_dict_usage(prefix):
+            return "# Prints all information gathered, either full (default) or in readable form (printable=True)\n" \
+                   "pprint({}.to_dict())\n" \
+                   "or\n" \
+                   "pprint({}.to_dict(printable=True))\n".format(prefix, prefix)
+
+        def to_dict_meaning_usage(prefix):
+            return "# Prints explanation for every field within the dict returned by to_dict()\n" \
+                   "pprint({}.to_dict_meaning())".format(prefix)
+
+        def add_components_msgs(prefix, plot=True, insights=True, to_dict=True, to_dict_meaning=True):
+            msgs = ['']
+            if plot:
+                msgs.append(plot_usage(prefix=prefix))
+
+            if insights:
+                msgs.append(insights_usage(prefix=prefix))
+
+            if to_dict:
+                msgs.append(to_dict_usage(prefix=prefix))
+
+            if to_dict_meaning:
+                msgs.append(to_dict_meaning_usage(prefix=prefix))
+
+            return "\n* ".join(msgs)
+
+        example = []
+        for report in report_types:
+            if report not in ['report']:
+                raise NotImplementedError(report)
+
+            if report == 'report':
+                msg = add_components_msgs(prefix="pytrust.report")
+                if msg:
+                    example.append(msg)
+                    example.append('\n')
+
+        example = "\n".join(example)
+        print(example)
+        return example
+
+    # endregion

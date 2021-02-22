@@ -1,4 +1,5 @@
 import itertools
+import time
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
@@ -15,10 +16,14 @@ class PyTrustReport(Report):
     @classmethod
     def _try_catch_report(cls, pytrust, attr):
 
+        ts = time.time()
         try:
             # some report may fail due to lack of available information
+            print("Calculating {}...".format(attr))
             out = getattr(pytrust, attr, None)
+            print("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
         except:
+            print("Failed to calculate {}".format(attr))
             out = None
 
         return out

@@ -132,3 +132,11 @@ class TestSensitivity(unittest.TestCase):
                 ci_high = metric_report.ci_high
 
                 self.assertTrue(ci_low < score_value < ci_high)
+
+    def test_pytrust_report(self):
+        pytrust = self.get_pytrust(is_classification=True)
+
+        pprint(pytrust.report.insights())
+        pprint(pytrust.report.to_dict())
+        pprint(pytrust.report.to_dict_meaning())
+        pprint(pytrust.report.plot())
