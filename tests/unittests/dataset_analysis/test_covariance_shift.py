@@ -59,7 +59,6 @@ class TestDatasetAnalysis(unittest.TestCase):
         pprint(covariance.covariance_shift_report().plot())
 
     def test_high_dist(self):
-        from matplotlib import pyplot as plt
 
         covariance = CovarianceShift()
         covariance.calc_covariance_shift(dmd_train=self.train, dmd_test=self.dif_dist_test)
@@ -78,4 +77,3 @@ if __name__ == '__main__':
     a=TestDatasetAnalysis()
     a.setUp()
     a.test_high_dist()
-    plt.show()
