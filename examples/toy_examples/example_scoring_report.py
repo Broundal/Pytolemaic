@@ -50,10 +50,9 @@ def run():
     score_value = scoring_report.metric_scores[metric].value
     ci_low = scoring_report.metric_scores[metric].ci_low
     ci_high = scoring_report.metric_scores[metric].ci_high
-    quality = scoring_report.separation_quality
+
 
     print('{} score is {:0.3f}'.format(metric, score_value))
-    print('Score quality is {:0.3f}'.format(quality))
     print('Confidence interval is [{:0.3f}, {:0.3f}]'.format(ci_low, ci_high))
 
     pprint(scoring_report.to_dict(printable=True), width=160)

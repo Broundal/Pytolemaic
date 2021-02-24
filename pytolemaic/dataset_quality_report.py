@@ -1,5 +1,6 @@
 import logging
 
+from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
 from pytolemaic.utils.base_report import Report
@@ -8,8 +9,9 @@ from pytolemaic.utils.metrics import Metrics
 
 
 class TestSetQualityReport(Report):
-    def __init__(self, scoring_report: ScoringFullReport):
+    def __init__(self, scoring_report: ScoringFullReport, dataset_analysis_report: DatasetAnalysisReport):
         self._scoring_report = scoring_report
+        self._dataset_analysis_report = dataset_analysis_report
         self._metric = scoring_report.target_metric
 
         self._test_set_quality = self._calculate_test_set_quality()
@@ -26,7 +28,7 @@ class TestSetQualityReport(Report):
     def to_dict_meaning(cls):
         return dict(
             ci_ratio=ScoringMetricReport.to_dict_meaning()['ci_ratio'],
-            separation_quality=ScoringFullReport.to_dict_meaning()['separation_quality'],
+            separation_quality="Quality measure of whether train and test set comes from same distribution (value=1).",
             test_set_quality="Overall test set quality - higher is better",
         )
 
@@ -46,7 +48,7 @@ class TestSetQualityReport(Report):
 
     @property
     def separation_quality(self):
-        return self._scoring_report.separation_quality
+        return 1 - self._dataset_analysis_report.covariance_shift_report.covariance_shift
 
     @property
     def scoring_report(self) -> ScoringFullReport:

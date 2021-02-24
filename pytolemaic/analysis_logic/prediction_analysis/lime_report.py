@@ -4,7 +4,9 @@ import numpy
 try:
     from lime.lime_tabular import LimeTabularExplainer
 except Exception as e:
-    print("Exception: Failed to import lime module:", e.msg)
+    logging.exception("Failed to import lime module:")
+    logging.error("Please try to run 'pip install lime'")
+    raise
 
 from matplotlib import pyplot as plt
 from sklearn.linear_model import ElasticNet

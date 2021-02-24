@@ -1,10 +1,15 @@
+import logging
+
 import numpy
 from sklearn import tree
 from sklearn.base import ClassifierMixin
 from sklearn.impute import SimpleImputer
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, BaseDecisionTree, _tree
 
-from pytolemaic import DMD, Metrics, FeatureTypes
+from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.constants import FeatureTypes
+
 from pytolemaic.utils.general import GeneralUtils
 from resources.datasets.california_housing import CaliforniaHousing
 
@@ -126,7 +131,7 @@ class DecisionTreeExplainer():
                 # inds = numpy.digitize(values[:, icol], bins=bins, right=False)
                 # values[:, icol] = numpy.round(0.5*(bins[inds-1] + bins[inds]), 2)
 
-        print('size of neighborhood:', values.shape)
+        logging.info('size of neighborhood:', values.shape)
         return values
 
     @classmethod
@@ -209,12 +214,12 @@ class DecisionTreeExplainer():
         dt.fit(train, y[n:])
 
         if self.is_classification:
-            print('recall score=', Metrics.recall.function(y[:n], dt.predict(valid)))
-            # print("model prediction = {}, surrogate dt model = {}".format(self.model.predict_proba(sample.reshape(1,-1)), dt.predict_proba(sample.reshape(1,-1))))
+            logging.info('recall score=', Metrics.recall.function(y[:n], dt.predict(valid)))
+            # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict_proba(sample.reshape(1,-1)), dt.predict_proba(sample.reshape(1,-1))))
 
         else:
-            print('r2 score=', Metrics.r2.function(y[:n], dt.predict(valid)))
-            # print("model prediction = {}, surrogate dt model = {}".format(self.model.predict(sample.reshape(1,-1)), dt.predict(sample.reshape(1,-1))))
+            logging.info('r2 score=', Metrics.r2.function(y[:n], dt.predict(valid)))
+            # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict(sample.reshape(1,-1)), dt.predict(sample.reshape(1,-1))))
 
         # train dt on entire data
         dt.fit(x, y)
@@ -264,11 +269,11 @@ if __name__ == '__main__':
     sample = dataset.testing_data[0][3, :]
     explainer = DecisionTreeExplainer()
     explainer.fit(train, model)
-    print('\n'.join([train.feature_names[icol] + ' : ' + str(sample[icol]) for icol in range(train.n_features)]))
+    logging.info('\n'.join([train.feature_names[icol] + ' : ' + str(sample[icol]) for icol in range(train.n_features)]))
 
-    print('\n\nexplain')
+    logging.info('\n\nexplain')
     explainer.explain(sample)
-    print('\n\nplot')
+    logging.info('\n\nplot')
     explainer.plot(sample)
 
     plt.show()

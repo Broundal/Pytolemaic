@@ -3,6 +3,7 @@ import itertools
 import numpy
 from matplotlib import pyplot as plt
 
+from pytolemaic.analysis_logic.dataset_analysis.covariance_shift_report import CovarianceShiftReport
 from pytolemaic.utils.base_report import Report
 
 
@@ -177,10 +178,13 @@ class MissingValuesReport(Report):
 
 
 class DatasetAnalysisReport(Report):
-    def __init__(self, class_counts, outliers_count, missing_values_report: MissingValuesReport):
+    def __init__(self, class_counts, outliers_count, missing_values_report: MissingValuesReport,
+                 covariance_shift_report:CovarianceShiftReport=None):
         self._class_counts = class_counts
         self._outliers_count = outliers_count
         self._missing_values_report = missing_values_report
+        self._covariance_shift_report = covariance_shift_report
+
 
     @property
     def class_counts(self) -> dict:
@@ -191,13 +195,21 @@ class DatasetAnalysisReport(Report):
         return self._outliers_count
 
     @property
-    def missing_values_report(self):
+    def missing_values_report(self)->MissingValuesReport:
         return self._missing_values_report
+
+    @property
+    def covariance_shift_report(self)->CovarianceShiftReport:
+        return self._covariance_shift_report
 
     def to_dict(self, printable=False):
         out = dict(few_class_representatives=self.class_counts,
                    outliers_count=self.outliers_count,
-                   missing_values=self.missing_values_report.to_dict())
+                   missing_values=self.missing_values_report.to_dict(printable=printable),
+                   covariance_shift=None,
+                   )
+        if self.covariance_shift_report is not None:
+            out.update(dict(covariance_shift=self.covariance_shift_report.to_dict(printable=printable)))
         return self._printable_dict(out, printable=printable)
 
     @classmethod
@@ -206,7 +218,9 @@ class DatasetAnalysisReport(Report):
             few_class_representatives='{feature_name: {class: instances_count}} : listing categorical features that has at least 1 class which is under-represented (less than 10 instances).',
             outliers_count='{feature_name: {n-sigma: outliers_info}} : listing numerical features that has more outliers than is expected with respect to n-sigma. '
                            'E.g. for 3-sigma we expect ceil(0.0027 x n_samples) outliers.',
-            missing_values=MissingValuesReport.to_dict_meaning())
+            missing_values=MissingValuesReport.to_dict_meaning(),
+            covariance_shift=CovarianceShiftReport.to_dict_meaning(),
+        )
 
     def _plot_class_counts(self):
         if len(self.class_counts) == 0:
@@ -255,6 +269,8 @@ class DatasetAnalysisReport(Report):
         self.missing_values_report.plot()
         self._plot_class_counts()
         self._plot_outlier_counts()
+        if self.covariance_shift_report is not None:
+            self.covariance_shift_report.plot()
 
     def _class_count_insights(self):
         insights = []
@@ -305,5 +321,6 @@ class DatasetAnalysisReport(Report):
 
     def insights(self):
         return list(itertools.chain(self.missing_values_report.insights(),
+                                    self.covariance_shift_report.insights(),
                                     self._outlier_counts_insights(),
                                     self._class_count_insights()))

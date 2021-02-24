@@ -1,4 +1,5 @@
 import itertools
+import logging
 import time
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
@@ -19,11 +20,11 @@ class PyTrustReport(Report):
         ts = time.time()
         try:
             # some report may fail due to lack of available information
-            print("Calculating {}...".format(attr))
+            logging.info("Calculating {}...".format(attr))
             out = getattr(pytrust, attr, None)
-            print("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
+            logging.info("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
         except:
-            print("Failed to calculate {}".format(attr))
+            logging.info("Failed to calculate {}".format(attr))
             out = None
 
         return out

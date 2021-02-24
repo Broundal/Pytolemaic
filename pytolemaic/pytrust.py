@@ -1,9 +1,11 @@
+import logging
+
 import numpy
 
-from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis
+from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis, CovarianceShift
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
-    Scoring, Separability
+    Scoring
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
@@ -165,7 +167,7 @@ class PyTrust():
         return sensitivity.sensitivity_report(**kwargs)
 
     @classmethod
-    def create_scoring_report(cls, model, train: DMD, test: DMD, metric: str, y_pred=None, y_proba=None,
+    def create_scoring_report(cls, model, test: DMD, metric: str, y_pred=None, y_proba=None,
                               scoring: Scoring = None, **kwargs) -> ScoringFullReport:
         """
         Create scoring report
@@ -189,28 +191,24 @@ class PyTrust():
                                        y_pred=y_pred,
                                        y_proba=y_proba)
 
-        if train is not None and test is not None:
-            separation_quality = scoring.separation_quality(dmd_train=train, dmd_test=test)
-        else:
-            separation_quality = numpy.nan
-
         return ScoringFullReport(target_metric=metric,
                                  metric_reports=score_values_report,
-                                 separation_quality=separation_quality,
                                  confusion_matrix=confusion_matrix,
                                  scatter=scatter,
                                  classification_report=classification_report)
 
     @classmethod
     def create_quality_report(cls, scoring_report: ScoringFullReport,
-                              sensitivity_report: SensitivityFullReport) -> QualityReport:
+                              sensitivity_report: SensitivityFullReport,
+                              dataset_analysis_report: DatasetAnalysisReport) -> QualityReport:
         """
         Create quality report by analyzing scoring_report & sensitivity_report
 
         Returns:
             quality report
         """
-        test_set_report = TestSetQualityReport(scoring_report=scoring_report)
+        test_set_report = TestSetQualityReport(scoring_report=scoring_report,
+                                               dataset_analysis_report=dataset_analysis_report)
 
         train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
         model_quality_report = ModelQualityReport(vulnerability_report=sensitivity_report.vulnerability_report,
@@ -220,18 +218,20 @@ class PyTrust():
                              model_quality_report=model_quality_report)
 
     @classmethod
-    def create_dataset_analysis_report(cls, train: DMD, is_classification, **kwargs) -> DatasetAnalysisReport:
+    def create_dataset_analysis_report(cls, train: DMD, is_classification, test:DMD=None, dataset_analysis: DatasetAnalysis=None, **kwargs) -> DatasetAnalysisReport:
         """
         Create dataset analysis report by analyzing train data
 
         Args:
+            train - train data
+            test - test data, if available
             is_classification - whether the target is categorical.
 
         Returns:
             dataset analysis report
         """
-        da = DatasetAnalysis(problem_Type=CLASSIFICATION if is_classification else REGRESSION)
-        report = da.dataset_analysis_report(dataset=train)
+        dataset_analysis = dataset_analysis or DatasetAnalysis(problem_Type=CLASSIFICATION if is_classification else REGRESSION)
+        report = dataset_analysis.dataset_analysis_report(train=train, test=test)
         return report
 
     @classmethod
@@ -255,15 +255,12 @@ class PyTrust():
             separability pytrust
         """
 
-        separability = Separability()
-        xtrain, xtest = separability.prepare_dataset_for_score_quality(dmd_train=train,
-                                                                       dmd_test=test)
-        model = separability.prepare_estimator()
-        model.fit(xtrain.values, xtrain.target.ravel())
+        covariance_shift = CovarianceShift()
+        covariance_shift.calc_separation_quality(dmd_train=train, dmd_test=test)
 
-        separability_pytrust = PyTrust(model=model,
-                                       xtrain=xtrain,
-                                       xtest=xtest,
+        separability_pytrust = PyTrust(model=covariance_shift.classifier,
+                                       xtrain=covariance_shift.train,
+                                       xtest=covariance_shift.test,
                                        **pytrust_kwargs)
         return separability_pytrust
 
@@ -284,10 +281,13 @@ class PyTrust():
 
     def _create_quality_report(self) -> QualityReport:
         return self.create_quality_report(scoring_report=self.scoring_report,
-                                          sensitivity_report=self.sensitivity_report)
+                                          sensitivity_report=self.sensitivity_report,
+                                          dataset_analysis_report=self.dataset_analysis_report)
 
     def _create_dataset_analysis_report(self, **kwargs) -> DatasetAnalysisReport:
-        return self.create_dataset_analysis_report(train=self.train, is_classification=self.is_classification)
+        self.dataset_analysis = DatasetAnalysis(problem_Type=CLASSIFICATION if self.is_classification else REGRESSION)
+        return self.create_dataset_analysis_report(train=self.train, test=self.test, is_classification=self.is_classification,
+                                                   dataset_analysis=self.dataset_analysis)
 
     def _create_pytrust_report(self):
         return self.create_pytrust_report(pytrust=self)
@@ -413,7 +413,7 @@ class PyTrust():
                 
         # See usage example below:\n
         """
-        print(example)
+        logging.info(example)
         example += cls.print_usage_example()
         return example
 
@@ -472,7 +472,7 @@ class PyTrust():
             example.append('\n**************\n')
 
         example = "\n".join(example)
-        print(example)
+        logging.info(example)
         return example
 
 

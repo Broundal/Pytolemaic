@@ -92,7 +92,7 @@ class TestDatasetAnalysis(unittest.TestCase):
   def test_dataset_analysis_report(self):
     da = DatasetAnalysis(REGRESSION, class_count_threshold=10, outliers_n_sigma=(3, 5),
                          nan_threshold_per_col=(0.1, 0.5, 0.9), nan_threshold_per_sample=(0.1, 0.9))
-    report = da.dataset_analysis_report(dataset=self.dataset)
+    report = da.dataset_analysis_report(train=self.dataset)
     pprint(report.to_dict(printable=True))
     pprint(report.to_dict_meaning())
     pprint(report.plot())

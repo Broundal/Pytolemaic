@@ -227,13 +227,16 @@ class SensitivityOfFeaturesReport(Report):
     def stats_report(self) -> SensitivityStatsReport:
         return self._stats_report
 
+    def most_important_feature_insight(self):
+        return "The most important feature is '{}', followed by '{}' and '{}'.".format(
+            self.sorted_sensitivities[0][0],
+            self.sorted_sensitivities[1][0],
+            self.sorted_sensitivities[2][0])
+
     def insights(self):
         stats_report_insights = self.stats_report.insights()
         insights = []
-        insights.append("The most important feature is '{}', followed by '{}' and '{}'."
-                        .format(self.sorted_sensitivities[0][0],
-                                self.sorted_sensitivities[1][0],
-                                self.sorted_sensitivities[2][0]))
+        insights.append(self.most_important_feature_insight())
         if self.stats_report.n_zero > 0:
             zero_sensitivity = [feature for feature, value in self.sorted_sensitivities[-self.stats_report.n_zero:]]
             if len(zero_sensitivity) == 1:

@@ -664,11 +664,10 @@ class ScoringMetricReport(Report):
 
 
 class ScoringFullReport(Report):
-    def __init__(self, target_metric, metric_reports: [ScoringMetricReport], separation_quality: float,
+    def __init__(self, target_metric, metric_reports: [ScoringMetricReport],
                  confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None,
                  classification_report: SklearnClassificationReport = None):
         self._target_metric = target_metric
-        self._separation_quality = separation_quality
         self._metric_scores_dict = {r.metric: r for r in metric_reports}
         self._confusion_matrix = confusion_matrix
         self._scatter = scatter
@@ -697,7 +696,6 @@ class ScoringFullReport(Report):
         out = dict(
             metric_scores=metric_scores,
             target_metric=self.target_metric,
-            separation_quality=self.separation_quality,
             scatter=None if self.scatter is None else self.scatter.to_dict(printable=printable),
             confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(
                 printable=printable),
@@ -712,29 +710,10 @@ class ScoringFullReport(Report):
             target_metric="Metric of interest",
             metric_scores="Score information for various metrics saved in a dict structure where key is the metric name and value is of type {}".format(
                 ScoringMetricReport.__name__),
-            separation_quality="Measure whether the test and train comes from same distribution. High quality (max 1) means the test and train come from the same distribution. Low score (min 0) means the test set is problematic.",
             scatter="Scatter information (y_true vs y_pred). Available only for regressors.",
             confusion_matrix="Confusion matrix (y_true vs y_pred). Available only for classifiers.",
             classification_report="Sklearn's classification report"
         )
-
-    def separation_quality_insight(self):
-        lvl1 = 0.95
-        lvl2 = 0.7
-        insights = []
-        separability = numpy.round(self.separation_quality, 2)
-        if separability > lvl1:
-            pass  # ok
-        elif separability > lvl2:
-            insights.append(
-                'Covariance shift ={:.2g} is not negligible, there may be some issue with train/test distribution'
-                    .format(1 - separability))
-        else:
-            insights.append("Covariance shift ={:.2g} is high! Double check the way you've defined the test set!\n"
-                            "Running sensitivity analysis on a model trained to classify train/test samples may "
-                            "indicate the source for the distribution differences.".format(1 - separability))
-
-        return self._add_cls_name_prefix(insights)
 
     def insights(self):
         insights_from_reports = [report.insights() for report in [self.metric_scores[self.target_metric],
@@ -742,18 +721,14 @@ class ScoringFullReport(Report):
                                                                   self.classification_report]
                                  if report is not None]
 
-        return list(itertools.chain(self.separation_quality_insight(), *insights_from_reports))
+        return list(itertools.chain(*insights_from_reports))
 
         # metric_scores=metric_scores,
         # target_metric=self.target_metric,
-        # separation_quality=self.separation_quality,
         # scatter=None if self.scatter is None else self.scatter.to_dict(),
         # confusion_matrix=None if self.confusion_matrix is None else self.confusion_matrix.to_dict(),
         # classification_report=None if self.classification_report is None else self.classification_report.to_dict()
 
-    @property
-    def separation_quality(self):
-        return self._separation_quality
 
     @property
     def target_metric(self):

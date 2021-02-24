@@ -3,10 +3,12 @@ import logging
 import numpy
 import scipy.stats
 
-from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import \
-    DatasetAnalysisReport, MissingValuesReport
 from pytolemaic.utils.constants import CLASSIFICATION
 from pytolemaic.utils.dmd import DMD
+from pytolemaic.analysis_logic.dataset_analysis.covriance_shift import CovarianceShift
+from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import \
+    DatasetAnalysisReport, MissingValuesReport
+
 
 
 class DatasetAnalysis():
@@ -17,6 +19,7 @@ class DatasetAnalysis():
         self._outliers_n_sigma = outliers_n_sigma
         self._nan_threshold_per_feature = nan_threshold_per_col
         self._nan_threshold_per_sample = nan_threshold_per_sample
+        self._covariance_shift = None
 
     def count_unique_classes(self, dataset: DMD) -> dict:
 
@@ -161,15 +164,26 @@ class DatasetAnalysis():
 
         return nan_cols, nan_rows
 
-    def dataset_analysis_report(self, dataset: DMD):
-        nan_counts_features, nan_counts_samples = self.count_missing_values(dataset=dataset)
+    @property
+    def covariance_shift(self):
+        return self._covariance_shift
 
-        self.count_unique_classes(dataset=dataset)
-        self.count_outliers(dataset=dataset)
+    def dataset_analysis_report(self, train: DMD, test:DMD=None) -> DatasetAnalysisReport:
+        nan_counts_features, nan_counts_samples = self.count_missing_values(dataset=train)
+
+        self.count_unique_classes(dataset=train)
+        self.count_outliers(dataset=train)
+        if test is None:
+            covariance_report = None
+        else:
+            self._covariance_shift = CovarianceShift()
+            self._covariance_shift.calc_covariance_shift(dmd_train=train, dmd_test=test)
+            covariance_report = self._covariance_shift.covariance_shift_report()
 
         return DatasetAnalysisReport(
-            class_counts=self.count_unique_classes(dataset=dataset),
-            outliers_count=self.count_outliers(dataset=dataset),
+            class_counts=self.count_unique_classes(dataset=train),
+            outliers_count=self.count_outliers(dataset=train),
             missing_values_report=MissingValuesReport(nan_counts_features=nan_counts_features,
-                                                      nan_counts_samples=nan_counts_samples)
+                                                      nan_counts_samples=nan_counts_samples),
+            covariance_shift_report=covariance_report
         )

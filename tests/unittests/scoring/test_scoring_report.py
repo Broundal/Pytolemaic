@@ -21,7 +21,7 @@ class TestScoringReport(unittest.TestCase):
         rep3 = ScoringMetricReport(metric='mae', value=0.5, ci_low=0.25, ci_high=0.75)
         self.assertTrue(self.equal_to_dict_keys(rep3))
 
-        rep4 = ScoringFullReport(target_metric='mae', metric_reports=[rep3], separation_quality=0.2,
+        rep4 = ScoringFullReport(target_metric='mae', metric_reports=[rep3],
                                  confusion_matrix=rep1, scatter=rep2)
         self.assertTrue(self.equal_to_dict_keys(rep4))
 

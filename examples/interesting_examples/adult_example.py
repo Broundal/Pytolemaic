@@ -63,7 +63,7 @@ def run(fast=False):
     toc("insights_summary")
 
     print("\nLet's create a Lime explainer")
-    lime_explainer = pytrust.create_lime_explainer(max_samples=16000 if fast else 64000)
+    lime_explainer = pytrust.create_lime_explainer(max_samples=6000 if fast else 64000)
 
     sample = test.values[0, :]
     print("And plot explanation for the first sample in test data: {}".format(sample))
@@ -112,7 +112,7 @@ def scoring_report_deepdive(scoring_report):
     ci_low = scoring_report.metric_scores[metric].ci_low
     ci_high = scoring_report.metric_scores[metric].ci_high
     ci_ratio = scoring_report.metric_scores[metric].ci_ratio
-    quality = scoring_report.separation_quality
+
     print("\nLet's check the target score first - ")
     print('{} score is {:0.3f} which is reasonable'.format(metric, score_value))
     print('Confidence interval is [{:0.3f}, {:0.3f}] which implies a ci_ratio of {:0.3f} which is quite good'.format(
@@ -128,7 +128,7 @@ def scoring_report_deepdive(scoring_report):
 
 
     print("\nFinally, let's look on the separation quality")
-    print("Score quality is {:0.3f} which is very bad! --> test set isn't worth much.".format(quality))
+
     print(
         "\nWe can see entire scoring report as well as explanation for the various fields using to_dict() and to_dict_meaning()")
     print('*** scoring_report was commented out ***')
