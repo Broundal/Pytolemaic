@@ -3,7 +3,7 @@ import numpy
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring import \
-    Scoring
+    Scoring, Separability
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
@@ -147,6 +147,17 @@ class PyTrust():
     @classmethod
     def create_sensitivity_report(cls, model, train: DMD, test: DMD, metric: str,
                                   sensitivity: SensitivityAnalysis = None, **kwargs) -> SensitivityFullReport:
+        """
+        Create sensitivity report
+        Args:
+            model - model to be analyzed based on test data
+            train - train data (DMD). Train data is used if test is None
+            test - test data (DMD). If None, use train data instead.
+            sensitivity - SensitivityAnalysis instance. If None, instance is initiated internally.
+
+        Returns:
+            sensitivity report
+        """
         sensitivity = sensitivity or SensitivityAnalysis()
         sensitivity.calculate_sensitivity(
             model=model, dmd_test=test, dmd_train=train, metric=metric, **kwargs)
@@ -156,6 +167,17 @@ class PyTrust():
     @classmethod
     def create_scoring_report(cls, model, train: DMD, test: DMD, metric: str, y_pred=None, y_proba=None,
                               scoring: Scoring = None, **kwargs) -> ScoringFullReport:
+        """
+        Create scoring report
+        Args:
+            model - model to be analyzed based on test data
+            train - train data (DMD). Train data is used only for separability test
+            test - test data (DMD). .
+            scoring - Scoring instance. If None, instance is initiated internally.
+
+        Returns:
+            scoring report
+        """
         metrics = Metrics.supported_metrics()
 
         scoring = scoring or Scoring(metrics=metrics)
@@ -182,6 +204,12 @@ class PyTrust():
     @classmethod
     def create_quality_report(cls, scoring_report: ScoringFullReport,
                               sensitivity_report: SensitivityFullReport) -> QualityReport:
+        """
+        Create quality report by analyzing scoring_report & sensitivity_report
+
+        Returns:
+            quality report
+        """
         test_set_report = TestSetQualityReport(scoring_report=scoring_report)
 
         train_set_report = TrainSetQualityReport(vulnerability_report=sensitivity_report.vulnerability_report)
@@ -193,13 +221,51 @@ class PyTrust():
 
     @classmethod
     def create_dataset_analysis_report(cls, train: DMD, is_classification, **kwargs) -> DatasetAnalysisReport:
+        """
+        Create dataset analysis report by analyzing train data
+
+        Args:
+            is_classification - whether the target is categorical.
+
+        Returns:
+            dataset analysis report
+        """
         da = DatasetAnalysis(problem_Type=CLASSIFICATION if is_classification else REGRESSION)
         report = da.dataset_analysis_report(dataset=train)
         return report
 
     @classmethod
     def create_pytrust_report(cls, pytrust) -> PyTrustReport:
+        """
+             Creates final report encompassing all other reports for entire pytrust.
+             Returns:
+                 pytrust report
+        """
         return PyTrustReport(pytrust=pytrust)
+
+    @classmethod
+    def create_pytrust_for_separability_test(cls, train: DMD, test: DMD, **pytrust_kwargs):
+        """
+        Create scoring report
+        Args:
+            train - train data (DMD).
+            test - test data (DMD).
+
+        Returns:
+            separability pytrust
+        """
+
+        separability = Separability()
+        xtrain, xtest = separability.prepare_dataset_for_score_quality(dmd_train=train,
+                                                                       dmd_test=test)
+        model = separability.prepare_estimator()
+        model.fit(xtrain.values, xtrain.target.ravel())
+
+        separability_pytrust = PyTrust(model=model,
+                                       xtrain=xtrain,
+                                       xtest=xtest,
+                                       **pytrust_kwargs)
+        return separability_pytrust
 
     # endregion
 
@@ -225,6 +291,10 @@ class PyTrust():
 
     def _create_pytrust_report(self):
         return self.create_pytrust_report(pytrust=self)
+
+    def _create_pytrust_for_separability_test(self):
+        return self.create_pytrust_for_separability_test(
+            train=self.train, test=self.test, metric=self.metric)
 
     # endregion
 
@@ -320,6 +390,11 @@ class PyTrust():
     def insights(self) -> list:
         return self.report.insights()
 
+    @property
+    @cache
+    def pytrust_for_separability_test(self):
+        return self._create_pytrust_for_separability_test()
+
     @classmethod
     def print_initialization_example(cls):
         example = \
@@ -399,5 +474,6 @@ class PyTrust():
         example = "\n".join(example)
         print(example)
         return example
+
 
     # endregion

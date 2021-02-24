@@ -12,6 +12,49 @@ from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 
+class Separability():
+    def prepare_dataset_for_score_quality(self, dmd_train: DMD,
+                                           dmd_test: DMD):
+        '''
+
+        :param dmd_train: train set
+        :param dmd_test: test set
+        :return: dataset with target of test/train
+        '''
+
+        dmd = DMD.concat([dmd_train, dmd_test])
+        new_label = [0] * dmd_train.n_samples + [1] * dmd_test.n_samples
+        dmd.set_target(new_label)
+
+        train, test = dmd.split(ratio=dmd_test.n_samples / (dmd_train.n_samples + dmd_test.n_samples))
+        return train, test
+
+    def prepare_estimator(self):
+        return GeneralUtils.simple_imputation_pipeline(
+            estimator=RandomForestClassifier(n_estimators=100, n_jobs=multiprocessing.cpu_count() - 1))
+
+    def separation_quality(self, dmd_train: DMD, dmd_test: DMD):
+        '''
+        :param dmd_train: train set
+        :param dmd_test: test set
+        :return: estimation of score quality based on similarity between train and test sets
+        '''
+
+        train, test = self.prepare_dataset_for_score_quality(dmd_train=dmd_train,
+                                                              dmd_test=dmd_test)
+
+        classifier = self.prepare_estimator()
+        classifier.fit(train.values, train.target.ravel())
+
+        yp = classifier.predict_proba(test.values)
+
+        auc = Metrics.auc.function(y_true=test.target, y_pred=yp)
+        auc = numpy.clip(auc, 0.5, 1)  # auc<0.5 --> 0.5
+
+        #  High auc --> separable --> low quality.
+        #  [0 to 1] --> [0.5 to 1] --> 1-(2*[0.5 to 1]-1) --> [1 to 0]
+
+        return numpy.round(1 - (2 * auc - 1), 5)
 
 class Scoring():
     def __init__(self, metrics: list = None):
@@ -110,21 +153,6 @@ class Scoring():
             error_bars[ind2] = uncertainty_model.uncertainty(dmd_2).ravel()
         return error_bars
 
-    def _prepare_dataset_for_score_quality(self, dmd_train: DMD,
-                                           dmd_test: DMD):
-        '''
-
-        :param dmd_train: train set
-        :param dmd_test: test set
-        :return: dataset with target of test/train
-        '''
-
-        dmd = DMD.concat([dmd_train, dmd_test])
-        new_label = [0] * dmd_train.n_samples + [1] * dmd_test.n_samples
-        dmd.set_target(new_label)
-
-        train, test = dmd.split(ratio=dmd_test.n_samples / (dmd_train.n_samples + dmd_test.n_samples))
-        return train, test
 
     def separation_quality(self, dmd_train: DMD, dmd_test: DMD):
         '''
@@ -134,16 +162,4 @@ class Scoring():
         :return: estimation of score quality based on similarity between train and test sets
         '''
 
-        train, test = self._prepare_dataset_for_score_quality(dmd_train=dmd_train,
-                                                              dmd_test=dmd_test)
-
-        classifier = GeneralUtils.simple_imputation_pipeline(
-            estimator=RandomForestClassifier(n_estimators=100, n_jobs=multiprocessing.cpu_count() - 1))
-        classifier.fit(train.values, train.target.ravel())
-
-        yp = classifier.predict_proba(test.values)
-
-        auc = Metrics.auc.function(y_true=test.target, y_pred=yp)
-        auc = numpy.clip(auc, 0.5, 1)  # auc<0.5 --> 0.5
-
-        return numpy.round(1 - (2 * auc - 1), 5)
+        return Separability().separation_quality(dmd_train=dmd_train, dmd_test=dmd_test)
