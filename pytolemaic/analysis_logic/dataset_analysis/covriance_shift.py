@@ -68,15 +68,23 @@ class CovarianceShiftCalculator():
 class CovarianceShift():
     def __init__(self):
         self._separation_quality = None
-        self._train = None
-        self._test = None
+        self._cov_train = None
+        self._cov_test = None
         self._classifier = None
         self._sensitivity = None
 
+        self._dmd_train = None
+        self._dmd_test = None
+
     def calc_covariance_shift(self, dmd_train: DMD, dmd_test: DMD):
-        self._train, self._test = CovarianceShiftCalculator.prepare_dataset_for_score_quality(dmd_train=dmd_train, dmd_test=dmd_test)
-        self._classifier = CovarianceShiftCalculator.prepare_estimator(train=self._train)
-        self._covariance_shift = CovarianceShiftCalculator.calc_convriance_shift_auc(classifier=self._classifier, test=self._test)
+        # save data for later report
+        self._dmd_train = dmd_train
+        self._dmd_test = dmd_test
+
+        # split data to new train / test setes
+        self._cov_train, self._cov_test = CovarianceShiftCalculator.prepare_dataset_for_score_quality(dmd_train=dmd_train, dmd_test=dmd_test)
+        self._classifier = CovarianceShiftCalculator.prepare_estimator(train=self._cov_train)
+        self._covariance_shift = CovarianceShiftCalculator.calc_convriance_shift_auc(classifier=self._classifier, test=self._cov_test)
 
     def covariance_shift_report(self):
         medium_lvl = 0.7
@@ -88,7 +96,9 @@ class CovarianceShift():
 
         return CovarianceShiftReport(covariance_shift=self.covariance_shift,
                                      sensitivity_report=sensitivity_report,
-                                     medium_lvl=medium_lvl, high_lvl=high_lvl)
+                                     medium_lvl=medium_lvl, high_lvl=high_lvl,
+                                     train=self._dmd_train,
+                                     test=self._dmd_test)
 
     def calc_sensitivity_report(self):
         try:
@@ -116,11 +126,11 @@ class CovarianceShift():
 
     @property
     def train(self):
-        return self._train
+        return self._cov_train
 
     @property
     def test(self):
-        return self._test
+        return self._cov_test
 
     @property
     def classifier(self):

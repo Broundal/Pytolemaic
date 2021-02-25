@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 
 from pytolemaic.utils.base_report import Report
 
-
 class SensitivityTypes():
     shuffled = 'shuffled'
     missing = 'missing'
@@ -191,11 +190,9 @@ class SensitivityOfFeaturesReport(Report):
             stats=SensitivityStatsReport.to_dict_meaning()
         )
 
-    def plot(self, axs=None, n_features_to_plot=10):
-        if axs is None:
-            fig, axs = plt.subplots(1, 2, figsize=(10, 10))
-
-        ax1, ax2 = axs
+    def plot_sorted_sensitivities(self, ax=None, n_features_to_plot=10):
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         sorted_features = self.sorted_sensitivities  # sorted(self.sensitivities.items(), key=lambda kv: -kv[1])
 
@@ -203,11 +200,18 @@ class SensitivityOfFeaturesReport(Report):
             sorted_features = sorted_features[:min(n_features_to_plot, len(sorted_features))]
 
         keys, values = zip(*sorted_features)
-        ax1.barh(list(reversed(keys)), list(reversed(values)))
-        ax1.set(
+        keys = ['"{}"'.format(k) for k in keys]
+        ax.barh(list(reversed(keys)), list(reversed(values)))
+        ax.set(
             title='"{}" Feature Sensitivity'.format(self.method),
             xlabel='Sensitivity value')
 
+    def plot(self, axs=None, n_features_to_plot=10):
+        if axs is None:
+            fig, axs = plt.subplots(1, 2, figsize=(10, 10))
+
+        ax1, ax2 = axs
+        self.plot_sorted_sensitivities(ax=ax1, n_features_to_plot=n_features_to_plot)
         self.stats_report.plot(ax=ax2, method=self.method)
         plt.draw()
 
@@ -227,11 +231,25 @@ class SensitivityOfFeaturesReport(Report):
     def stats_report(self) -> SensitivityStatsReport:
         return self._stats_report
 
+    def most_important_features(self, n_features=3):
+        out = []
+        n_features = min(n_features, len(self.sorted_sensitivities))
+        for i in range(n_features):
+            if self.sorted_sensitivities[i][1] > 0:
+                out.append(self.sorted_sensitivities[i][0])
+        return out
+
     def most_important_feature_insight(self):
-        return "The most important feature is '{}', followed by '{}' and '{}'.".format(
-            self.sorted_sensitivities[0][0],
-            self.sorted_sensitivities[1][0],
-            self.sorted_sensitivities[2][0])
+        features = self.most_important_features(n_features=3)
+        msg = ''
+        if len(features)>1:
+            msg += "The most important feature is '{}'.".format(features[0])
+        if len(features)>2:
+            msg += ", followed by '{}'".format(features[1])
+        if len(features) > 3:
+            msg += "and '{}'".format(features[2])
+
+        return msg
 
     def insights(self):
         stats_report_insights = self.stats_report.insights()

@@ -384,3 +384,6 @@ class DMD():
                            feature_names=feature_names, feature_types=feature_types)
 
         return dmd_train, dmd_test
+
+    def to_df(self, copy=False):
+        return self._x.copy(deep=copy), None if self._y is None else self._y.copy(deep=copy)

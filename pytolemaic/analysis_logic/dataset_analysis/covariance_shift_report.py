@@ -1,28 +1,52 @@
 import itertools
+import logging
+
 import numpy
+import pandas
+
+from pytolemaic.utils.dmd import DMD
+
+try:
+    from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport
+except:
+    logging.warning('issue with import of SensitivityOfFeaturesReport')
+    pass
+
 from pytolemaic.utils.base_report import Report
+from matplotlib import pyplot as plt
 
 class CovarianceShiftReport(Report):
-    def __init__(self, covariance_shift:float, sensitivity_report:Report=None,
+    def __init__(self, covariance_shift:float, sensitivity_report:SensitivityOfFeaturesReport=None, train:DMD=None, test:DMD=None,
                  medium_lvl=0.7, high_lvl=0.95):
         self.medium_lvl = medium_lvl
         self.high_lvl = high_lvl
         self.covariance_shift = covariance_shift
         self.sensitivity = sensitivity_report
 
+        # train and test data is used for distribution plots
+        self.train = train
+        self.test = test
+
+    def _features_to_look_at_msg(self):
+        if self.sensitivity is None:
+            return ''
+        else:
+            return 'Compare distributions for following features: {}'.format(self.sensitivity.most_important_features())
+
     def covariance_shift_insight(self):
         insights = []
         covariance_shift = numpy.round(self.covariance_shift, 2)
         if covariance_shift < self.medium_lvl:
-            pass  # ok
-        elif covariance_shift < self.high_lvl:
-            insights.append(
-                'Covariance shift ={:.2g} is not negligible, there may be some issue with train/test distribution'
-                    .format(self.covariance_shift))
+            return  insights # ok
+
+        features_to_look_at_msg = self._features_to_look_at_msg()
+
+        if covariance_shift < self.high_lvl:
+            insights.append('Covariance shift ={:.2g} is not negligible, there may be some issue with train/test distribution. {}'
+                            .format(self.covariance_shift, features_to_look_at_msg))
         else:
-            insights.append("Covariance shift ={:.2g} is high! Double check the way you've defined the test set! "
-                            "Check covariance_shift_sensitivity as it may indicate the source for the distribution "\
-                            "differences.".format(self.covariance_shift))
+            insights.append("Covariance shift ={:.2g} is high! Double check the way you've defined the test set! {}"
+                            .format(self.covariance_shift, features_to_look_at_msg))
 
         return insights
 
@@ -43,7 +67,33 @@ class CovarianceShiftReport(Report):
 
     def plot(self):
         if self.sensitivity is not None:
-            self.sensitivity.plot()
+            fig, ax = plt.subplots(1,1, figsize=(8,10))
+            self.sensitivity.plot_sorted_sensitivities(ax=ax, n_features_to_plot=10)
+            ax.set(
+                title='Feature Sensitivity for Covariance Shift model',
+                xlabel='Sensitivity value')
+
+            if self.train is not None and self.test is not None:
+                features_to_look_at = self.sensitivity.most_important_features(n_features=3)
+                train, _ = self.train.to_df()
+                test, _ = self.test.to_df()
+
+                fig, axs = plt.subplots(len(features_to_look_at), 1, figsize=(10, 10), sharex=True)
+                for i, feature in enumerate(features_to_look_at):
+                    if feature not in train.columns:
+                        continue
+
+                    tmp = pandas.DataFrame({'Distribution in train set' : train[feature],
+                                            'Distribution in test set': test[feature]})
+
+                    for col in tmp.columns:
+                        axs[i].hist(tmp[col], alpha=0.5, label=col)
+                    axs[i].legend()
+                    axs[i].set_title('Feature "{}"'.format(feature))
+
+
+
+
 
     def insights(self):
 

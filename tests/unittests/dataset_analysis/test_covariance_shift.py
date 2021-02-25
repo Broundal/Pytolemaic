@@ -77,3 +77,5 @@ if __name__ == '__main__':
     a=TestDatasetAnalysis()
     a.setUp()
     a.test_high_dist()
+    from matplotlib import pyplot as plt
+    plt.show()
