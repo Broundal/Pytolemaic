@@ -8,7 +8,7 @@ from pytolemaic.analysis_logic.dataset_analysis.covriance_shift import Covarianc
 from pytolemaic.utils.dmd import DMD
 
 
-class TestDatasetAnalysis(unittest.TestCase):
+class TestCovarianceShift(unittest.TestCase):
 
     def _gen_data(self, seed, offset=0.):
         rs = numpy.random.RandomState(seed)
@@ -74,7 +74,7 @@ class TestDatasetAnalysis(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    a=TestDatasetAnalysis()
+    a=TestCovarianceShift()
     a.setUp()
     a.test_high_dist()
     from matplotlib import pyplot as plt

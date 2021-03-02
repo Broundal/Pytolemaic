@@ -138,7 +138,7 @@ class PyTrust():
         self.sensitivity = SensitivityAnalysis()
 
         self._uncertainty_models = {}
-
+        self.covariance_shift = None
         self._cache = {}
 
     def _validate_input(self):
@@ -244,7 +244,7 @@ class PyTrust():
         return PyTrustReport(pytrust=pytrust)
 
     @classmethod
-    def create_pytrust_for_separability_test(cls, train: DMD, test: DMD, **pytrust_kwargs):
+    def create_pytrust_for_separability_test(cls, train: DMD, test: DMD, covariance_shift=None, **pytrust_kwargs):
         """
         Create scoring report
         Args:
@@ -255,8 +255,8 @@ class PyTrust():
             separability pytrust
         """
 
-        covariance_shift = CovarianceShift()
-        covariance_shift.calc_separation_quality(dmd_train=train, dmd_test=test)
+        covariance_shift = covariance_shift or CovarianceShift()
+        covariance_shift.calc_covariance_shift(dmd_train=train, dmd_test=test)
 
         separability_pytrust = PyTrust(model=covariance_shift.classifier,
                                        xtrain=covariance_shift.train,
@@ -293,8 +293,9 @@ class PyTrust():
         return self.create_pytrust_report(pytrust=self)
 
     def _create_pytrust_for_separability_test(self):
+        self.covariance_shift = CovarianceShift()
         return self.create_pytrust_for_separability_test(
-            train=self.train, test=self.test, metric=self.metric)
+            train=self.train, test=self.test, metric=self.metric, covariance_shift=self.covariance_shift)
 
     # endregion
 

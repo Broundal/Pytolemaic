@@ -33,7 +33,7 @@ class CovarianceShiftReport(Report):
         else:
             return 'Compare distributions for following features: {}'.format(self.sensitivity.most_important_features())
 
-    def covariance_shift_insight(self):
+    def covariance_shift_insights(self):
         insights = []
         covariance_shift = numpy.round(self.covariance_shift, 2)
         if covariance_shift < self.medium_lvl:
@@ -78,10 +78,10 @@ class CovarianceShiftReport(Report):
                 train, _ = self.train.to_df()
                 test, _ = self.test.to_df()
 
-                fig, axs = plt.subplots(len(features_to_look_at), 1, figsize=(10, 10), sharex=True)
+                features_to_look_at = [f for f in features_to_look_at if f in train.columns]
+                if len(features_to_look_at) > 0:
+                    fig, axs = plt.subplots(len(features_to_look_at), 1, figsize=(10, 10), sharex=True)
                 for i, feature in enumerate(features_to_look_at):
-                    if feature not in train.columns:
-                        continue
 
                     tmp = pandas.DataFrame({'Distribution in train set' : train[feature],
                                             'Distribution in test set': test[feature]})
@@ -98,8 +98,7 @@ class CovarianceShiftReport(Report):
     def insights(self):
 
         return self._add_cls_name_prefix(
-            itertools.chain(self.covariance_shift_insight(),
-                            [self.sensitivity.most_important_feature_insight()] if self.sensitivity is not None else []))
+            itertools.chain(self.covariance_shift_insights()))
 
 
 

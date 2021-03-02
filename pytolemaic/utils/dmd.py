@@ -47,21 +47,15 @@ class DMD():
                  splitter=ShuffleSplitter, target_labels: dict = None, categorical_encoding: dict = None,
                  feature_names: list = None, feature_types: list = None):
 
-        if (feature_names or feature_types) and not columns_meta:
-            columns_meta = {}
-
-        if feature_names:
-            columns_meta[self.FEATURE_NAMES] = feature_names
-        if feature_types:
-            columns_meta[self.FEATURE_TYPES] = feature_types
-
         self._x = pandas.DataFrame(x)
         if y is not None:
             self._y = pandas.DataFrame(y)
         else:
             self._y = None
 
-        self._columns_meta = self._create_columns_meta(columns_meta, self._x)
+        self._columns_meta = self._create_columns_meta(columns_meta, self._x, feature_names=feature_names, feature_types=feature_types)
+        self._x.columns = self._columns_meta[self.FEATURE_NAMES]
+
         self._samples_meta = self._create_samples_meta(samples_meta, self._x)
         self._splitter = splitter
 
@@ -115,14 +109,21 @@ class DMD():
                           )
 
     @classmethod
-    def _create_columns_meta(cls, columns_meta, df):
+    def _create_columns_meta(cls, columns_meta, df, feature_names=None, feature_types=None)->pandas.DataFrame:
+        # columns_meta is either pd.DataFrame or dict
         if columns_meta is None:
-            columns_meta = pandas.DataFrame({DMD.FEATURE_NAMES: df.columns})
-        else:
-            columns_meta = pandas.DataFrame(columns_meta)
+            columns_meta = {}
 
-        if DMD.FEATURE_NAMES not in columns_meta:
-            columns_meta[DMD.FEATURE_NAMES] = df.columns
+        if cls.FEATURE_NAMES not in columns_meta:
+            if feature_names:
+                columns_meta[cls.FEATURE_NAMES] = feature_names
+            else:
+                columns_meta[cls.FEATURE_NAMES] = df.columns
+
+        if cls.FEATURE_TYPES not in columns_meta and feature_types is not None:
+            columns_meta[cls.FEATURE_TYPES] = feature_types
+
+        columns_meta = pandas.DataFrame(columns_meta)
 
         if df.shape[1] != columns_meta.shape[0]:
             raise ValueError("Given data has {} features but columns metadata was given for {} features"
