@@ -6,7 +6,7 @@ from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import D
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ConfusionMatrixReport, \
     ScatterReport, ScoringMetricReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityVulnerabilityReport
-from pytolemaic.dataset_quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
+from pytolemaic.quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
     ModelQualityReport
 from pytolemaic.utils.metrics import Metrics
 

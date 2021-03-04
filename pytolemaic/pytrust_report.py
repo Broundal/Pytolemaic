@@ -5,7 +5,7 @@ import time
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityFullReport
-from pytolemaic.dataset_quality_report import QualityReport
+from pytolemaic.quality_report import QualityReport
 from pytolemaic.utils.base_report import Report
 
 
