@@ -32,7 +32,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
             estimator = RandomForestRegressor
 
         model = GeneralUtils.simple_imputation_pipeline(
-            estimator(random_state=0, n_jobs=multiprocessing.cpu_count() - 1, n_estimators=10))
+            estimator(random_state=0, n_jobs=multiprocessing.cpu_count() - 1, n_estimators=15))
 
         return model
 
@@ -72,10 +72,11 @@ class TestPredictionsUncertainty(unittest.TestCase):
         subset_bad_score = metric(
             y_true=new_data.target[bad], y_pred=yp[bad], **kwargs)
 
+        print(subset_bad_score, base_score, subset_good_score)
         self.assertGreater(subset_good_score, base_score)
         self.assertLess(subset_bad_score, base_score)
 
-        print(subset_bad_score, base_score, subset_good_score)
+
 
     def test_classification_confidence(self):
         self._test(is_classification=True, method='confidence')
@@ -88,6 +89,9 @@ class TestPredictionsUncertainty(unittest.TestCase):
 
     def test_regression_rmse(self):
         self._test(is_classification=False, method='rmse')
+
+    def test_regression_quantile(self):
+        self._test(is_classification=False, method='quantile')
 
         # subset_bad_score = []
         # subset_good_score = []

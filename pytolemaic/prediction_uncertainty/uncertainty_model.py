@@ -5,6 +5,7 @@ import sklearn
 from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import brier_score_loss
+from sklearn.pipeline import Pipeline
 
 from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
 from pytolemaic.utils.dmd import DMD
@@ -113,6 +114,13 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             self.uncertainty_model.fit(dmd_test.values,
                                        (dmd_test.target.ravel() - yp.ravel()) ** 2)
         elif self.uncertainty_method in ['quantile']:
+            if isinstance(self.model, Pipeline):
+
+                names, estimators = zip(*self.model.steps)
+                estimator = estimators[-1]
+                if hasattr(estimator, 'estimators_'):
+                    self.model.estimators_ = estimator.estimators_
+
             if not hasattr(self.model, 'estimators_'):
                 raise ValueError(
                     "'quantile' method can work only for models with estimators_ attrbiute. Use method='mae' instead")
@@ -173,7 +181,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             return out.reshape(-1, 1)
         elif self.uncertainty_method in ['quantile']:
 
-            percentile = 25
+            percentile = 10
 
             ys = numpy.zeros((len(x), len(self.model.estimators_)))
             for i, pred in enumerate(self.model.estimators_):
