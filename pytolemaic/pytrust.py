@@ -11,11 +11,11 @@ from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import \
     SensitivityAnalysis
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityFullReport
 from pytolemaic.analysis_logic.prediction_analysis.lime_report import LimeExplainer
+from pytolemaic.analysis_logic.quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
+    ModelQualityReport
 from pytolemaic.prediction_uncertainty.uncertainty_model import \
     UncertaintyModelClassifier, UncertaintyModelRegressor, UncertaintyModelBase
 from pytolemaic.pytrust_report import PyTrustReport
-from pytolemaic.quality_report import TestSetQualityReport, TrainSetQualityReport, QualityReport, \
-    ModelQualityReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION, FeatureTypes
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
 from pytolemaic.utils.general import GeneralUtils
