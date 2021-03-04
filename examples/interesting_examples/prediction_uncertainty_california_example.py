@@ -37,8 +37,8 @@ def run():
     mn, mx = 1, 0
 
     # uncertainty model may be based on 'confidence' or 'probability' for classification, and 'mae' or 'rmse' for regression
-    for method in ['mae', 'rmse']:
-
+    for method in ['quantile', 'mae', 'rmse']:
+        print('working on method %s' % method)
         # train uncertainty model
         uncertainty_model = pytrust.create_uncertainty_model(method=method)
         yp = uncertainty_model.predict(xtest2)  # same as model.predict
@@ -63,7 +63,7 @@ def run():
         plt.xlabel("Uncertainty level")
         plt.ylabel("{} Score".format(metric.name))
         plt.title("{} score vs uncertainty level".format(metric.name))
-        plt.legend(['method=mae', 'method=rmse'], loc='upper right')
+        plt.legend(['method=mae', 'method=rmse', 'method=quantile'], loc='upper right')
 
         print(uncertainty_levels_middle)
         print(GeneralUtils.f3(performance))

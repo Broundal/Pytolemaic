@@ -75,10 +75,10 @@ class UncertaintyModelBase():
 
 class UncertaintyModelRegressor(UncertaintyModelBase):
 
-    def __init__(self, model, uncertainty_method='rmse'):
+    def __init__(self, model, uncertainty_method='mae'):
         super(UncertaintyModelRegressor, self).__init__(
             model=model, uncertainty_method=uncertainty_method,
-            ptype=REGRESSION, supported_methods=['mae', 'rmse'])
+            ptype=REGRESSION, supported_methods=['mae', 'rmse', 'quantile'])
         self._n_bins = 10
         self.actual_error = None
         self.mean_predicted_error = None
@@ -112,10 +112,16 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             yp = self.predict(dmd_test)
             self.uncertainty_model.fit(dmd_test.values,
                                        (dmd_test.target.ravel() - yp.ravel()) ** 2)
+        elif self.uncertainty_method in ['quantile']:
+            if not hasattr(self.model, 'estimators_'):
+                raise ValueError(
+                    "'quantile' method can work only for models with estimators_ attrbiute. Use method='mae' instead")
 
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
+
+        # the following section is purely for plotting/analysis purposes
 
         # calibration curve
         y_pred = self.predict(cal_curve_samples).ravel()
@@ -132,7 +138,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
         bin_true = numpy.bincount(binids, weights=delta, minlength=len(bins))
         bin_total = numpy.bincount(binids, minlength=len(bins))
 
-        nonzero = bin_total != 0
+        nonzero = bin_total > 10
         self.actual_error = (bin_true[nonzero] / bin_total[nonzero])
         self.mean_predicted_error = (bin_sums[nonzero] / bin_total[nonzero])
 
@@ -142,7 +148,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
         uncertainty_levels_middle = []
         for ibin in range(len(bins) - 1):
             inds = binids == ibin
-            if numpy.sum(inds) < 5:
+            if numpy.sum(inds) < 10:
                 continue
 
             subset_score = metric.function(y_true=y_true[inds], y_pred=y_pred[inds])
@@ -165,6 +171,19 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
         elif self.uncertainty_method in ['rmse']:
             out = numpy.sqrt(self.uncertainty_model.predict(x))
             return out.reshape(-1, 1)
+        elif self.uncertainty_method in ['quantile']:
+
+            percentile = 25
+
+            ys = numpy.zeros((len(x), len(self.model.estimators_)))
+            for i, pred in enumerate(self.model.estimators_):
+                ys[:, i] = pred.predict(x)
+
+            err_down = numpy.percentile(ys, percentile, axis=1)
+            err_up = numpy.percentile(ys, 100 - percentile, axis=1)
+
+            return (err_up - err_down) / 2
+
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
@@ -249,6 +268,8 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
 
+        # analysis for plots :
+
         # calibration curve
 
         y_pred = self.predict(cal_curve_samples).ravel()
@@ -281,7 +302,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
         uncertainty_levels_middle = []
         for ibin in range(len(bins) - 1):
             inds = binids == ibin
-            if numpy.sum(inds) < 5:
+            if numpy.sum(inds) < 10:
                 continue
 
             subset_score = metric.function(y_true=y_true[inds], y_pred=y_pred[inds])
