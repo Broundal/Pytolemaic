@@ -19,7 +19,7 @@ class UncertaintyModelBase():
                  ptype=None,
                  supported_methods: list = None):
         self.model = model
-        self.uncertainty_method = uncertainty_method
+        self.uncertainty_method = uncertainty_method if uncertainty_method != 'default' else supported_methods[0]
         self.dmd_supported = None
         self.is_classification = GeneralUtils.is_classification(model)
         self.uncertainty_analysis_output = None
@@ -377,10 +377,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
         super(UncertaintyModelClassifier, self).__init__(model=model,
                                                          uncertainty_method=uncertainty_method,
                                                          ptype=CLASSIFICATION,
-                                                         supported_methods=[
-                                                             'probability',
-                                                             'confidence']
-                                                         )
+                                                         supported_methods=['confidence', 'probability'])
 
         self._brier_loss = -1
         self._fraction_of_positives = None
@@ -396,7 +393,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             cal_curve_samples = dmd_test
             # no fit logic required
 
-        elif self.uncertainty_method in ['confidence', 'default']:
+        elif self.uncertainty_method in ['confidence']:
             dmd_test, cal_curve_samples = dmd_test.split(ratio=0.1)
 
             estimator = RandomForestClassifier(
