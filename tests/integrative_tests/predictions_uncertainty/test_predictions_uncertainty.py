@@ -1,5 +1,6 @@
 import multiprocessing
 import unittest
+from pprint import pprint
 
 import numpy
 import sklearn
@@ -19,6 +20,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
         x[:, 1] = 0
         # 1st is double importance, 2nd has no importance
         y = numpy.sum(x, axis=1) + 2 * x[:, 0]
+        y[x[:, 0] < 0.2] = x[x[:, 0] < 0.2, 2]
         if is_classification:
             y = numpy.round(y, 0).astype(int)
         return DMD(x=x, y=y,
@@ -76,6 +78,7 @@ class TestPredictionsUncertainty(unittest.TestCase):
         self.assertGreater(subset_good_score, base_score)
         self.assertLess(subset_bad_score, base_score)
 
+        pprint(uncertainty_model.uncertainty_analysis(dmd_train=train))
 
 
     def test_classification_confidence(self):

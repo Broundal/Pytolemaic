@@ -22,6 +22,7 @@ class UncertaintyModelBase():
         self.uncertainty_method = uncertainty_method
         self.dmd_supported = None
         self.is_classification = GeneralUtils.is_classification(model)
+        self.uncertainty_analysis_output = None
 
         if (self.is_classification and ptype != CLASSIFICATION) or \
                 (not self.is_classification and ptype == CLASSIFICATION):
@@ -73,6 +74,142 @@ class UncertaintyModelBase():
     def plot_calibration_curve(self):
         raise NotImplementedError
 
+    @classmethod
+    def _get_decision_paths(cls, values, tree, y, uncertainty_threshold, low):
+
+        if low:
+            vals = values[y.ravel() <= uncertainty_threshold]
+        else:
+            vals = values[y.ravel() >= uncertainty_threshold]
+
+        # vals = vals[:min(100, len(vals)), :]
+        # decision_path_nodes = [tree.decision_path(val.reshape(1,-1)).indices for val in vals]
+        decision_path_nodes = tree.decision_path(vals)
+
+        return decision_path_nodes
+
+    @classmethod
+    def _get_nodes(cls, tree, uncertainty_threshold, low, min_samples_in_node=100):
+        # get candidates nodes by n_samples and value.
+        ids = tree.tree_.n_node_samples >= min_samples_in_node
+        values = tree.tree_.value.ravel()
+
+        impurity = tree.tree_.impurity
+        impurity[impurity < 0] = 1e100
+        rmse = numpy.sqrt(impurity).ravel()
+        rmse[tree.tree_.impurity < 0] = -1
+
+        if low:
+            ids = ids & (values <= uncertainty_threshold) & (values >= rmse * 2)
+        else:
+            ids = ids & (values >= uncertainty_threshold) & (values >= rmse * 2)
+
+        if not any(ids):
+            return numpy.array([])
+
+        nodes = numpy.arange(tree.tree_.node_count)[ids]
+
+        # prune nodes
+        for i in reversed(nodes):  # high to low
+            for children in [tree.tree_.children_left[i], tree.tree_.children_right[i]]:
+                nodes[nodes == children] = -1
+        nodes = nodes[nodes > 0]
+        return nodes
+
+    def uncertainty_analysis(self, dmd_train: DMD = None, dmd_test: DMD = None,
+                             n_jobs=multiprocessing.cpu_count() - 1, max_depth=5, min_samples_in_area=0.05,
+                             percentile=10) -> dict:
+        """
+        Provides an analysis of areas with low/high uncertainty. Can assist in understanding where the model is good, and where it's not.
+        :param dmd_train:
+        :param dmd_test:
+        :param n_jobs:
+        :param max_depth: Maximum number of conditions to define an area.
+        :param min_samples_in_area: Minimal train+test samples in reported area.
+        :param percentile: percentile over uncertainty to provide threshold for high and low uncertainties.
+        :return:
+        """
+        if dmd_train is not None:
+            dmd = dmd_train
+            if dmd_test is not None:
+                dmd.append(dmd_test)
+        elif dmd_test is not None:
+            dmd = dmd_test
+        else:
+            raise ValueError("Require either dmd_train or dmd_test or both")
+
+        if min_samples_in_area < 1:
+            min_samples_in_area = int(dmd.n_samples * min_samples_in_area)
+
+        # train RF on uncertainty output (because it's not necessarity RF in uncertainty estimator)
+        estimator = RandomForestRegressor(random_state=0, n_jobs=n_jobs, max_depth=max_depth, n_estimators=50)
+
+        pipeline = GeneralUtils.simple_imputation_pipeline(
+            estimator)  # todo better imputation scheme whenever a model is created by package
+        y = self.uncertainty(dmd)
+        pipeline.fit(dmd.values, y)
+
+        # extract RF from pipeline
+        names, estimators = zip(*pipeline.steps)
+        imputer = estimators[-2]
+        estimator = estimators[-1]
+
+        low_uncertainty = numpy.percentile(y, percentile)
+        high_uncertainty = numpy.percentile(y, 100 - percentile)
+
+        areas_of_extreme_uncertainty = {'low': [], 'high': []}
+        for mode in ['low', 'high']:
+            extreme_areas = []
+            for tree in estimator.estimators_:
+                uncertainty_threshold = low_uncertainty if mode == 'low' else high_uncertainty
+
+                # get nodes of interest
+                nodes = self._get_nodes(tree, uncertainty_threshold=uncertainty_threshold, low=mode == 'low',
+                                        min_samples_in_node=min_samples_in_area)
+                if len(nodes) == 0:
+                    continue
+
+                # get relevant decision paths of nodes
+                node_paths = self._get_decision_paths(imputer.transform(dmd.values), tree, y,
+                                                      uncertainty_threshold=uncertainty_threshold, low=mode == 'low')
+
+                # for each node, get msg
+                for node in nodes:
+                    # search for appropriate path.
+                    found = None
+                    for node_path_csr in node_paths:
+                        nodes_path = node_path_csr.indices
+                        if node in nodes_path:
+                            found = nodes_path
+                            break
+
+                    assert found is not None
+
+                    # this can be moved elsewhere if needed
+                    from pytolemaic.analysis_logic.prediction_analysis.decision_tree_report import DecisionTreeExplainer
+                    conditions = DecisionTreeExplainer._list_of_conditions(decision_tree=tree,
+                                                                           nodes=found,
+                                                                           feature_names=dmd.feature_names)
+
+                    mean = tree.tree_.value[node][0][0]
+                    rmse = numpy.sqrt(tree.tree_.impurity[node])
+
+                    msg = "Uncertainty( {} ) = {}.".format(" & ".join(conditions),
+                                                           "{:.2g}+-{:.2g}".format(mean, rmse))
+                    # extreme_areas.append(msg)
+                    extreme_areas.append(dict(where=" & ".join(conditions),
+                                              uncertainty="{:.2g}+-{:.1g}".format(mean, rmse),
+                                              n_samples="{} out of {}".format(tree.tree_.n_node_samples[node],
+                                                                              dmd.n_samples)
+                                              ))
+
+            areas_of_extreme_uncertainty[mode] = extreme_areas
+
+        areas_of_extreme_uncertainty = {'Low uncertainty': areas_of_extreme_uncertainty['low'],
+                                        'High uncertainty': areas_of_extreme_uncertainty['high']}
+        # from pprint import pprint
+        # pprint(areas_of_extreme_uncertainty)
+        return areas_of_extreme_uncertainty
 
 class UncertaintyModelRegressor(UncertaintyModelBase):
 
@@ -90,7 +227,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
 
         dmd_test, cal_curve_samples = dmd_test.split(ratio=0.1)
 
-        if self.uncertainty_method in ['mae']:
+        if self.uncertainty_method in ['mae', 'default']:
             estimator = RandomForestRegressor(
                 random_state=0, n_jobs=n_jobs,
                 n_estimators=kwargs.pop('n_estimators', 100))
@@ -129,9 +266,11 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
 
+        self.uncertainty_analysis_output = self.uncertainty_analysis(dmd_train=None, dmd_test=dmd_test)
+
         # the following section is purely for plotting/analysis purposes
 
-        # calibration curve
+        ## calibration curve
         y_pred = self.predict(cal_curve_samples).ravel()
         y_true = cal_curve_samples.target.ravel()
 
@@ -190,7 +329,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             err_down = numpy.percentile(ys, percentile, axis=1)
             err_up = numpy.percentile(ys, 100 - percentile, axis=1)
 
-            return (err_up - err_down) / 2
+            return ((err_up - err_down) / 2).reshape(-1, 1)
 
         else:
             raise NotImplementedError("Method {} is not implemented"
@@ -231,6 +370,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
         plt.title("{} score vs uncertainty level".format(self._cal_curve_metric['metric']))
 
 
+
 class UncertaintyModelClassifier(UncertaintyModelBase):
 
     def __init__(self, model, uncertainty_method='confidence'):
@@ -256,7 +396,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             cal_curve_samples = dmd_test
             # no fit logic required
 
-        elif self.uncertainty_method in ['confidence']:
+        elif self.uncertainty_method in ['confidence', 'default']:
             dmd_test, cal_curve_samples = dmd_test.split(ratio=0.1)
 
             estimator = RandomForestClassifier(
@@ -275,6 +415,8 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
         else:
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
+
+        self.uncertainty_analysis_output = self.uncertainty_analysis(dmd_train=None, dmd_test=dmd_test)
 
         # analysis for plots :
 

@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import numpy
 
 from pytolemaic import Metrics
@@ -30,15 +32,17 @@ def run():
 
     # uncertainty model may be based on 'confidence' or 'probability' for classification, and 'mae' or 'rmse' for regression
     for method in ['confidence', 'probability']:
-
         # train uncertainty model
         uncertainty_model = pytrust.create_uncertainty_model(method=method)
+
+        pprint(uncertainty_model.uncertainty_analysis_output)
+
         yp = uncertainty_model.predict(x_new_test)  # this is same as model.predict
 
         # and now it's possible to calculate uncertainty on new samples!
         uncertainty = uncertainty_model.uncertainty(x_new_test)
 
-        #let's see whether we can use this value to separate good samples and bad samples:
+        # let's see whether we can use this value to separate good samples and bad samples:
 
         base_score = metric.function(y_new_test, yp)
         p25, p50, p75 = numpy.percentile(numpy.unique(uncertainty), [25, 50, 75])

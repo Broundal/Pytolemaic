@@ -4,13 +4,12 @@ import numpy
 from sklearn import tree
 from sklearn.base import ClassifierMixin
 from sklearn.impute import SimpleImputer
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, BaseDecisionTree, _tree
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, _tree
 
-from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.metrics import Metrics
 from pytolemaic.utils.constants import FeatureTypes
-
+from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
+from pytolemaic.utils.metrics import Metrics
 from resources.datasets.california_housing import CaliforniaHousing
 
 
@@ -136,26 +135,15 @@ class DecisionTreeExplainer():
 
     @classmethod
     def _decision_path_to_text(cls, decision_tree, sample, feature_names):
-        # self._fit_decision_tree(self._create_neighborhood(sample=sample, n_samples=self.n_samples, train_data_stats=self.train_data_stats))
         nodes = decision_tree.decision_path(sample.reshape(1, -1)).indices
+        return cls._nodes_path_to_text(decision_tree, nodes_path=nodes, feature_names=feature_names)
 
-        features = decision_tree.tree_.feature[nodes]
-        names = [feature_names[i] for i in features if i >= 0]
+    @classmethod
+    def _nodes_path_to_text(cls, decision_tree, nodes_path, feature_names):
 
-        threshold = decision_tree.tree_.threshold[nodes]
-        left = decision_tree.tree_.children_left[nodes]
+        nodes = nodes_path
 
-        msg = []
-        for i in range(len(names)):
-
-            if left[i] in nodes:
-                question = '[{} <= {}]'
-            else:
-                question = '[{} > {}]'
-
-            msg.append((question).format(names[i], GeneralUtils.f3(threshold[i])))
-
-        depth = len(msg)
+        list_of_conditions = cls._list_of_conditions(decision_tree, feature_names, nodes)
 
         is_classification = isinstance(decision_tree, ClassifierMixin)
         if is_classification:
@@ -166,15 +154,55 @@ class DecisionTreeExplainer():
             values = numpy.round(values, 3)
             value_msg += '{}'.format(values)
         else:
-            value_msg = 'the predicted value is'
             mean = decision_tree.tree_.value[nodes[-1]][0][0]
             mean = numpy.round(mean, 3)
             mse = decision_tree.tree_.impurity[nodes[-1]]
             sigma = numpy.sqrt(mse)
-            value_msg += 'predicted value is {} +- {:.1g}'.format(mean, sigma)
+            value_msg = 'the predicted value is {} +- {:.1g}'.format(mean, sigma)
 
-        msg = 'Since ' + ' and '.join(msg) + ' then {}'.format(value_msg)
+        msg = 'Since ' + ' and '.join(list_of_conditions) + ' then {}'.format(value_msg)
+        depth = len(nodes)
         return msg, depth
+
+    @classmethod
+    def _list_of_conditions(cls, decision_tree, feature_names, nodes):
+        features = decision_tree.tree_.feature[nodes]
+        names = [feature_names[i] for i in features if i >= 0]
+        thresholds = decision_tree.tree_.threshold[nodes]
+        left = decision_tree.tree_.children_left[nodes]
+        list_of_questions = []  # give condition per node in path
+        dict_of_conditions = {}  # condition per feature in path.
+        feature_lower_limit = {}
+        feature_upper_limit = {}
+        features_involved = []
+        # since names is ordered, the condition gets tighter along the way, no need to compare limit with previous one.
+        for i in range(len(names)):
+            name = names[i]
+            threshold = GeneralUtils.f3(thresholds[i])
+            if left[i] in nodes:
+                question = '[{} <= {}]'.format(name, threshold)
+                feature_upper_limit[names[i]] = threshold
+            else:
+                question = '[{} > {}]'.format(name, threshold)
+                feature_lower_limit[names[i]] = threshold
+
+            list_of_questions.append(question)
+
+        keys = set(list(feature_lower_limit.keys()) + list(feature_upper_limit.keys()))
+        for k in keys:
+            c1 = '{} < '.format(feature_lower_limit[k]) if k in feature_lower_limit else ''
+            c2 = '"{}"'.format(k)
+            c3 = ' <= {}'.format(feature_upper_limit[k]) if k in feature_upper_limit else ''
+
+            condition = '[{}{}{}]'.format(c1, c2, c3)
+            dict_of_conditions[k] = condition
+
+        list_of_conditions = []
+        for f in feature_names:
+            if f in dict_of_conditions:
+                list_of_conditions.append(dict_of_conditions[f])
+
+        return list_of_conditions
 
     def _fit_decision_tree(self, neiborhood, sample=None):
         x = neiborhood

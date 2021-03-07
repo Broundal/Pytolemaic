@@ -305,15 +305,11 @@ class PyTrust():
         if method not in self._uncertainty_models:
 
             if self.is_classification:
-                method = 'confidence' if method == 'default' else method
                 uncertainty_model = UncertaintyModelClassifier(
-                    model=self.model,
-                    uncertainty_method=method)
+                    model=self.model, uncertainty_method=method)
             else:
-                method = 'mae' if method == 'default' else method
                 uncertainty_model = UncertaintyModelRegressor(
-                    model=self.model,
-                    uncertainty_method=method)
+                    model=self.model, uncertainty_method=method)
 
             uncertainty_model.fit(dmd_test=self.test)
             self._uncertainty_models[method] = uncertainty_model
