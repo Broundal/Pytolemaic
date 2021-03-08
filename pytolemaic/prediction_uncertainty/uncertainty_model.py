@@ -142,12 +142,13 @@ class UncertaintyModelBase():
             min_samples_in_area = int(dmd.n_samples * min_samples_in_area)
 
         # train RF on uncertainty output (because it's not necessarity RF in uncertainty estimator)
-        estimator = RandomForestRegressor(random_state=0, n_jobs=n_jobs, max_depth=max_depth, n_estimators=50)
+        estimator = RandomForestRegressor(random_state=0, n_jobs=n_jobs, max_depth=max_depth, n_estimators=50,
+                                          min_samples_split=min_samples_in_area//2)
 
         pipeline = GeneralUtils.simple_imputation_pipeline(
             estimator)  # todo better imputation scheme whenever a model is created by package
         y = self.uncertainty(dmd)
-        pipeline.fit(dmd.values, y)
+        pipeline.fit(dmd.values, y.ravel())
 
         # extract RF from pipeline
         names, estimators = zip(*pipeline.steps)
