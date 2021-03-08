@@ -33,7 +33,7 @@ class CovarianceShiftCalculator():
     @classmethod
     def prepare_estimator(cls, train:DMD):
         classifier= GeneralUtils.simple_imputation_pipeline(
-            estimator=RandomForestClassifier(n_estimators=30, n_jobs=multiprocessing.cpu_count() - 1))
+            estimator=RandomForestClassifier(random_state=0, n_estimators=30, n_jobs=multiprocessing.cpu_count() - 1))
         classifier.fit(train.values, train.target.ravel())
         return classifier
 
