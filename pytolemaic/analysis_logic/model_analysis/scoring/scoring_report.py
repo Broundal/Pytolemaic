@@ -531,8 +531,9 @@ class ScatterReport(Report):
 
         plt.figure(figsize=figsize)
         plt.errorbar(self.y_true[inds], self.y_pred[inds], xerr=None, yerr=self._error_bars[inds], fmt='.b', ecolor='k')
-        mn = numpy.min(self.y_true[inds].min(), self.y_pred[inds].min())
-        mx = numpy.max(self.y_true[inds].max(), self.y_pred[inds].max())
+
+        mn = numpy.min([self.y_true[inds].min(), self.y_pred[inds].min()])
+        mx = numpy.max([self.y_true[inds].max(), self.y_pred[inds].max()])
         plt.plot([mn, mx], [mn, mx],':k')
 
         plt.xlabel('Y true')
