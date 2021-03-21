@@ -53,9 +53,9 @@ class ROCCurveReport(Report):
             labels="The class labels"
         )
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, figsize=(10,5)):
         if ax is None:
-            fig, ax = plt.subplot()
+            fig, ax = plt.subplots(1,1,figsize=figsize)
 
         ax.set_title("ROC Curve")
         possible_colors = GeneralUtils.shuffled_colors()
@@ -125,9 +125,9 @@ class PrecisionRecallCurveReport(Report):
             labels="The class labels"
         )
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, figsize=(10,5)):
         if ax is None:
-            fig, ax = plt.subplot()
+            fig, ax = plt.subplots(1,1, figsize=figsize)
 
         ax.set_title("Precision Recall Curve")
         possible_colors = GeneralUtils.shuffled_colors()
@@ -197,11 +197,13 @@ class CalibrationCurveReport(Report):
             labels="The class labels"
         )
 
-    def plot(self):
-
-        fig = plt.figure(figsize=(10, 10))
-        ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
-        ax2 = plt.subplot2grid((3, 1), (2, 0))
+    def plot(self, axs=None, figsize=(10,10)):
+        if axs is None:
+            fig = plt.figure(figsize=figsize)
+            ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
+            ax2 = plt.subplot2grid((3, 1), (2, 0))
+        else:
+            ax1, ax2 = axs
 
         ax1.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
 
@@ -339,22 +341,23 @@ class SklearnClassificationReport(Report):
     def _plot_classification_report(self):
         import matplotlib.pyplot as plt
 
-        fig = plt.figure(figsize=(14, 3 + len(self.labels)))
+        fig = plt.figure(figsize=(12, 1 + len(self.labels)))
         fig.text(0.5, 0.5, self._sklearn_performance_summary_text,
                  ha='center', va='center', size=20, fontname='courier', family='monospace')
+        plt.tight_layout()
 
 
-    def plot(self):
+    def plot(self, figsize=(14,5)):
         self._plot_classification_report()
 
-        fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
 
         self.precision_recall_curve.plot(ax1)
         self.roc_curve.plot(ax2)
         plt.tight_layout()
 
         # new figure
-        self.calibration_curve.plot()
+        self.calibration_curve.plot(figsize=figsize)
 
         plt.tight_layout()
         plt.draw()
@@ -465,8 +468,11 @@ class ConfusionMatrixReport(Report):
                         color="white" if cm[i, j] > thresh else "black")
         return ax
 
-    def plot(self):
-        fig, (ax1, ax2) = plt.subplots(1, 2)
+    def plot(self, axs=None, figsize=(12,5)):
+        if axs is None:
+            fig, axs = plt.subplots(1, 2, figsize=figsize)
+
+        ax1, ax2 = axs
 
         self._plot_confusion_matrix(confusion_matrix=self.confusion_matrix,
                                     labels=self.labels,
@@ -516,15 +522,18 @@ class ScatterReport(Report):
                     y_pred="Predicted values",
                     error_bars="The uncertainty of each prediction")
 
-    def plot(self, max_points=500):
+    def plot(self, max_points=500, figsize=(10,5)):
         if max_points is None:
             max_points = len(self.y_true)
 
         rs = numpy.random.RandomState(0)
         inds = rs.permutation(len(self.y_true))[:max_points]
 
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=figsize)
         plt.errorbar(self.y_true[inds], self.y_pred[inds], xerr=None, yerr=self._error_bars[inds], fmt='.b', ecolor='k')
+        mn = numpy.min(self.y_true[inds].min(), self.y_pred[inds].min())
+        mx = numpy.max(self.y_true[inds].max(), self.y_pred[inds].max())
+        plt.plot([mn, mx], [mn, mx],':k')
 
         plt.xlabel('Y true')
         plt.ylabel('Y predicted')
@@ -562,9 +571,9 @@ class ScoringMetricReport(Report):
                     ci_ratio="Measure confidence interval relative size - lower is better. Equation: (ci_high-ci_low)/(ci_low+ci_high)*2",
                     )
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, figsize=(10,5)):
         if ax is None:
-            fig, ax = plt.subplots(1)
+            fig, ax = plt.subplots(1,1,figsize=figsize)
 
 
         ci_low = GeneralUtils.f5(self.ci_low)
@@ -597,6 +606,7 @@ class ScoringMetricReport(Report):
         xlabels = ["%.5g" % numpy.round(k, n_digits) for k in x]
         ax.set(xticks=x.tolist(),
                xticklabels=xlabels,
+               yticks=[0.5],
                yticklabels=[''],
                title='Confidence intervals for metric {}'.format(self.metric),
                ylabel='',
@@ -673,13 +683,13 @@ class ScoringFullReport(Report):
         self._scatter = scatter
         self._classification_report = classification_report
 
-    def plot(self):
+    def plot(self, figsize=(12,5)):
         if self.confusion_matrix is not None:
-            self.confusion_matrix.plot()
+            self.confusion_matrix.plot(figsize=figsize)
         if self.scatter is not None:
-            self.scatter.plot()
+            self.scatter.plot(figsize=figsize)
         if self.classification_report is not None:
-            self.classification_report.plot()
+            self.classification_report.plot(figsize=figsize)
 
         n = len(self.metric_scores)
         fig, axs = plt.subplots(n, figsize=(12,n*2))
