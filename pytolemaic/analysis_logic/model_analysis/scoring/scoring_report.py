@@ -522,23 +522,49 @@ class ScatterReport(Report):
                     y_pred="Predicted values",
                     error_bars="The uncertainty of each prediction")
 
-    def plot(self, max_points=500, figsize=(10,5)):
+    def plot(self, max_points=500, figsize=(10,5), residual_plot=True):
         if max_points is None:
             max_points = len(self.y_true)
 
         rs = numpy.random.RandomState(0)
         inds = rs.permutation(len(self.y_true))[:max_points]
 
-        plt.figure(figsize=figsize)
-        plt.errorbar(self.y_true[inds], self.y_pred[inds], xerr=None, yerr=self._error_bars[inds], fmt='.b', ecolor='k')
+        if residual_plot:
+            fig, (ax1, ax2) = plt.subplots(1,2,figsize=figsize)
+        else:
+            fig, ax1 = plt.subplots(1, 1, figsize=figsize)
 
-        mn = numpy.min([self.y_true[inds].min(), self.y_pred[inds].min()])
-        mx = numpy.max([self.y_true[inds].max(), self.y_pred[inds].max()])
-        plt.plot([mn, mx], [mn, mx],':k')
 
-        plt.xlabel('Y true')
-        plt.ylabel('Y predicted')
-        plt.title('Scatter plot')
+
+        y_true = self.y_true[inds]
+        y_pred = self.y_pred[inds]
+        error_bars = None if self._error_bars is None else self._error_bars[inds]
+
+        ## scatter plot
+
+        ax = ax1
+        ax.errorbar(y_true, y_pred, xerr=None, yerr=error_bars, fmt='.b', ecolor='k')
+
+        mn = numpy.min([y_true.min(), y_pred.min()])
+        mx = numpy.max([y_true.max(), y_pred.max()])
+        ax.plot([mn, mx], [mn, mx],':k')
+
+        ax.set_xlabel('Y true')
+        ax.set_ylabel('Y predicted')
+        ax.set_title('Scatter plot')
+
+        ## scatter plot
+        if residual_plot:
+            ax = ax2
+            ax.errorbar(y_true, y_pred-y_true, xerr=None, yerr=error_bars, fmt='.b', ecolor='k')
+
+            mn = numpy.min([y_true.min(), y_pred.min()])
+            ax.plot([mn, mx], [0, 0], '-k')
+
+            ax.set_xlabel('Y true')
+            ax.set_ylabel('Ypred - Ytrue')
+            ax.set_title('Residual plot')
+
         plt.draw()
         # plt.show()
 
