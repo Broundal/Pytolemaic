@@ -289,7 +289,7 @@ class DMD():
     @classmethod
     def from_df(cls, df_train: pandas.DataFrame, target_name: str, is_classification, feature_types: list = None,
                 df_test: pandas.DataFrame = None,
-                categorical_encoding=False, split_ratio: float = None, nan_list: list = (), splitter=ShuffleSplitter):
+                categorical_encoding=True, split_ratio: float = None, nan_list: list = (), splitter=ShuffleSplitter):
         feature_names = list(df_train.columns)
         feature_names.remove(target_name)
 

@@ -34,6 +34,90 @@ def cache(func):
 
     return cache_wrapper
 
+def help(key=None):
+    """
+    Provides assistance/examples on how to use pytrust. Run help() to start.
+    """
+    supported_keys = ['basic usage', 'pytrust additional', 'basic pytrust from df']
+    if key is None:
+        print('Supported keys are:', supported_keys)
+        return supported_keys
+    elif key not in supported_keys:
+        print("Key '{}' is not recognized! Supported keys are {}".format(key, supported_keys))
+    elif key == 'basic usage':
+        msg = """
+*** Basic Usage ***",
+# The basic usage covers
+# 1. creating PyTrust object in basic mode
+# 2. run analysis
+# 3. obtain insights, graphs and entire analysis information
+
+from pytolemaic import PyTrust
+pytrust = PyTrust(model=model, # Trained model with Sklearn-like API
+                  xtrain=xtrain, ytrain=ytrain, #numpy.ndarray or pandas.DataFrame or DMD
+                  xtest=xtrain, ytest=xtrain, #numpy.ndarray or pandas.DataFrame or DMD
+                  metric=metric) 
+
+# Note: data is expected to be purely numeric. 
+# If your data is in pandas.DataFrame format with non-numeric values, see help(key='basic pytrust from df') 
+
+# run all analysis and get a list of distilled insights",
+insights = pytrust.insights()
+print("\\n".join(insights))
+
+# run all analysis and plot all graphs
+pytrust.plot()
+
+# run all analysis and provide all information gathered in a dictionary.
+import pprint
+analysis_as_dict = pytrust.to_dict() # full
+pprint(pytrust.to_dict(printable=True)) # in a readable format.
+
+# to understand the structure of the dictionary run
+import pprint
+pprint(pytrust.to_dict_meaning()) or pprint(PyTtrust.to_dict_meaning()) 
+
+            """
+        print(msg)
+    elif key == 'pytrust additional':
+        msg = """
+*** Pytrust additional settings ***",
+# The basic pytrust covers creating PyTrust object with more information,
+# allowing better graphs/analysis
+
+from pytolemaic.pytrust import PyTrust
+
+pytrust = PyTrust(model=model,
+                  xtrain=xtrain, ytrain=ytrain, # numpy.ndarray or pandas.DataFrame or DMD
+                  xtest=xtrain, ytest=xtrain, # numpy.ndarray or pandas.DataFrame or DMD
+    
+                  feature_names=feature_names, # list[str]
+                  feature_types=feature_types, # list[PyTrust.numerical, PyTrust.categorical]
+                  categorical_encoding=categorical_encoding, # Provide a dictionary of the structure {feature_name: {index: class name}} for each categorical feature. This information will allow providing more readable reports.
+                  metric=metric, "'recall'/'auc'/'mae'/'mse' etc"                               
+                  target_labels=target_labels) # categorical encoding for target variable in the format of {index: class name}
+
+# Note: data is expected to be purely numeric. 
+# If your data is in pandas.DataFrame format with non-numeric values, see help(key='basic pytrust from df') 
+
+            """
+        print(msg)
+    elif key == 'basic pytrust from df':
+        msg = """
+        
+# If your data is given as pandas.DataFrame containing non-numeric values, it's recommended to use:
+from pytolemaic import PyTrust, DMD
+dmd_train, dmd_test = DMD.from_df(df_train=df_train, df_test=df_test,
+                                  target_name=target_column_name,
+                                  feature_types=feature_types, # list[PyTrust.numerical, PyTrust.categorical] (not including target)                
+                                  categorical_encoding=True, # whether to perform label encoding on categorical features
+                                  is_classification=is_classification)
+pytrust = PyTrust(model=model, xtrain=dmd_train, xtest=dmd_test)
+            
+            """
+        print(msg)
+    else:
+        raise NotImplementedError("key '{}' is supported but not implemented".format(key))
 
 class PyTrust():
     numerical = FeatureTypes.numerical
@@ -70,7 +154,7 @@ class PyTrust():
         :param feature_names: feature name for each feature
         :param feature_types: feature type for each feature: NUMERICAL or CATEGORICAL
         :param categorical_encoding: For each column of categorical feature type, provide a dictionary of the structure
-        {index: class name}. This information will allow providing more readable reports.
+        {feature_names: {index: class name}}. This information will allow providing more readable reports.
 
         :param metric: Target metric
         :param splitter: Splitter

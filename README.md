@@ -36,12 +36,37 @@ The package contains the following functionalities:
 
 ## How to use: 
 
+Get started by calling help() function (*Recommended!*):
 ```
+   from pytolemaic import help
+   supported_keys = help()
+   # or
+   help(key='basic usage')
+```
+
+Example for performing all available analysis with PyTrust:
+```
+   from pytolemaic import PyTrust
+
    pytrust = PyTrust(
        model=estimator,
        xtrain=xtrain, ytrain=ytrain,
        xtest=xtest, ytest=ytest)
+       
+   # run all analysis and get a list of distilled insights",
+   insights = pytrust.insights()
+   print("\n".join(insights))
+    
+   # run all analysis and plot all graphs
+   pytrust.plot()
    
+   # print all data gathered
+   import pprint
+   pprint(report.to_dict(printable=True))
+```
+
+In case of need to access only specific analysis (usually to save time)
+```
    # dataset analysis report
    dataset_analysis_report = pytrust.dataset_analysis_report
    
@@ -54,15 +79,19 @@ The package contains the following functionalities:
    # overall model's quality report
    quality_report = pytrust.quality_report
    
-   for report in [dataset_analysis_report, sensitivity_report, scoring_report, quality_report]:
-       report.plot() # plot graphs
-       pprint(report.to_dict(printable=True)) # export report as a dictionary
-       pprint(report.to_dict_meaning()) # print documentation for above dictionary
+   # with any of the above reports
+   report = <desired report>
+   print("\n".join(report.insights()))
+   
+   report.plot() # plot graphs
+   pprint(report.to_dict(printable=True)) # export report as a dictionary
+   pprint(report.to_dict_meaning()) # print documentation for above dictionary
           
-   
-   # Insights & issues discovered in your data/model
-   insights = pytrust.insights
-   
+```
+
+Analysis of predictions
+```
+ 
    # estimate uncertainty of a prediction
    uncertainty_model = pytrust.create_uncertainty_model()
    
