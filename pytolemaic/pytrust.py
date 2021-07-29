@@ -39,11 +39,17 @@ def help(key=None):
     Provides assistance/examples on how to use pytrust. Run help() to start.
     """
     supported_keys = ['basic usage', 'pytrust additional', 'basic pytrust from df']
+
+    if key not in supported_keys:
+        print("Key '{}' is not recognized!".format(key))
+        key = None
+
     if key is None:
         print('Supported keys are:', supported_keys)
+        print('Run one of the following')
+        for k in supported_keys[:3]:
+            print("\t* help('{}')".format(k))
         return supported_keys
-    elif key not in supported_keys:
-        print("Key '{}' is not recognized! Supported keys are {}".format(key, supported_keys))
     elif key == 'basic usage':
         msg = """
 *** Basic Usage ***",
@@ -55,7 +61,7 @@ def help(key=None):
 from pytolemaic import PyTrust
 pytrust = PyTrust(model=model, # Trained model with Sklearn-like API
                   xtrain=xtrain, ytrain=ytrain, #numpy.ndarray or pandas.DataFrame or DMD
-                  xtest=xtrain, ytest=xtrain, #numpy.ndarray or pandas.DataFrame or DMD
+                  xtest=xtest, ytest=ytest, #numpy.ndarray or pandas.DataFrame or DMD
                   metric=metric) 
 
 # Note: data is expected to be purely numeric. 
