@@ -22,11 +22,9 @@ class SensitivityAnalysis():
     def shuffle_x(cls, x, index, dmd_train=None, seed=0):
         rs = np.random.RandomState(seed)
         if dmd_train is None:
-            new_order = rs.permutation(x.shape[0])
-            x[:, index] = x[:, index][new_order]
+            x[:, index] = rs.choice(x[:, index], len(x), replace=True)
         else:
-            new_order = rs.permutation(dmd_train.n_samples)[:x.shape[0]]
-            x[:, index] = dmd_train.values[:, index][new_order]
+            x[:, index] = rs.choice(dmd_train.values[:, index], len(x), replace=True)
         return x
 
     @classmethod
