@@ -80,7 +80,9 @@ class CovarianceShiftReport(Report):
 
                 features_to_look_at = [f for f in features_to_look_at if f in train.columns]
                 if len(features_to_look_at) > 0:
-                    fig, axs = plt.subplots(len(features_to_look_at), 1, figsize=(10, 10), sharex=True)
+                    fig, axs = plt.subplots(len(features_to_look_at), 1, figsize=(10, 10))
+                    if len(features_to_look_at)==1:
+                        axs = [axs]
                 for i, feature in enumerate(features_to_look_at):
 
                     tmp = pandas.DataFrame({'Distribution in train set' : train[feature],
@@ -90,6 +92,7 @@ class CovarianceShiftReport(Report):
                         axs[i].hist(tmp[col], alpha=0.5, label=col)
                     axs[i].legend()
                     axs[i].set_title('Feature "{}"'.format(feature))
+                plt.tight_layout()
 
 
 
