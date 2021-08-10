@@ -225,7 +225,7 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
         self._cal_curve_uncertainty = None
 
     def fit_uncertainty_model(self, dmd_test, n_jobs=multiprocessing.cpu_count() - 1,
-                              metric=Metrics.r2, **kwargs):
+                              metric=Metrics.r2, do_analysis=True, **kwargs):
 
         dmd_test, cal_curve_samples = dmd_test.split(ratio=0.1)
 
@@ -268,45 +268,46 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
 
-        self.uncertainty_analysis_output = self.uncertainty_analysis(dmd_train=None, dmd_test=dmd_test)
+        if do_analysis:
+            self.uncertainty_analysis_output = self.uncertainty_analysis(dmd_train=None, dmd_test=dmd_test)
 
-        # the following section is purely for plotting/analysis purposes
+            # the following section is purely for plotting/analysis purposes
 
-        ## calibration curve
-        y_pred = self.predict(cal_curve_samples).ravel()
-        y_true = cal_curve_samples.target.ravel()
+            ## calibration curve
+            y_pred = self.predict(cal_curve_samples).ravel()
+            y_true = cal_curve_samples.target.ravel()
 
-        delta = numpy.abs(y_true - y_pred)
-        uncertainty = self.uncertainty(cal_curve_samples).ravel()
-        self._cal_curve_uncertainty = uncertainty
+            delta = numpy.abs(y_true - y_pred)
+            uncertainty = self.uncertainty(cal_curve_samples).ravel()
+            self._cal_curve_uncertainty = uncertainty
 
-        bins = numpy.linspace(0., max(uncertainty) + 1e-8, self._n_bins + 1).ravel()
-        binids = numpy.digitize(uncertainty, bins) - 1
+            bins = numpy.linspace(0., max(uncertainty) + 1e-8, self._n_bins + 1).ravel()
+            binids = numpy.digitize(uncertainty, bins) - 1
 
-        bin_sums = numpy.bincount(binids, weights=uncertainty, minlength=len(bins))
-        bin_true = numpy.bincount(binids, weights=delta, minlength=len(bins))
-        bin_total = numpy.bincount(binids, minlength=len(bins))
+            bin_sums = numpy.bincount(binids, weights=uncertainty, minlength=len(bins))
+            bin_true = numpy.bincount(binids, weights=delta, minlength=len(bins))
+            bin_total = numpy.bincount(binids, minlength=len(bins))
 
-        nonzero = bin_total > 10
-        self.actual_error = (bin_true[nonzero] / bin_total[nonzero])
-        self.mean_predicted_error = (bin_sums[nonzero] / bin_total[nonzero])
+            nonzero = bin_total > 10
+            self.actual_error = (bin_true[nonzero] / bin_total[nonzero])
+            self.mean_predicted_error = (bin_sums[nonzero] / bin_total[nonzero])
 
-        # calibration curve by metric
+            # calibration curve by metric
 
-        performance = []
-        uncertainty_levels_middle = []
-        for ibin in range(len(bins) - 1):
-            inds = binids == ibin
-            if numpy.sum(inds) < 10:
-                continue
+            performance = []
+            uncertainty_levels_middle = []
+            for ibin in range(len(bins) - 1):
+                inds = binids == ibin
+                if numpy.sum(inds) < 10:
+                    continue
 
-            subset_score = metric.function(y_true=y_true[inds], y_pred=y_pred[inds])
-            performance.append(subset_score)
-            uncertainty_levels_middle.append((bins[ibin] + bins[ibin + 1]) / 2)
+                subset_score = metric.function(y_true=y_true[inds], y_pred=y_pred[inds])
+                performance.append(subset_score)
+                uncertainty_levels_middle.append((bins[ibin] + bins[ibin + 1]) / 2)
 
-        self._cal_curve_metric = {'uncertainty': uncertainty_levels_middle,
-                                  'score': performance,
-                                  'metric': metric.name}
+            self._cal_curve_metric = {'uncertainty': uncertainty_levels_middle,
+                                      'score': performance,
+                                      'metric': metric.name}
 
     def uncertainty(self, dmd: DMD):
         if isinstance(dmd, DMD):
@@ -388,7 +389,7 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
         self._n_bins = 10
 
     def fit_uncertainty_model(self, dmd_test, n_jobs=multiprocessing.cpu_count() - 1,
-                              metric=Metrics.recall,
+                              metric=Metrics.recall, do_analysis=True,
                               **kwargs):
 
         if self.uncertainty_method in ['probability']:
@@ -415,50 +416,51 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             raise NotImplementedError("Method {} is not implemented"
                                       .format(self.uncertainty_method))
 
-        self.uncertainty_analysis_output = self.uncertainty_analysis(dmd_train=None, dmd_test=dmd_test)
+        if do_analysis:
+            self.uncertainty_analysis_output = self.uncertainty_analysis(dmd_train=None, dmd_test=dmd_test)
 
-        # analysis for plots :
+            # analysis for plots :
 
-        # calibration curve
+            # calibration curve
 
-        y_pred = self.predict(cal_curve_samples).ravel()
-        y_true = cal_curve_samples.target.ravel()
-        uncertainty = self.uncertainty(cal_curve_samples)
-        self._cal_curve_uncertainty = uncertainty
+            y_pred = self.predict(cal_curve_samples).ravel()
+            y_true = cal_curve_samples.target.ravel()
+            uncertainty = self.uncertainty(cal_curve_samples)
+            self._cal_curve_uncertainty = uncertainty
 
-        self._fraction_of_positives, self._mean_uncertainty = sklearn.calibration.calibration_curve(
-            y_true=y_pred == y_true,
-            y_prob=uncertainty,
-            normalize=True,
-            n_bins=self._n_bins,
-            strategy='uniform')
+            self._fraction_of_positives, self._mean_uncertainty = sklearn.calibration.calibration_curve(
+                y_true=y_pred == y_true,
+                y_prob=uncertainty,
+                normalize=True,
+                n_bins=self._n_bins,
+                strategy='uniform')
 
-        sample_weight = None
-        self._brier_loss = brier_score_loss(
-            y_true=y_pred == y_true,
-            y_prob=1 - uncertainty,
-            sample_weight=sample_weight,
-            pos_label=1)
+            sample_weight = None
+            self._brier_loss = brier_score_loss(
+                y_true=y_pred == y_true,
+                y_prob=1 - uncertainty,
+                sample_weight=sample_weight,
+                pos_label=1)
 
-        # calibration curve by metric
+            # calibration curve by metric
 
-        uncertainty = uncertainty / max(uncertainty)
+            uncertainty = uncertainty / max(uncertainty)
 
-        bins = numpy.linspace(0., max(uncertainty) + 1e-8, 5 + 1)
-        binids = numpy.digitize(uncertainty.flatten(), bins.ravel()) - 1
+            bins = numpy.linspace(0., max(uncertainty) + 1e-8, 5 + 1)
+            binids = numpy.digitize(uncertainty.flatten(), bins.ravel()) - 1
 
-        performance = []
-        uncertainty_levels_middle = []
-        for ibin in range(len(bins) - 1):
-            inds = binids == ibin
-            if numpy.sum(inds) < 10:
-                continue
+            performance = []
+            uncertainty_levels_middle = []
+            for ibin in range(len(bins) - 1):
+                inds = binids == ibin
+                if numpy.sum(inds) < 10:
+                    continue
 
-            subset_score = metric.function(y_true=y_true[inds], y_pred=y_pred[inds])
-            performance.append(subset_score)
-            uncertainty_levels_middle.append((bins[ibin] + bins[ibin + 1]) / 2)
+                subset_score = metric.function(y_true=y_true[inds], y_pred=y_pred[inds])
+                performance.append(subset_score)
+                uncertainty_levels_middle.append((bins[ibin] + bins[ibin + 1]) / 2)
 
-        self._cal_curve_metric = {'uncertainty': uncertainty_levels_middle,
+            self._cal_curve_metric = {'uncertainty': uncertainty_levels_middle,
                                   'score': performance,
                                   'metric': metric.name}
 
@@ -466,12 +468,15 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
 
         if self.uncertainty_method in ['probability']:
             yproba = self.predict_proba(dmd)
+            # break ties
             yproba += 1e-10 * numpy.random.RandomState(0).rand(*yproba.shape)
             max_probability = numpy.max(yproba, axis=1).reshape(-1, 1)
             delta = max_probability - yproba
             yproba[delta == 0] = 0
 
             # delta[numpy.sum(delta, axis=1)>=20,:] = 0 # i
+
+            # ratio of 2nd highest probability to max_probability
             out = numpy.max(yproba, axis=1).reshape(-1, 1) / max_probability
             return GeneralUtils.f5(out).reshape(-1, 1)
         elif self.uncertainty_method in ['confidence']:

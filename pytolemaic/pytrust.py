@@ -391,7 +391,7 @@ class PyTrust():
 
     # region on predict
 
-    def create_uncertainty_model(self, method='default') -> UncertaintyModelBase:
+    def create_uncertainty_model(self, method='default', do_analysis=True) -> UncertaintyModelBase:
         if method not in self._uncertainty_models:
 
             if self.is_classification:
@@ -401,7 +401,7 @@ class PyTrust():
                 uncertainty_model = UncertaintyModelRegressor(
                     model=self.model, uncertainty_method=method)
 
-            uncertainty_model.fit(dmd_test=self.test)
+            uncertainty_model.fit(dmd_test=self.test, do_analysis=do_analysis)
             self._uncertainty_models[method] = uncertainty_model
 
         return self._uncertainty_models[method]

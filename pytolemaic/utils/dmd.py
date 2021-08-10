@@ -143,11 +143,13 @@ class DMD():
         return samples_meta
 
     def split_by_indices(self, indices):
-        return DMD(x=copy.deepcopy(self._x.iloc[indices, :]),
-                   y=copy.deepcopy(self._y.iloc[indices, :]),
+        if isinstance(indices, tuple):
+            indices = list(indices)
+        return DMD(x=copy.deepcopy(self._x.iloc[indices, :]).reset_index(drop=True),
+                   y=copy.deepcopy(self._y.iloc[indices, :]).reset_index(drop=True),
                    columns_meta=copy.deepcopy(self._columns_meta),
                    samples_meta=copy.deepcopy(
-                       self._samples_meta.iloc[indices, :]),
+                       self._samples_meta.iloc[indices, :]).reset_index(drop=True),
                    splitter=self.splitter,
                    target_labels=self.target_encoding,
                    categorical_encoding=self.categorical_encoding_by_feature_name)
