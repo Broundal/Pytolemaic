@@ -627,6 +627,7 @@ class ScoringMetricReport(Report):
 
         ax.set_xlim(l_lim, r_lim)
         n_points = 1 + int(numpy.round(r_lim - l_lim, n_digits) / 10 ** -n_digits) % 10
+        n_points = max(n_points, 3)
 
         x = numpy.linspace(l_lim, r_lim, num=n_points)
 
@@ -635,13 +636,13 @@ class ScoringMetricReport(Report):
                xticklabels=xlabels,
                yticks=[0.5],
                yticklabels=[''],
-               title='Confidence intervals for metric {}'.format(self.metric),
+               title='Confidence interval for metric {}'.format(self.metric),
                ylabel='',
-               xlabel='{}'.format(self.metric))
+               xlabel='')
 
         # Loop over data dimensions and create text annotations.
         for x, label in [(ci_low, 'ci_low (25%)'),
-                         (value, '{} value'.format(self.metric)),
+                         (value, '{} value: {:.5g}'.format(self.metric, numpy.round(value, 1+n_digits))),
                          (ci_high, 'ci_high  (75%)')]:
             y = 1.01 + 0.01 * (x == value)
             ax.text(x, y, label,
@@ -719,11 +720,11 @@ class ScoringFullReport(Report):
             self.classification_report.plot(figsize=figsize)
 
         n = len(self.metric_scores)
-        fig, axs = plt.subplots(n, figsize=(12,n*2))
+        fig, axs = plt.subplots((n+1)//2, 2, figsize=(12,n*2))
         for i, k in enumerate(sorted(self.metric_scores.keys())):
-            self.metric_scores[k].plot(axs[i])
+            self.metric_scores[k].plot(axs[i//2, i % 2])
 
-        plt.tight_layout()
+        plt.tight_layout(pad=3)
 
     def to_dict(self, printable=False):
         metric_scores = {k: v.to_dict(printable=printable) for k, v in self.metric_scores.items()}

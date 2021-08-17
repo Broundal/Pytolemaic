@@ -1,7 +1,7 @@
 import functools
 
 import numpy
-import sklearn.metrics
+import sklearn
 
 from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
 
@@ -63,6 +63,11 @@ class Metrics():
                   ptype=REGRESSION,
                   is_loss=True)
 
+    mape = Metric(name='mape',
+                  function=sklearn.metrics.mean_absolute_percentage_error,
+                  ptype=REGRESSION,
+                  is_loss=True)
+
     normalized_rmse = Metric(name='normalized_rmse',
                              function=CustomMetrics.normalized_rmse,
                              ptype=REGRESSION,
@@ -89,7 +94,8 @@ class Metrics():
     def supported_metrics(cls):
         return {m.name: m for m in
                 [Metrics.r2, Metrics.recall, Metrics.mae, Metrics.auc,
-                 Metrics.mse, Metrics.rmse, Metrics.normalized_rmse]}
+                 Metrics.mse, Metrics.rmse, Metrics.normalized_rmse,
+                 Metrics.mape]}
 
     @classmethod
     def metric_as_loss(cls, value, metric):
