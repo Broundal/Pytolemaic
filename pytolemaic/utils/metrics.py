@@ -1,7 +1,7 @@
 import functools
 
 import numpy
-import sklearn
+from sklearn import metrics as sklearn_metrics
 
 from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
 
@@ -19,7 +19,7 @@ class CustomMetrics:
     @classmethod
     def auc(cls, y_true, y_pred):
         if y_pred.shape[1] == 1:
-            return sklearn.metrics.roc_auc_score(y_true=y_true, y_score=y_pred)
+            return sklearn_metrics.roc_auc_score(y_true=y_true, y_score=y_pred)
         else:
             auc_list = []
             for i in range(y_pred.shape[1]):
@@ -28,33 +28,33 @@ class CustomMetrics:
                 if all(y_true_i) or all(~y_true_i):
                     auc_list.append(0)
                 else:
-                    auc_list.append(sklearn.metrics.roc_auc_score(y_true=y_true_i,
+                    auc_list.append(sklearn_metrics.roc_auc_score(y_true=y_true_i,
                                                                   y_score=y_pred_i))
 
             return float(numpy.mean(auc_list))
 
     @classmethod
     def rmse(cls, y_true, y_pred):
-        return numpy.sqrt(sklearn.metrics.mean_squared_error(y_true=y_true, y_pred=y_pred))
+        return numpy.sqrt(sklearn_metrics.mean_squared_error(y_true=y_true, y_pred=y_pred))
 
     @classmethod
     def normalized_rmse(cls, y_true, y_pred):
-        return numpy.sqrt(sklearn.metrics.mean_squared_error(y_true=y_true, y_pred=y_pred)) / (
+        return numpy.sqrt(sklearn_metrics.mean_squared_error(y_true=y_true, y_pred=y_pred)) / (
                 numpy.std(y_true) + 1e-10)
 
 
 class Metrics():
     r2 = Metric(name='r2',
-                function=sklearn.metrics.r2_score,
+                function=sklearn_metrics.r2_score,
                 ptype=REGRESSION)
 
     mae = Metric(name='mae',
-                 function=sklearn.metrics.mean_absolute_error,
+                 function=sklearn_metrics.mean_absolute_error,
                  ptype=REGRESSION,
                  is_loss=True)
 
     mse = Metric(name='mse',
-                 function=sklearn.metrics.mean_squared_error,
+                 function=sklearn_metrics.mean_squared_error,
                  ptype=REGRESSION,
                  is_loss=True)
 
@@ -64,7 +64,7 @@ class Metrics():
                   is_loss=True)
 
     mape = Metric(name='mape',
-                  function=sklearn.metrics.mean_absolute_percentage_error,
+                  function=sklearn_metrics.mean_absolute_percentage_error,
                   ptype=REGRESSION,
                   is_loss=True)
 
@@ -80,7 +80,7 @@ class Metrics():
                  is_proba=True)
 
     recall = Metric(name='recall',
-                    function=functools.partial(sklearn.metrics.recall_score,
+                    function=functools.partial(sklearn_metrics.recall_score,
                                                average='macro'),
 
                     ptype=CLASSIFICATION)
