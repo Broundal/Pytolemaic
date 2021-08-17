@@ -720,7 +720,7 @@ class ScoringFullReport(Report):
             self.classification_report.plot(figsize=figsize)
 
         n = len(self.metric_scores)
-        fig, axs = plt.subplots((n+1)//2, 2, figsize=(12,n*2))
+        fig, axs = plt.subplots((n+1)//2, 2, squeeze=False, figsize=(12,n*2))
         for i, k in enumerate(sorted(self.metric_scores.keys())):
             self.metric_scores[k].plot(axs[i//2, i % 2])
 
