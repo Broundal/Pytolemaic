@@ -42,6 +42,13 @@ class CustomMetrics:
         return numpy.sqrt(sklearn_metrics.mean_squared_error(y_true=y_true, y_pred=y_pred)) / (
                 numpy.std(y_true) + 1e-10)
 
+    @classmethod
+    def mape(cls, y_true, y_pred, eps=1e-100):
+        # same as sklearn's mean_absolute_percentage_error.
+        # Re-writing it as custom function for backwards compatibility
+        delta_ratio = numpy.abs(y_true-y_pred) / numpy.clip(numpy.abs(y_true), eps, 1e100)
+        return numpy.mean(delta_ratio)
+
 
 class Metrics():
     r2 = Metric(name='r2',
@@ -64,7 +71,7 @@ class Metrics():
                   is_loss=True)
 
     mape = Metric(name='mape',
-                  function=sklearn_metrics.mean_absolute_percentage_error,
+                  function=CustomMetrics.mape, # == sklearn_metrics.mean_absolute_percentage_error
                   ptype=REGRESSION,
                   is_loss=True)
 
