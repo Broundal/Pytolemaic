@@ -50,3 +50,12 @@ class TestMetrics(unittest.TestCase):
         auc = CustomMetrics.auc(y_true=yt, y_pred=yp)
         print(auc)
         self.assertLess(abs(auc - 1.0), 5e-2)
+
+    def test_mape(self):
+        y1 = numpy.random.rand(100)
+        y2 = numpy.random.rand(100)
+
+        ref = Metrics.mape.function(y_true=y1, y_pred=y2)
+        for yy1 in [y1.ravel(), y1.reshape(-1,1)]:
+            for yy2 in [y2.ravel(), y2.reshape(-1, 1)]:
+                self.assertEqual(ref, Metrics.mape.function(y_true=yy1, y_pred=yy2))

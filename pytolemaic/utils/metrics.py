@@ -15,7 +15,6 @@ class Metric():
         self.is_proba = is_proba
         self.is_loss = is_loss
 
-
 class CustomMetrics:
     @classmethod
     def auc(cls, y_true, y_pred):
@@ -47,6 +46,11 @@ class CustomMetrics:
     def mape(cls, y_true, y_pred, eps=1e-100):
         # same as sklearn's mean_absolute_percentage_error.
         # Re-writing it as custom function for backwards compatibility
+
+        # explicit ravel to avoid bug when shapes are not the same (1D vs 2D)
+        y_true = numpy.asarray(y_true).ravel()
+        y_pred = numpy.asarray(y_pred).ravel()
+
         delta_ratio = numpy.abs(y_true-y_pred) / numpy.clip(numpy.abs(y_true), eps, 1e100)
         return numpy.mean(delta_ratio)
 
