@@ -7,8 +7,9 @@ from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
 
 
 class Metric():
-    def __init__(self, name, function, ptype, is_proba=False, is_loss=False):
+    def __init__(self, name, function, ptype, full_name=None, is_proba=False, is_loss=False):
         self.name = name
+        self.full_name = full_name or self.name
         self.function = function
         self.ptype = ptype
         self.is_proba = is_proba
@@ -52,41 +53,49 @@ class CustomMetrics:
 
 class Metrics():
     r2 = Metric(name='r2',
+                full_name="Coefficient of Determination (R^2)",
                 function=sklearn_metrics.r2_score,
                 ptype=REGRESSION)
 
     mae = Metric(name='mae',
+                 full_name="Mean Absolute Error",
                  function=sklearn_metrics.mean_absolute_error,
                  ptype=REGRESSION,
                  is_loss=True)
 
     mse = Metric(name='mse',
+                 full_name="Mean Squared Error",
                  function=sklearn_metrics.mean_squared_error,
                  ptype=REGRESSION,
                  is_loss=True)
 
     rmse = Metric(name='rmse',
+                  full_name="Root Mean Squared Error",
                   function=CustomMetrics.rmse,
                   ptype=REGRESSION,
                   is_loss=True)
 
     mape = Metric(name='mape',
+                  full_name="Mean Absolute Percentage Error",
                   function=CustomMetrics.mape, # == sklearn_metrics.mean_absolute_percentage_error
                   ptype=REGRESSION,
                   is_loss=True)
 
     normalized_rmse = Metric(name='normalized_rmse',
+                             full_name="Normalized Root Mean Squared Error",
                              function=CustomMetrics.normalized_rmse,
                              ptype=REGRESSION,
                              is_loss=True)
 
     # sklearn's auc does not support multiclass
     auc = Metric(name='auc',
+                 full_name="Area Under ROC curve",
                  function=CustomMetrics.auc,
                  ptype=CLASSIFICATION,
                  is_proba=True)
 
     recall = Metric(name='recall',
+                    full_name="Mean Recall Score",
                     function=functools.partial(sklearn_metrics.recall_score,
                                                average='macro'),
 

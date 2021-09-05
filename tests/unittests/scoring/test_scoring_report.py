@@ -18,7 +18,7 @@ class TestScoringReport(unittest.TestCase):
         rep2 = ScatterReport(y_true=[1,2,3], y_pred=[1,2,3])
         self.assertTrue(self.equal_to_dict_keys(rep2))
 
-        rep3 = ScoringMetricReport(metric='mae', value=0.5, ci_low=0.25, ci_high=0.75)
+        rep3 = ScoringMetricReport(metric_name='mae', value=0.5, ci_low=0.25, ci_high=0.75)
         self.assertTrue(self.equal_to_dict_keys(rep3))
 
         rep4 = ScoringFullReport(target_metric='mae', metric_reports=[rep3],

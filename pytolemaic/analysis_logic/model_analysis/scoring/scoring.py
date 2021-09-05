@@ -64,7 +64,7 @@ class Scoring():
                                                               y_pred=y_pred,
                                                               y_proba=y_proba)
                 score_report.append(ScoringMetricReport(
-                    metric=metric.name,
+                    metric_name=metric.name,
                     value=score,
                     ci_low=ci_low,
                     ci_high=ci_high))
@@ -89,7 +89,7 @@ class Scoring():
                 ci_high = GeneralUtils.f5(ci_high)
                 score = GeneralUtils.f5(score)
                 score_report.append(ScoringMetricReport(
-                    metric=metric.name,
+                    metric_name=metric.name,
                     value=score,
                     ci_low=ci_low,
                     ci_high=ci_high))

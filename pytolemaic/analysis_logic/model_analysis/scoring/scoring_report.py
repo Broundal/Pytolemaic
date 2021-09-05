@@ -573,15 +573,15 @@ class ScatterReport(Report):
         return []
 
 class ScoringMetricReport(Report):
-    def __init__(self, metric, value, ci_low, ci_high):
-        self._metric = metric
+    def __init__(self, metric_name: str, value, ci_low, ci_high):
+        self._metric_name = metric_name
         self._value = value
         self._ci_low = ci_low
         self._ci_high = ci_high
 
     def to_dict(self, printable=False):
         out = dict(
-            metric=self.metric,
+            metric=self.metric_name,
             value=self.value,
             ci_low=self.ci_low,
             ci_high=self.ci_high,
@@ -618,7 +618,8 @@ class ScoringMetricReport(Report):
 
         delta = (ci_high - ci_low) * 1e-1 + 10 ** -n_digits / 2
 
-        metric_obj = Metrics.supported_metrics()[self.metric]
+        metric_obj = Metrics.supported_metrics()[self.metric_name]
+        metric_full_name = metric_obj.full_name
         r_lim = 1e100 if metric_obj.is_loss else 1
         l_lim = 0 if metric_obj.is_loss else -1e100
 
@@ -636,13 +637,13 @@ class ScoringMetricReport(Report):
                xticklabels=xlabels,
                yticks=[0.5],
                yticklabels=[''],
-               title='Confidence interval for metric {}'.format(self.metric),
+               title='Confidence interval for metric {}'.format(metric_full_name),
                ylabel='',
                xlabel='')
 
         # Loop over data dimensions and create text annotations.
         for x, label in [(ci_low, 'ci_low (25%)'),
-                         (value, '{} value: {:.5g}'.format(self.metric, numpy.round(value, 1+n_digits))),
+                         (value, '{} value: {:.5g}'.format(self.metric_name, numpy.round(value, 1 + n_digits))),
                          (ci_high, 'ci_high  (75%)')]:
             y = 1.01 + 0.01 * (x == value)
             ax.text(x, y, label,
@@ -655,7 +656,7 @@ class ScoringMetricReport(Report):
 
         if self.value < self.ci_low or self.value > self.ci_high:
             insights.append('{} value {} is out of range of confidence interval [{},{}]'
-                            .format(self.metric, self.value, self.ci_low, self.ci_high))
+                            .format(self.metric_name, self.value, self.ci_low, self.ci_high))
 
         lvl1 = 0.1
         lvl2 = 0.5
@@ -664,17 +665,17 @@ class ScoringMetricReport(Report):
             pass  # ok
         elif self.ci_ratio < lvl2:
             insights.append(
-                'Confidence interval for metric {} is quite large ({})'.format(self.metric, ci_range_and_ratio))
+                'Confidence interval for metric {} is quite large ({})'.format(self.metric_name, ci_range_and_ratio))
         else:
             insights.append(
                 'Confidence interval for metric {} is very large ({}). The score measurement of {} is inaccurate.'.format(
-                    self.metric, ci_range_and_ratio, self.value))
+                    self.metric_name, ci_range_and_ratio, self.value))
 
         return self._add_cls_name_prefix(insights)
 
     @property
-    def metric(self):
-        return self._metric
+    def metric_name(self):
+        return self._metric_name
 
     @property
     def value(self):
@@ -691,8 +692,8 @@ class ScoringMetricReport(Report):
     @property
     def ci_ratio(self):
         # large ci difference is more of a concern if score is high
-        ci_low = Metrics.metric_as_loss(value=self.ci_low, metric=self.metric)
-        ci_high = Metrics.metric_as_loss(value=self.ci_high, metric=self.metric)
+        ci_low = Metrics.metric_as_loss(value=self.ci_low, metric=self.metric_name)
+        ci_high = Metrics.metric_as_loss(value=self.ci_high, metric=self.metric_name)
 
         if ci_low == ci_high:
             return 0
@@ -706,7 +707,7 @@ class ScoringFullReport(Report):
                  confusion_matrix: ConfusionMatrixReport = None, scatter: ScatterReport = None,
                  classification_report: SklearnClassificationReport = None):
         self._target_metric = target_metric
-        self._metric_scores_dict = {r.metric: r for r in metric_reports}
+        self._metric_scores_dict = {r.metric_name: r for r in metric_reports}
         self._confusion_matrix = confusion_matrix
         self._scatter = scatter
         self._classification_report = classification_report

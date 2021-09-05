@@ -21,8 +21,8 @@ class TestSensitivityReport(unittest.TestCase):
     def get_scoring_report(self):
         rep1 = ConfusionMatrixReport(y_true=[1, 2, 3], y_pred=[1, 2, 3])
         rep2 = ScatterReport(y_true=[1, 2, 3], y_pred=[1, 2, 3])
-        rep3 = ScoringMetricReport(metric=Metrics.normalized_rmse.name, value=0.5, ci_low=0.25, ci_high=0.75)
-        rep4 = ScoringMetricReport(metric=Metrics.mae.name, value=0.5, ci_low=0.25, ci_high=0.75)
+        rep3 = ScoringMetricReport(metric_name=Metrics.normalized_rmse.name, value=0.5, ci_low=0.25, ci_high=0.75)
+        rep4 = ScoringMetricReport(metric_name=Metrics.mae.name, value=0.5, ci_low=0.25, ci_high=0.75)
         return ScoringFullReport(target_metric=Metrics.mae.name, metric_reports=[rep3, rep4],
                                  confusion_matrix=rep1, scatter=rep2)
 
