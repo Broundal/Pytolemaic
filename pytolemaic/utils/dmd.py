@@ -92,7 +92,7 @@ class DMD():
             vec = values[:, icol]
             vec = vec[numpy.isfinite(vec)]
             delta = set(vec) - set(categorical_encoding[feature_names[icol]].keys())
-            if delta:
+            if delta and delta!={-1.0}:
                 raise ValueError("No categorical name is set for categories {} (feature #{}:{})".format(delta, icol,
                                                                                                         feature_names[
                                                                                                             icol]))
@@ -293,7 +293,16 @@ class DMD():
                 df_test: pandas.DataFrame = None,
                 categorical_encoding=True, split_ratio: float = None, nan_list: list = (), splitter=ShuffleSplitter):
         feature_names = list(df_train.columns)
+        # discard feature type of target
+        if len(feature_types) == len(feature_names):
+            feature_types = [feature_types[i] for i in range(len(feature_names)) if feature_names[i]!=target_name]
+
         feature_names.remove(target_name)
+
+        # assert consistency
+        if len(feature_types) != len(feature_names):
+            raise ValueError("Mismatch! there are {} features and {} feature_types!"
+                             .format(len(feature_names), len(feature_types)))
 
         categorical_encoding_dict = None
         target_labels = None
@@ -312,6 +321,7 @@ class DMD():
             df_train.replace(numpy.nan, jibrish_value, inplace=True)
 
             xencoders = []
+
             categorical_encoding_dict = {}
             for i, feature_name in enumerate(feature_names):
                 logging.info("Fit encoding for feature {}".format(feature_name))
@@ -362,7 +372,7 @@ class DMD():
 
                             new_values = numpy.zeros(mask.shape)
                             new_values[mask] = xencoders[i].transform(df_test[feature_name].astype(str)[mask])
-                            new_values[~mask] = -1
+                            new_values[~mask] = -1 # never seen these values before - new class
                             df_test[feature_name] = new_values
 
                 if yencoder:
