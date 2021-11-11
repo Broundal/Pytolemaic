@@ -397,7 +397,8 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
             # no fit logic required
 
         elif self.uncertainty_method in ['confidence']:
-            dmd_test, cal_curve_samples = dmd_test.split(ratio=0.1)
+            if do_analysis:
+                dmd_test, cal_curve_samples = dmd_test.split(ratio=0.1)
 
             estimator = RandomForestClassifier(
                 random_state=0, n_jobs=n_jobs, n_estimators=100)
