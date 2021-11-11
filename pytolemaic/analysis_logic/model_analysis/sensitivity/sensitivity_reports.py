@@ -46,6 +46,7 @@ class SensitivityStatsReport(Report):
             title='{}Sensitivity Statistics'.format(title_prefix),
             ylabel='# of features')
         plt.draw()
+        plt.tight_layout()
 
     @property
     def n_features(self):

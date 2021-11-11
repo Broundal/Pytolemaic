@@ -324,7 +324,7 @@ class DMD():
 
             categorical_encoding_dict = {}
             for i, feature_name in enumerate(feature_names):
-                logging.info("Fit encoding for feature {}".format(feature_name))
+                logging.info("Fit encoding for feature #{}:'{}'. Feature type is '{}'".format(i, feature_name, feature_types[i]))
 
                 if feature_types[i] == FeatureTypes.categorical:
                     le = LabelEncoder().fit(df_train[feature_name].astype(str))

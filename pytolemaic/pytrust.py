@@ -39,7 +39,7 @@ def help(key=None):
     Provides assistance/examples on how to use pytrust. Run help() to start.
     """
     supported_keys = ['basic usage', 'pytrust additional', 'basic pytrust from df']
-
+    print('** Printing help for key={} **'.format(key))
     if key not in supported_keys:
         print("Key '{}' is not recognized!".format(key))
         key = None
@@ -52,7 +52,7 @@ def help(key=None):
         return supported_keys
     elif key == 'basic usage':
         msg = """
-*** Basic Usage ***",
+*** Basic Usage ***,
 # The basic usage covers
 # 1. creating PyTrust object in basic mode
 # 2. run analysis
@@ -87,7 +87,7 @@ pprint(pytrust.to_dict_meaning()) or pprint(PyTtrust.to_dict_meaning())
         print(msg)
     elif key == 'pytrust additional':
         msg = """
-*** Pytrust additional settings ***",
+*** Pytrust additional settings ***,
 # The basic pytrust covers creating PyTrust object with more information,
 # allowing better graphs/analysis
 
@@ -110,7 +110,7 @@ pytrust = PyTrust(model=model,
         print(msg)
     elif key == 'basic pytrust from df':
         msg = """
-        
+*** Pytrust from pandas dataframe ***,        
 # If your data is given as pandas.DataFrame containing non-numeric values, it's recommended to use:
 from pytolemaic import PyTrust, DMD
 dmd_train, dmd_test = DMD.from_df(df_train=df_train, df_test=df_test,
