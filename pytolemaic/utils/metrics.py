@@ -119,14 +119,20 @@ class Metrics():
 
     @classmethod
     def metric_as_loss(cls, value, metric):
-        if cls.supported_metrics()[metric].is_loss:
+        if isinstance(metric, str):
+            metric = cls.supported_metrics()[metric]
+
+        if metric.is_loss:
             return value
         else:
             return 1 - value
 
     @classmethod
     def metric_as_score(cls, value, metric):
-        if not cls.supported_metrics()[metric].is_loss:
+        if isinstance(metric, str):
+            metric = cls.supported_metrics()[metric]
+
+        if not metric.is_loss:
             return value
         else:
             return 1 - value

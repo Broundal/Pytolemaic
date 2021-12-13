@@ -12,9 +12,24 @@ The package is aimed for personal use and comes with no guarantees.
 I hope you will find it useful. I will appreciate any feedback you have.
 
 ## Install
-Pytolemaic package may be installed using ```pip```:
 ```
 pip install pytolemaic
+```
+
+## Basic usage
+```
+from pytolemaic import PyTrust
+
+pytrust = PyTrust(model=estimator,
+                  xtrain=xtrain, ytrain=ytrain,
+                  xtest=xtest, ytest=ytest)
+   
+# run all analysis and print insights:,
+insights = pytrust.insights()
+print("\n".join(insights))
+
+# run analysis and plot graphs
+pytrust.plot()
 ```
 
 ## supported features

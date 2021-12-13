@@ -8,7 +8,7 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-
+import logging
 
 class Scoring():
     def __init__(self, metrics: list = None):
@@ -97,13 +97,17 @@ class Scoring():
         return score_report, confusion_matrix, scatter, classification_report
 
     def _calc_error_bars(self, dmd_test, model):
-        left, right = dmd_test.split(ratio=0.5, return_indices=True)
-        error_bars = numpy.zeros(dmd_test.n_samples)
-        for ind1, ind2 in [(left, right), (right, left)]:
-            dmd_1 = dmd_test.split_by_indices(ind1)
-            dmd_2 = dmd_test.split_by_indices(ind2)
-            uncertainty_model = UncertaintyModelRegressor(model=model, uncertainty_method='mae')
-            uncertainty_model.fit(dmd_test=dmd_1, do_analysis=False)
-            error_bars[ind2] = uncertainty_model.uncertainty(dmd_2).ravel()
-        return error_bars
+        try:
+            left, right = dmd_test.split(ratio=0.5, return_indices=True)
+            error_bars = numpy.zeros(dmd_test.n_samples)
+            for ind1, ind2 in [(left, right), (right, left)]:
+                dmd_1 = dmd_test.split_by_indices(ind1)
+                dmd_2 = dmd_test.split_by_indices(ind2)
+                uncertainty_model = UncertaintyModelRegressor(model=model, uncertainty_method='mae')
+                uncertainty_model.fit(dmd_test=dmd_1, do_analysis=False)
+                error_bars[ind2] = uncertainty_model.uncertainty(dmd_2).ravel()
+            return error_bars
+        except:
+            logging.exception("Failed to calculate error bars")
+            return numpy.zeros(dmd_test.n_samples)
 
