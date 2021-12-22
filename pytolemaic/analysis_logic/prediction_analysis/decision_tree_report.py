@@ -15,6 +15,10 @@ from resources.datasets.california_housing import CaliforniaHousing
 
 class DecisionTreeExplainer():
 
+    """
+    Use this class to explain predictions using tree-like rules by building a local decision tree.
+    """
+
     def __init__(self, n_samples=100000, explanation_depth=4, min_samples_leaf=100, allowed_delta=0.05, digitize=2,
                  cat_imputer=None, num_imputer=None):
         """
@@ -130,7 +134,7 @@ class DecisionTreeExplainer():
                 # inds = numpy.digitize(values[:, icol], bins=bins, right=False)
                 # values[:, icol] = numpy.round(0.5*(bins[inds-1] + bins[inds]), 2)
 
-        logging.info('size of neighborhood:', values.shape)
+        logging.info('size of neighborhood: {}'.format(values.shape))
         return values
 
     @classmethod
@@ -160,7 +164,7 @@ class DecisionTreeExplainer():
             sigma = numpy.sqrt(mse)
             value_msg = 'the predicted value is {} +- {:.1g}'.format(mean, sigma)
 
-        msg = 'Since ' + ' and '.join(list_of_conditions) + ' then {}'.format(value_msg)
+        msg = 'Because ' + ' and '.join(list_of_conditions) + ' {}'.format(value_msg)
         depth = len(nodes)
         return msg, depth
 
@@ -190,11 +194,14 @@ class DecisionTreeExplainer():
 
         keys = set(list(feature_lower_limit.keys()) + list(feature_upper_limit.keys()))
         for k in keys:
-            c1 = '{} < '.format(feature_lower_limit[k]) if k in feature_lower_limit else ''
+            c1 = ' > {}'.format(feature_lower_limit[k]) if k in feature_lower_limit else ''
             c2 = '"{}"'.format(k)
             c3 = ' <= {}'.format(feature_upper_limit[k]) if k in feature_upper_limit else ''
 
-            condition = '[{}{}{}]'.format(c1, c2, c3)
+            if c1 and c3:
+                condition = '[{}{}{}]'.format(c1, c2, c3)
+            else:
+                condition = '[{}{}{}]'.format(c2, c1, c3)
             dict_of_conditions[k] = condition
 
         list_of_conditions = []
@@ -242,11 +249,11 @@ class DecisionTreeExplainer():
         dt.fit(train, y[n:])
 
         if self.is_classification:
-            logging.info('recall score=', Metrics.recall.function(y[:n], dt.predict(valid)))
+            logging.info('recall score={}'.format(Metrics.recall.function(y[:n], dt.predict(valid))))
             # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict_proba(sample.reshape(1,-1)), dt.predict_proba(sample.reshape(1,-1))))
 
         else:
-            logging.info('r2 score=', Metrics.r2.function(y[:n], dt.predict(valid)))
+            logging.info('r2 score={}'.format(Metrics.r2.function(y[:n], dt.predict(valid))))
             # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict(sample.reshape(1,-1)), dt.predict(sample.reshape(1,-1))))
 
         # train dt on entire data
@@ -282,6 +289,7 @@ class DecisionTreeExplainer():
                      transform=plt.gca().transAxes, size=12,
                      horizontalalignment='left',
                      verticalalignment='top')
+            plt.tight_layout()
         except:
             raise
 
@@ -297,11 +305,14 @@ if __name__ == '__main__':
     sample = dataset.testing_data[0][3, :]
     explainer = DecisionTreeExplainer()
     explainer.fit(train, model)
-    logging.info('\n'.join([train.feature_names[icol] + ' : ' + str(sample[icol]) for icol in range(train.n_features)]))
+    logging.info('\n'.join(['Data point:']+[train.feature_names[icol] + ' : ' + str(sample[icol]) for icol in range(train.n_features)]))
 
-    logging.info('\n\nexplain')
-    explainer.explain(sample)
-    logging.info('\n\nplot')
+    logging.info('explain')
+    msg = explainer.explain(sample)
+
+    logging.info('Prediction at point #{} is {}. Explanation:\n{}'.format(3, model.predict(sample.reshape(1,-1)), msg))
+
+    logging.info('plot')
     explainer.plot(sample)
 
     plt.show()
