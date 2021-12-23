@@ -19,7 +19,7 @@ class DecisionTreeExplainer():
     Use this class to explain predictions using tree-like rules by building a local decision tree.
     """
 
-    def __init__(self, n_samples=100000, explanation_depth=4, min_samples_leaf=100, allowed_delta=0.05, digitize=2,
+    def __init__(self, n_samples=100000, explanation_depth=4, min_samples_leaf=50, allowed_delta=0.01, digitize=2,
                  cat_imputer=None, num_imputer=None):
         """
 
@@ -78,7 +78,27 @@ class DecisionTreeExplainer():
     def _calc_train_data_stats(self, dmd_train: DMD):
         return dmd_train  # TODO: save stats instead of entire train data
 
-    def _create_neighborhood(self, sample: numpy.ndarray, n_samples, train_data_stats: DMD):
+
+    def _create_neighborhood(self, sample: numpy.ndarray, train_data_stats: DMD):
+
+        """
+        Find a neighborhood that can produce a DT surrogate model with good enough accuracy at point==sample.
+        """
+        for n_samples_ratio, n_std_ratio in zip((0.25, 0.5,   1,    2,     4,     8),
+                                                (0.2, 0.1, 0.05, 0.01, 0.005, 0.001)):
+
+            x = self.__create_neighborhood(sample=sample, n_samples=int(self.n_samples * n_samples_ratio),
+                                           train_data_stats=train_data_stats, n_std_radius=n_std_ratio)
+            dt = self._create_dt(max_depth=None)
+            dt.fit(x, self.model.predict(x))
+            delta = self._calc_dt_error(dt, sample.reshape(1,-1))
+            if delta < self.allowed_delta:
+                break
+
+        logging.info('size of neighborhood: {}'.format(x.shape))
+        return x
+
+    def __create_neighborhood(self, sample: numpy.ndarray, n_samples, train_data_stats: DMD, n_std_radius=0.1):
         random_state = numpy.random.RandomState(0)
 
         values = random_state.permutation(train_data_stats.values)
@@ -115,14 +135,14 @@ class DecisionTreeExplainer():
                 # values[values[:, icol]>=up, icol] = up
                 # values[values[:, icol]<=low, icol] = low
                 if not numpy.isnan(sample[icol]):
-                    sigma = std[icol] / 10
+                    sigma = std[icol] * n_std_radius
 
                     values[:, icol] = sample[icol] + random_state.randn(len(values)) * sigma
                     values[:, icol] = numpy.clip(values[:, icol], mn[icol], mx[icol])
 
                 else:
                     values[:, icol] = random_state.permutation(values[:, icol])
-                values[:, icol] = numpy.round(values[:, icol], self.digitize) + 0.005
+                values[:, icol] = numpy.round(values[:, icol], self.digitize) + 0.5 * 10**(-self.digitize)
 
                 # uniques = numpy.unique(values[:, icol])
                 # len_uniques = len(uniques)
@@ -134,7 +154,7 @@ class DecisionTreeExplainer():
                 # inds = numpy.digitize(values[:, icol], bins=bins, right=False)
                 # values[:, icol] = numpy.round(0.5*(bins[inds-1] + bins[inds]), 2)
 
-        logging.info('size of neighborhood: {}'.format(values.shape))
+
         return values
 
     @classmethod
@@ -162,9 +182,11 @@ class DecisionTreeExplainer():
             mean = numpy.round(mean, 3)
             mse = decision_tree.tree_.impurity[nodes[-1]]
             sigma = numpy.sqrt(mse)
-            value_msg = 'the predicted value is {} +- {:.1g}'.format(mean, sigma)
+            value_msg = 'a value of {:.3g} +- {:.1g}'.format(mean, sigma)
 
-        msg = 'Because ' + ' and '.join(list_of_conditions) + ' {}'.format(value_msg)
+        msg = 'Key decision features around sample point: ' + ' and '.join(list_of_conditions) +'.\n'+\
+              'In this area we expect {}.\n'.format(value_msg)+ \
+              'There are {} points in this area'.format(decision_tree.tree_.n_node_samples[nodes[-1]])
         depth = len(nodes)
         return msg, depth
 
@@ -194,14 +216,15 @@ class DecisionTreeExplainer():
 
         keys = set(list(feature_lower_limit.keys()) + list(feature_upper_limit.keys()))
         for k in keys:
-            c1 = ' > {}'.format(feature_lower_limit[k]) if k in feature_lower_limit else ''
+            c1_123 = '{} < '.format(feature_lower_limit[k]) if k in feature_lower_limit else ''
+            c1_213 = ' > {}'.format(feature_lower_limit[k]) if k in feature_lower_limit else ''
             c2 = '"{}"'.format(k)
             c3 = ' <= {}'.format(feature_upper_limit[k]) if k in feature_upper_limit else ''
 
-            if c1 and c3:
-                condition = '[{}{}{}]'.format(c1, c2, c3)
+            if c1_123 and c3:
+                condition = '[{}{}{}]'.format(c1_123, c2, c3)
             else:
-                condition = '[{}{}{}]'.format(c2, c1, c3)
+                condition = '[{}{}{}]'.format(c2, c1_213, c3)
             dict_of_conditions[k] = condition
 
         list_of_conditions = []
@@ -215,57 +238,64 @@ class DecisionTreeExplainer():
         x = neiborhood
         y = self.model.predict(x)
 
+        sample = sample.reshape(1, -1)
+
         delta = 1e100
         prev_delta = delta
+        prev_n_leaf = 0
         depth = self.explanation_depth
         while delta > self.allowed_delta:
 
             dt = self._create_dt(max_depth=depth)
             dt.fit(x, y)
-            if self.is_classification:
-                yt_proba = self.model.predict_proba(sample.reshape(1, -1))
-                yp_proba = dt.predict_proba(sample.reshape(1, -1))
-                delta = numpy.max(numpy.abs(yt_proba - yp_proba))
-            else:
-                yt = self.model.predict(sample.reshape(1, -1))
-                yp = dt.predict(sample.reshape(1, -1))
-                delta = 2 * numpy.abs(yt - yp) / (numpy.abs(yt + yp) + 1e-3)
+            delta = self._calc_dt_error(dt, sample)
 
             depth += 1
-            if delta == prev_delta:
-                raise ValueError("Failed training surrogate dt: dt does not converge correctly on given sample.\n"
-                                 "Either increase allowed_delta (>{}) or decrease min_samples_leaf".format(delta))
+            n_leaf = dt.get_n_leaves()
+            if n_leaf == prev_n_leaf:
+                logging.warning("Failed training surrogate dt: DT did not converge accurately on given sample.\n"
+                                 "Either increase allowed_delta (>{:.3g}) or decrease min_samples_leaf (<{}) and try again".format(delta[0], self.min_samples_leaf))
+                logging.info("allowed_delta was increased to {:.3g}".format(delta[0]))
+                self.allowed_delta = delta+1e-5
             else:
                 prev_delta = delta
+                prev_n_leaf = n_leaf
 
-        msg, depth = self._decision_path_to_text(decision_tree=dt, sample=sample,
-                                                 feature_names=self.train_data_stats.feature_names)
+        # msg, depth = self._decision_path_to_text(decision_tree=dt, sample=sample,
+        #                                          feature_names=self.train_data_stats.feature_names)
 
         # check dt performance
         n = len(x) // 5
         train, valid = x[n:, :], x[:n, :]
 
-        dt = self._create_dt(max_depth=depth)
-        dt.fit(train, y[n:])
+        dt_for_performance = self._create_dt(max_depth=depth)
+        dt_for_performance.fit(train, y[n:])
 
         if self.is_classification:
-            logging.info('recall score={}'.format(Metrics.recall.function(y[:n], dt.predict(valid))))
+            logging.info('recall score={:.3g}'.format(Metrics.recall.function(y[:n], dt_for_performance.predict(valid))))
             # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict_proba(sample.reshape(1,-1)), dt.predict_proba(sample.reshape(1,-1))))
-
         else:
-            logging.info('r2 score={}'.format(Metrics.r2.function(y[:n], dt.predict(valid))))
+            logging.info('r2 score={:.3g}'.format(Metrics.r2.function(y[:n], dt_for_performance.predict(valid))))
             # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict(sample.reshape(1,-1)), dt.predict(sample.reshape(1,-1))))
 
-        # train dt on entire data
-        dt.fit(x, y)
-
         return dt
+
+    def _calc_dt_error(self, dt, sample):
+        if self.is_classification:
+            yt_proba = self.model.predict_proba(sample)
+            yp_proba = dt.predict_proba(sample)
+            delta = numpy.max(numpy.abs(yt_proba - yp_proba))
+        else:
+            yt = self.model.predict(sample)
+            yp = dt.predict(sample)
+            delta = 2 * numpy.abs(yt - yp) / (numpy.abs(yt + yp) + 1e-3)
+        return delta
 
     def _fit_dt_on_neighborhood(self, sample):
         if self.cache is None or self.cache != str(sample):
             self.cache = str(sample)
-            self.dt = self._fit_decision_tree(self._create_neighborhood(sample=sample, n_samples=self.n_samples,
-                                                                        train_data_stats=self.train_data_stats),
+            self.dt = self._fit_decision_tree(neiborhood=self._create_neighborhood(sample=sample,
+                                                                                   train_data_stats=self.train_data_stats),
                                               sample=sample)
         else:
             pass  # dt is already fitted
@@ -278,6 +308,8 @@ class DecisionTreeExplainer():
 
     def plot(self, sample: numpy.ndarray):
         self._fit_dt_on_neighborhood(sample=sample)
+
+        ## 1st plot
         tree.plot_tree(self.dt, feature_names=self.train_data_stats.feature_names, fontsize=10, filled=True)
 
         try:
@@ -291,7 +323,20 @@ class DecisionTreeExplainer():
                      verticalalignment='top')
             plt.tight_layout()
         except:
-            raise
+            logging.exception("Failed to add text to graph")
+
+        # ## 2md plot
+        #
+        # from matplotlib import cm
+        # x = self.neighborhood
+        # i1, i2 = self._get_first_2_features()
+        # i1 = 0
+        # i2 = 5
+        # # ax = plt.figure().add_subplot(projection='3d')
+        # plt.scatter(x[:, i1], x[:, i2], c=dt.predict(x), marker='.', cmap=cm.coolwarm)
+        # plt.scatter(sample[0, i1], sample[0, i2], c=dt.predict(sample), marker='*', cmap=cm.coolwarm)
+        # # ax.contour(x[:, i1], x[:, i2], dt.predict(x), cmap=cm.coolwarm)
+        # plt.show()
 
 
 if __name__ == '__main__':
