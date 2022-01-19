@@ -556,7 +556,7 @@ class ScatterReport(Report):
         ## scatter plot
         if residual_plot:
             ax = ax2
-            ax.errorbar(y_true, y_pred-y_true, xerr=None, yerr=error_bars, fmt='.b', ecolor='k')
+            ax.errorbar(y_true.ravel(), (y_pred-y_true).ravel(), xerr=None, yerr=error_bars.ravel(), fmt='.b', ecolor='k')
 
             mn = numpy.min([y_true.min(), y_pred.min()])
             ax.plot([mn, mx], [0, 0], '-k')
