@@ -49,6 +49,7 @@ class GeneralUtils():
 
     @classmethod
     def simple_imputation_pipeline(cls, estimator):
+        # note - this works only for enncoded data (e.g. no text in caategoricl features)
         estimators = []
         estimators.append(('Imputer', SimpleImputer()))
         estimators.append(('Estimator', estimator))

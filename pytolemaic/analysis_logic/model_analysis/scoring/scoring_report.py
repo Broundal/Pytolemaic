@@ -543,7 +543,7 @@ class ScatterReport(Report):
         ## scatter plot
 
         ax = ax1
-        ax.errorbar(y_true, y_pred, xerr=None, yerr=error_bars, fmt='.b', ecolor='k')
+        ax.errorbar(y_true.ravel(), y_pred.ravel(), xerr=None, yerr=error_bars.ravel(), fmt='.b', ecolor='k')
 
         mn = numpy.min([y_true.min(), y_pred.min()])
         mx = numpy.max([y_true.max(), y_pred.max()])
