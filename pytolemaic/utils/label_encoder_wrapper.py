@@ -4,7 +4,7 @@ import logging
 import numpy
 from pytolemaic import FeatureTypes
 from sklearn.preprocessing import LabelEncoder
-
+import pandas as pd
 
 class LabelEncoderProtected():
     def __init__(self, nan_list=()):
