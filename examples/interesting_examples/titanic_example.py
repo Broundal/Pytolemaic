@@ -1,11 +1,11 @@
 import os
 
 import pandas
+from pytolemaic import DMD, HOME_DIR, PyTrust
+from pytolemaic import FeatureTypes
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-
-from pytolemaic import FeatureTypes, DMD, HOME_DIR, PyTrust
 
 
 def run(fast=False):

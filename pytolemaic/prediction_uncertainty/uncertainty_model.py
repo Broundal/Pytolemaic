@@ -3,15 +3,50 @@ import multiprocessing
 import numpy
 import sklearn
 from matplotlib import pyplot as plt
+from pytolemaic.utils.constants import FeatureTypes
+from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
+from pytolemaic.utils.dmd import DMD
+from pytolemaic.utils.general import GeneralUtils
+from pytolemaic.utils.label_encoder_wrapper import LabelEncoderProtected
+from pytolemaic.utils.metrics import Metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import brier_score_loss
 from sklearn.pipeline import Pipeline
 
-from pytolemaic.utils.constants import REGRESSION, CLASSIFICATION
-from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.general import GeneralUtils
-from pytolemaic.utils.metrics import Metrics
 
+class EncodeWrapper():
+    def __init__(self, model, encode_target):
+        self.model = model
+        self.encode_target=encode_target
+
+    def fit(self, x, y, feature_types=None, feature_names=None):
+        self.perform_xencoding = feature_types is not None and FeatureTypes.categorical in feature_types
+        if self.perform_xencoding:
+            self.xencoder = LabelEncoderProtected()
+            self.xencoder.fit(x, feature_types=feature_types, feature_names=feature_names)
+        else:
+            self.xencoder = None
+
+        if self.encode_target:
+            self.yencoder = LabelEncoderProtected()
+            self.yencoder.fit(y, feature_types=[FeatureTypes.categorical], feature_names='target')
+        else:
+            self.yencoder = None
+
+        self.model.fit(x if self.xencoder is None else self.xencoder.transform(x),
+                       y if self.yencoder is None else self.yencoder.transform(y).ravel())
+
+    def predict(self, x):
+        if self.encode_target:
+            raise NotImplementedError("Inverse transform not yet implemented")
+        return self.model.predict(x if self.xencoder is None else self.xencoder.transform(x))
+
+    def predict_proba(self, x):
+        return self.model.predict_proba(x if self.xencoder is None else self.xencoder.transform(x))
+
+    @property
+    def steps(self):
+        return self.model.steps
 
 class UncertaintyModelBase():
 
@@ -148,8 +183,10 @@ class UncertaintyModelBase():
 
         pipeline = GeneralUtils.simple_imputation_pipeline(
             estimator)  # todo better imputation scheme whenever a model is created by package
+        pipeline = EncodeWrapper(pipeline, encode_target=False)
+
         y = self.uncertainty(dmd)
-        pipeline.fit(dmd.values, y.ravel())
+        pipeline.fit(dmd.values, y.ravel(), feature_types=dmd.feature_types, feature_names=dmd.feature_names)
 
         # extract RF from pipeline
         names, estimators = zip(*pipeline.steps)
@@ -232,15 +269,17 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
         if self.uncertainty_method in ['mae', 'default']:
             estimator = RandomForestRegressor(
                 random_state=0, n_jobs=n_jobs,
-                n_estimators=kwargs.pop('n_estimators', 100))
-
+                n_estimators=kwargs.pop('n_estimators', 250))
             self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
                 estimator)
 
+            self.uncertainty_model = EncodeWrapper(self.uncertainty_model, encode_target=False)
             yp = self.predict(dmd_test)
             self.uncertainty_model.fit(dmd_test.values,
                                        numpy.abs(
-                                           dmd_test.target.ravel() - yp.ravel()))
+                                           dmd_test.target.ravel() - yp.ravel()),
+                                       feature_types=dmd_test.feature_types, feature_names=dmd_test.feature_names
+                                       )
         elif self.uncertainty_method in ['rmse']:
             estimator = RandomForestRegressor(
                 random_state=0, n_jobs=n_jobs,
@@ -248,10 +287,12 @@ class UncertaintyModelRegressor(UncertaintyModelBase):
 
             self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
                 estimator)
+            self.uncertainty_model = EncodeWrapper(self.uncertainty_model, encode_target=False)
 
             yp = self.predict(dmd_test)
             self.uncertainty_model.fit(dmd_test.values,
-                                       (dmd_test.target.ravel() - yp.ravel()) ** 2)
+                                       (dmd_test.target.ravel() - yp.ravel()) ** 2,
+                                       feature_types=dmd_test.feature_types, feature_names=dmd_test.feature_names)
         elif self.uncertainty_method in ['quantile']:
             if isinstance(self.model, Pipeline):
 
@@ -405,13 +446,15 @@ class UncertaintyModelClassifier(UncertaintyModelBase):
 
             self.uncertainty_model = GeneralUtils.simple_imputation_pipeline(
                 estimator)
+            self.uncertainty_model = EncodeWrapper(self.uncertainty_model, encode_target=True)
 
             y_pred = self.predict(dmd_test)
             is_correct = numpy.array(y_pred.ravel() == dmd_test.target.ravel(),
                                      dtype=int)
 
-            # bug here
-            self.uncertainty_model.fit(dmd_test.values, is_correct.ravel())
+            self.uncertainty_model.fit(dmd_test.values,
+                                       is_correct.ravel(),
+                                       feature_types=dmd_test.feature_types, feature_names=dmd_test.feature_names)
 
         else:
             raise NotImplementedError("Method {} is not implemented"

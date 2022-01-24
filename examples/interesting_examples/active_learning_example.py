@@ -1,18 +1,14 @@
-import time
-from pprint import pprint
-
 import numpy
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-
-from pytolemaic import Metrics, DMD
+from pytolemaic import Metrics
 from pytolemaic import PyTrust
 from pytolemaic.utils.general import GeneralUtils
 from resources.datasets.uci_adult import UCIAdult
+from sklearn.ensemble import RandomForestClassifier
 
 
-def run(use_active_learning=True, max_samples = 12500, batch_size = 100, train_base_ratio=0.001):
+def run(use_active_learning=True, max_samples = 2500, batch_size = 100, train_base_ratio=0.001, fast=False):
+    if fast:
+        max_samples = 500
 
     dataset = UCIAdult()
     train, test = dataset.as_dmd()

@@ -1,13 +1,14 @@
 import copy
 import logging
+from typing import Tuple
 
 import numpy
 import numpy as np
 import pandas
+from pytolemaic.utils.constants import FeatureTypes
+from pytolemaic.utils.label_encoder_wrapper import LabelEncoderProtected
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
-from pytolemaic.utils.constants import FeatureTypes
 
 
 class ShuffleSplitter():
@@ -58,6 +59,8 @@ class DMD():
 
         self._samples_meta = self._create_samples_meta(samples_meta, self._x)
         self._splitter = splitter
+        self.xencoder = None
+        self.yencoder = None
 
         # meta data
         if target_labels is not None:
@@ -288,6 +291,33 @@ class DMD():
     def nan_mask(self):
         return self._x.isnull().values
 
+    @property
+    def encoders(self):
+        return self.xencoder, self.yencoder
+
+    def encode_self(self, encode_target:bool, encoders:Tuple[LabelEncoder]=None, nan_list=()):
+        if encoders is None:
+            self.xencoder = LabelEncoderProtected(nan_list=nan_list)
+            self.xencoder.fit(self._x.values, feature_types=self.feature_types, feature_names=self.feature_names)
+
+            if encode_target and self._y is not None:
+                self.yencoder = LabelEncoderProtected(nan_list=nan_list)
+                self.yencoder.fit(self._y.values, feature_types=FeatureTypes.categorical, feature_names=['target'])
+            else:
+                self.yencoder = None
+        else:
+            self.xencoder, self.yencoder = encoders
+
+        self._x.loc[:,:] = self.xencoder.transform(self._x.values)
+        self._categorical_encoding_by_name= self.xencoder.categorical_encoding_dict
+        self._categorical_encoding_by_ind = self._validate_categorical_encoding()
+        if self.yencoder is not None:
+            self._y.loc[:,:] = self.yencoder.transform(self._y.values)
+            self._target_encoding = self.yencoder.categorical_encoding_dict['target']
+
+        return self
+
+
     @classmethod
     def from_df(cls, df_train: pandas.DataFrame, target_name: str, is_classification, feature_types: list = None,
                 df_test: pandas.DataFrame = None,
@@ -304,97 +334,31 @@ class DMD():
             raise ValueError("Mismatch! there are {} features and {} feature_types!"
                              .format(len(feature_names), len(feature_types)))
 
-        categorical_encoding_dict = None
-        target_labels = None
-        if categorical_encoding:
-            if feature_types is None:
-                raise ValueError("categorical_encoding requires feature types")
-            logging.info("Categorical Encoding")
-            # fit
-            jibrish_value = '!@#$%^&*()'
-            df_train = copy.deepcopy(df_train)
-            for k in nan_list:
-                df_train.replace(k, numpy.nan, inplace=True)
-
-            nan_mask = df_train.isnull()
-            # df_train[nan_mask] = jibrish_value
-            df_train.replace(numpy.nan, jibrish_value, inplace=True)
-
-            xencoders = []
-
-            categorical_encoding_dict = {}
-            for i, feature_name in enumerate(feature_names):
-                logging.info("Fit encoding for feature #{}:'{}'. Feature type is '{}'".format(i, feature_name, feature_types[i]))
-
-                if feature_types[i] == FeatureTypes.categorical:
-                    le = LabelEncoder().fit(df_train[feature_name].astype(str))
-                    xencoders.append(le)
-                    categorical_encoding_dict[feature_name] = {i: cls_ for i, cls_ in enumerate(le.classes_)}
-                else:
-                    xencoders.append(None)
-
-            if is_classification:
-                yencoder = LabelEncoder().fit(df_train[target_name].astype(str))
-                target_labels = {i: cls_ for i, cls_ in enumerate(yencoder.classes_)}
-            else:
-                yencoder = None
-                target_labels = None
-
-            # transform train
-            for i, feature_name in enumerate(feature_names):
-                if feature_types[i] == FeatureTypes.categorical:
-                    logging.info("Encode train: feature {}".format(feature_name))
-                    df_train[feature_name] = xencoders[i].transform(df_train[feature_name].astype(str))
-
-            if yencoder:
-                df_train[target_name] = yencoder.transform(df_train[target_name].astype(str))
-
-            df_train[nan_mask] = numpy.nan
-
-            if df_test is not None:
-                df_test = copy.deepcopy(df_test)
-                for k in nan_list:
-                    df_test.replace(k, numpy.nan, inplace=True)
-
-                nan_mask = df_test.isnull()
-                df_test.replace(numpy.nan, jibrish_value, inplace=True)
-
-                for i, feature_name in enumerate(feature_names):
-                    if feature_types[i] == FeatureTypes.categorical:
-                        logging.info("Encode test: feature {}".format(feature_name))
-
-                        try:
-                            df_test[feature_name] = xencoders[i].transform(df_test[feature_name].astype(str))
-                        except ValueError as e:
-                            logging.warning(e)
-                            classes = xencoders[i].classes_
-                            mask = numpy.array([x in classes for x in df_test[feature_name].astype(str)])
-
-                            new_values = numpy.zeros(mask.shape)
-                            new_values[mask] = xencoders[i].transform(df_test[feature_name].astype(str)[mask])
-                            new_values[~mask] = -1 # never seen these values before - new class
-                            df_test[feature_name] = new_values
-
-                if yencoder:
-                    df_test[target_name] = yencoder.transform(df_test[target_name].astype(str))
-
-                df_test[nan_mask] = numpy.nan
-
         logging.info("Creating DMDs")
 
         dmd_train = DMD(x=df_train[feature_names], y=df_train[target_name], splitter=splitter,
-                        target_labels=target_labels, categorical_encoding=categorical_encoding_dict,
                         feature_names=feature_names, feature_types=feature_types)
+
         if df_test is None:
             if split_ratio is None:
                 dmd_test = None
             else:
                 dmd_train, dmd_test = dmd_train.split(ratio=split_ratio)
         else:
-
             dmd_test = DMD(x=df_test[feature_names], y=df_test[target_name], splitter=splitter,
-                           target_labels=target_labels, categorical_encoding=categorical_encoding_dict,
                            feature_names=feature_names, feature_types=feature_types)
+
+        if categorical_encoding:
+            if feature_types is None:
+                raise ValueError("categorical_encoding requires feature types")
+            logging.info("Categorical Encoding")
+
+            dmd_train.encode_self(encode_target=is_classification,
+                                  nan_list=nan_list,
+                                  encoders=None)
+            dmd_test.encode_self(encode_target=is_classification,
+                                 nan_list=nan_list,
+                                 encoders=dmd_train.encoders)
 
         return dmd_train, dmd_test
 
