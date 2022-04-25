@@ -18,7 +18,7 @@ class LabelEncoderProtected():
         for k in self.nan_list:
             x[x==k] = numpy.nan
 
-        nan_mask = pd.DataFrame(x).isnull()
+        nan_mask = pd.DataFrame(x).isnull().values
 
         x[nan_mask] = self.jibrish_value
 

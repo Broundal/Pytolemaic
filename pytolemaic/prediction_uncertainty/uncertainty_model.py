@@ -12,7 +12,7 @@ from pytolemaic.utils.metrics import Metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import brier_score_loss
 from sklearn.pipeline import Pipeline
-
+import logging
 
 class EncodeWrapper():
     def __init__(self, model, encode_target):
@@ -21,6 +21,9 @@ class EncodeWrapper():
 
     def fit(self, x, y, feature_types=None, feature_names=None):
         self.perform_xencoding = feature_types is not None and FeatureTypes.categorical in feature_types
+        if feature_types is None:
+            logging.warning("Feature types are not available, skipping label encoding")
+
         if self.perform_xencoding:
             self.xencoder = LabelEncoderProtected()
             self.xencoder.fit(x, feature_types=feature_types, feature_names=feature_names)

@@ -565,6 +565,14 @@ class ScatterReport(Report):
             ax.set_ylabel('Ypred - Ytrue')
             ax.set_title('Residual plot')
 
+            if numpy.min(y_true) >=0:
+                mape = Metrics.mape.function(y_true[y_true>0], y_pred[y_true>0])
+                mape = numpy.round(mape, -int(numpy.floor(numpy.log10(numpy.abs(mape))))).clip(0,1)
+                ax.plot([mn, mx], [mape*mn, mape*mx], ':k', label="{}% error".format(mape*100))
+                ax.plot([mn, mx], [-mape*mn, -mape*mx], ':k')
+
+            ax.legend()
+
         plt.draw()
         # plt.show()
 

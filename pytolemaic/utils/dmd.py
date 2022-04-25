@@ -356,9 +356,10 @@ class DMD():
             dmd_train.encode_self(encode_target=is_classification,
                                   nan_list=nan_list,
                                   encoders=None)
-            dmd_test.encode_self(encode_target=is_classification,
-                                 nan_list=nan_list,
-                                 encoders=dmd_train.encoders)
+            if dmd_test is not None:
+                dmd_test.encode_self(encode_target=is_classification,
+                                     nan_list=nan_list,
+                                     encoders=dmd_train.encoders)
 
         return dmd_train, dmd_test
 

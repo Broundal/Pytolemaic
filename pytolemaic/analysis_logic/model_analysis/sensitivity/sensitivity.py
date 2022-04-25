@@ -102,7 +102,7 @@ class SensitivityAnalysis():
         else:
             impact = {name: 1 - score for name, score in scores.items()}
 
-        total_impact = sum([score for score in impact.values()])
+        total_impact = sum([score for score in impact.values()])+1e-10
         impact = {name: float(score / total_impact) for
                   name, score in impact.items()}
         impact = GeneralUtils.round_values(impact)
@@ -189,7 +189,7 @@ class SensitivityAnalysis():
 
         deltas = numpy.abs([shuffled.sensitivities[i] - missing.sensitivities[i] for i in shuffled.sensitivities])
         deltas = deltas[deltas >= max(deltas) * 1e-3]
-        if max(abs(deltas)) == 0:
+        if max(deltas) == 0:
             return 0
 
         score = np.mean(deltas) / max(deltas)
