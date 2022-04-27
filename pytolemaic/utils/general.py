@@ -13,6 +13,7 @@ import pandas
 from matplotlib._color_data import XKCD_COLORS
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+from sklearn.base import is_classifier
 
 global tictoc
 from time import time
@@ -37,7 +38,7 @@ class GeneralUtils():
 
     @classmethod
     def is_classification(cls, model):
-        return hasattr(model, 'predict_proba')
+        return is_classifier(model)
 
     @classmethod
     def dmd_supported(cls, model, dmd):
