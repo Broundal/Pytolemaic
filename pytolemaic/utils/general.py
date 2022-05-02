@@ -2,6 +2,8 @@ import copy
 import logging
 import os
 
+from sklearn.base import RegressorMixin
+
 logger = logging.getLogger("Pytolemaic")
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
@@ -37,7 +39,12 @@ class GeneralUtils():
 
     @classmethod
     def is_classification(cls, model):
-        return hasattr(model, 'predict_proba')
+        """
+        Use the existence of predict_proba method to differentiate between classifier and regressor
+        In order to use a regressor with a predict_proba method introduce an _estimator_type property with value "regressor"
+        """
+        is_regression = getattr(model, "_estimator_type", None) in ["regressor", RegressorMixin._estimator_type]
+        return hasattr(model, 'predict_proba') and callable(model.predict_proba) and not is_regression
 
     @classmethod
     def dmd_supported(cls, model, dmd):
