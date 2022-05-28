@@ -1,4 +1,8 @@
+![PyPI - Version](https://img.shields.io/pypi/v/pytolemaic?color=brightgreen)
 ![Unittests](https://github.com/Broundal/Pytolemaic/workflows/Unittests/badge.svg?branch=master)
+![PyPI - License](https://img.shields.io/pypi/l/pytolemaic?color=orange)
+
+
 
 # Pytolemaic
 
