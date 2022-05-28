@@ -1,5 +1,5 @@
 import copy
-import logging
+
 from typing import Tuple
 
 import numpy
@@ -10,6 +10,9 @@ from pytolemaic.utils.label_encoder_wrapper import LabelEncoderProtected
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
 
 class ShuffleSplitter():
     @classmethod
@@ -29,7 +32,7 @@ class StratifiedSplitter():
                                        shuffle=True, stratify=dmdy.target)
 
         if len(test) < ratio * 0.95 * dmdy.n_samples:
-            logging.warning("Issue encountered with sklearn's stratified split! Reveting to shuffle split")
+            logger.warning("Issue encountered with sklearn's stratified split! Reveting to shuffle split")
             train, test = ShuffleSplitter.split(dmdy=dmdy, ratio=ratio, random_state=random_state)
 
         return train, test
@@ -334,7 +337,7 @@ class DMD():
             raise ValueError("Mismatch! there are {} features and {} feature_types!"
                              .format(len(feature_names), len(feature_types)))
 
-        logging.info("Creating DMDs")
+        logger.info("Creating DMDs")
 
         dmd_train = DMD(x=df_train[feature_names], y=df_train[target_name], splitter=splitter,
                         feature_names=feature_names, feature_types=feature_types)
@@ -351,7 +354,7 @@ class DMD():
         if categorical_encoding:
             if feature_types is None:
                 raise ValueError("categorical_encoding requires feature types")
-            logging.info("Categorical Encoding")
+            logger.info("Categorical Encoding")
 
             dmd_train.encode_self(encode_target=is_classification,
                                   nan_list=nan_list,

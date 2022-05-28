@@ -1,4 +1,4 @@
-import logging
+
 
 import numpy
 from sklearn import tree
@@ -12,6 +12,9 @@ from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
 from resources.datasets.california_housing import CaliforniaHousing
 
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
 
 class DecisionTreeExplainer():
 
@@ -95,7 +98,7 @@ class DecisionTreeExplainer():
             if delta < self.allowed_delta:
                 break
 
-        logging.info('size of neighborhood: {}'.format(x.shape))
+        logger.info('size of neighborhood: {}'.format(x.shape))
         return x
 
     def __create_neighborhood(self, sample: numpy.ndarray, n_samples, train_data_stats: DMD, n_std_radius=0.1):
@@ -253,9 +256,9 @@ class DecisionTreeExplainer():
             depth += 1
             n_leaf = dt.get_n_leaves()
             if n_leaf == prev_n_leaf:
-                logging.warning("Failed training surrogate dt: DT did not converge accurately on given sample.\n"
+                logger.warning("Failed training surrogate dt: DT did not converge accurately on given sample.\n"
                                  "Either increase allowed_delta (>{:.3g}) or decrease min_samples_leaf (<{}) and try again".format(delta[0], self.min_samples_leaf))
-                logging.info("allowed_delta was increased to {:.3g}".format(delta[0]))
+                logger.info("allowed_delta was increased to {:.3g}".format(delta[0]))
                 self.allowed_delta = delta+1e-5
             else:
                 prev_delta = delta
@@ -272,11 +275,11 @@ class DecisionTreeExplainer():
         dt_for_performance.fit(train, y[n:])
 
         if self.is_classification:
-            logging.info('recall score={:.3g}'.format(Metrics.recall.function(y[:n], dt_for_performance.predict(valid))))
-            # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict_proba(sample.reshape(1,-1)), dt.predict_proba(sample.reshape(1,-1))))
+            logger.info('recall score={:.3g}'.format(Metrics.recall.function(y[:n], dt_for_performance.predict(valid))))
+            # logger.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict_proba(sample.reshape(1,-1)), dt.predict_proba(sample.reshape(1,-1))))
         else:
-            logging.info('r2 score={:.3g}'.format(Metrics.r2.function(y[:n], dt_for_performance.predict(valid))))
-            # logging.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict(sample.reshape(1,-1)), dt.predict(sample.reshape(1,-1))))
+            logger.info('r2 score={:.3g}'.format(Metrics.r2.function(y[:n], dt_for_performance.predict(valid))))
+            # logger.info("model prediction = {}, surrogate dt model = {}".format(self.model.predict(sample.reshape(1,-1)), dt.predict(sample.reshape(1,-1))))
 
         return dt
 
@@ -323,7 +326,7 @@ class DecisionTreeExplainer():
                      verticalalignment='top')
             plt.tight_layout()
         except:
-            logging.exception("Failed to add text to graph")
+            logger.exception("Failed to add text to graph")
 
         # ## 2md plot
         #
@@ -350,14 +353,14 @@ if __name__ == '__main__':
     sample = dataset.testing_data[0][3, :]
     explainer = DecisionTreeExplainer()
     explainer.fit(train, model)
-    logging.info('\n'.join(['Data point:']+[train.feature_names[icol] + ' : ' + str(sample[icol]) for icol in range(train.n_features)]))
+    logger.info('\n'.join(['Data point:']+[train.feature_names[icol] + ' : ' + str(sample[icol]) for icol in range(train.n_features)]))
 
-    logging.info('explain')
+    logger.info('explain')
     msg = explainer.explain(sample)
 
-    logging.info('Prediction at point #{} is {}. Explanation:\n{}'.format(3, model.predict(sample.reshape(1,-1)), msg))
+    logger.info('Prediction at point #{} is {}. Explanation:\n{}'.format(3, model.predict(sample.reshape(1,-1)), msg))
 
-    logging.info('plot')
+    logger.info('plot')
     explainer.plot(sample)
 
     plt.show()

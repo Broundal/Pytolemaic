@@ -1,4 +1,4 @@
-import logging
+
 
 import numpy
 import numpy as np
@@ -8,7 +8,9 @@ from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports im
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
+from pytolemaic.utils.general import get_logger
 
+logger = get_logger(__name__)
 
 class SensitivityAnalysis():
     def __init__(self):
@@ -214,7 +216,7 @@ class SensitivityAnalysis():
                 method=SensitivityTypes.missing,
                 raw_scores=False)
         except:
-            logging.error(
+            logger.error(
                 "Failed to calculate sensitivity with {} method. This is expected if your model cannot handle missing values.".format(
                     SensitivityTypes.missing))
 

@@ -1,15 +1,19 @@
 import itertools
-import logging
+
 
 import numpy
 import pandas
 
 from pytolemaic.utils.dmd import DMD
 
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
+
 try:
     from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityOfFeaturesReport
 except:
-    logging.warning('issue with import of SensitivityOfFeaturesReport')
+    logger.warning('issue with import of SensitivityOfFeaturesReport')
     pass
 
 from pytolemaic.utils.base_report import Report

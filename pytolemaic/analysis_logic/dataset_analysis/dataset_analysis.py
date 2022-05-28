@@ -1,4 +1,4 @@
-import logging
+
 
 import numpy
 import scipy.stats
@@ -9,7 +9,9 @@ from pytolemaic.analysis_logic.dataset_analysis.covriance_shift import Covarianc
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import \
     DatasetAnalysisReport, MissingValuesReport
 
+from pytolemaic.utils.general import get_logger
 
+logger = get_logger(__name__)
 
 class DatasetAnalysis():
     def __init__(self, problem_Type, class_count_threshold=10, outliers_n_sigma=(3, 5),
@@ -24,7 +26,7 @@ class DatasetAnalysis():
     def count_unique_classes(self, dataset: DMD) -> dict:
 
         if dataset.categorical_features is None:
-            logging.warning("Unable to analyze categorical features if feature types information is unavailable.")
+            logger.warning("Unable to analyze categorical features if feature types information is unavailable.")
             return {}
 
         if len(dataset.categorical_features) == 0:
@@ -73,7 +75,7 @@ class DatasetAnalysis():
 
     def count_outliers(self, dataset: DMD) -> dict:
         if dataset.categorical_features is None:
-            logging.warning(
+            logger.warning(
                 "Unable to analyze numerical features for outlier if feature types information is unavailable.")
             return {}
 

@@ -1,10 +1,11 @@
 import copy
-import logging
 
 import numpy
 from pytolemaic import FeatureTypes
 from sklearn.preprocessing import LabelEncoder
+from pytolemaic.utils.general import get_logger
 import pandas as pd
+logger = get_logger(__name__)
 
 class LabelEncoderProtected():
     def __init__(self, nan_list=()):
@@ -56,7 +57,7 @@ class LabelEncoderProtected():
         x, nan_mask = self._replace_nan_with_jibbrish(x)
 
         for i, (name, feature_type) in enumerate(zip(self._feature_names, self._feature_types)):
-            logging.info("Fit encoding for feature #{}:'{}'. Feature type is '{}'"
+            logger.info("Fit encoding for feature #{}:'{}'. Feature type is '{}'"
                          .format(i, name, feature_type))
 
             if feature_type == FeatureTypes.categorical:
@@ -95,19 +96,19 @@ class LabelEncoderProtected():
 
         for i, (name, feature_type) in enumerate(zip(self._feature_names, self._feature_types)):
             if feature_type == FeatureTypes.categorical:
-                logging.info("Transform feature #{}:'{}'".format(i, name))
+                logger.info("Transform feature #{}:'{}'".format(i, name))
 
                 x[:,i], e = self._encode_protected(le=self.encoders[i],
                                                    series=x[:,i].astype(str))
                 if e is not None:
-                    logging.warning(e)
+                    logger.warning(e)
 
         x[nan_mask] = numpy.nan
 
         return x.astype(float)
 
 if __name__ == '__main__':
-    import pandas as pd
+
     dmd = pd.DataFrame([list('fff'),
                  list('abc'),
                  list('ddd'),

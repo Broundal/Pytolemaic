@@ -1,5 +1,5 @@
 import copy
-import logging
+
 
 import numpy
 import pandas
@@ -12,6 +12,9 @@ from pytolemaic.utils.constants import FeatureTypes
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
 
 class KDDCup99():
     def __init__(self, subset=False):
@@ -152,7 +155,7 @@ class KDDCup99():
                                                                          stratify=y)
 
         if len(test_inds) < 0.29 * len(y):
-            logging.warning("Issue with sklearn's stratified split. reveting to shuffle split")
+            logger.warning("Issue with sklearn's stratified split. reveting to shuffle split")
             train_inds, test_inds = sklearn.model_selection.train_test_split(numpy.arange(len(y)),
                                                                              test_size=0.3, random_state=0)
 

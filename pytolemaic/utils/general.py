@@ -1,14 +1,47 @@
 import copy
 import logging
 import os
+import sys
+from logging.handlers import TimedRotatingFileHandler
 
 from sklearn.base import RegressorMixin
 
-logger = logging.getLogger("Pytolemaic")
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+def get_logger(name, level="DEBUG", handlers=(), log_path='default'):
+    split = name.split('.')
+    if len(split)>2 and split[0]=='pytolemaic':
+        name = split[0] + '.' + split[-1]
+    logger = logging.getLogger(name)
+    logger.setLevel(level=os.environ.get("LOGLEVEL", level))
 
-root = logging.getLogger("matplotlib")
-root.setLevel(os.environ.get("LOGLEVEL", "WARNING"))
+    if handlers is not None:
+        if len(handlers)==0:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            fmt = logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s]: %(message)s",
+                                    datefmt='%Y-%m-%d %H:%M:%S')
+            stream_handler.setFormatter(fmt)
+            stream_handler.setLevel(max(logger.level, logging.INFO))
+
+            if log_path == 'default':
+                abs_path = os.path.abspath(__file__)
+                log_path = os.path.join(abs_path, '../../../logs/log.log')
+            file_handler = TimedRotatingFileHandler(log_path, when='midnight')
+            file_handler.setFormatter(fmt)
+            file_handler.setLevel(logging.DEBUG)
+
+            handlers = [stream_handler, file_handler]
+
+        for h in handlers:
+            logger.addHandler(h)
+
+    return logger
+
+logger = get_logger(__name__)
+
+matplotlib_logger = logging.getLogger("matplotlib")
+matplotlib_logger.setLevel(os.environ.get("LOGLEVEL", "WARNING"))
+
+
+
 
 import numpy
 import pandas
@@ -25,13 +58,13 @@ def tic(name=None):
 
     tictoc = time()
     if name is not None:
-        logging.info("Calculating {}...".format(name))
+        logger.info("Calculating {}...".format(name))
 
 
 def toc(name=None):
     global tictoc
     if name is not None:
-        logging.info("Calculating {}... Done {:.2g} seconds".format(name, time() - tictoc))
+        logger.info("Calculating {}... Done {:.2g} seconds".format(name, time() - tictoc))
     return time() - tictoc
 
 

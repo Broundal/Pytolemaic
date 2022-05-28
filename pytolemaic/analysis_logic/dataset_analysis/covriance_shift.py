@@ -1,4 +1,4 @@
-import logging
+
 import multiprocessing
 
 import numpy
@@ -10,7 +10,9 @@ from pytolemaic.utils.general import GeneralUtils
 
 from pytolemaic.analysis_logic.dataset_analysis.covariance_shift_report import CovarianceShiftReport
 
+from pytolemaic.utils.general import get_logger
 
+logger = get_logger(__name__)
 
 class CovarianceShiftCalculator():
 
@@ -104,7 +106,7 @@ class CovarianceShift():
         try:
             from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity import SensitivityAnalysis
         except:
-            logging.exception("Failed to import SensitivityAnalysis")
+            logger.exception("Failed to import SensitivityAnalysis")
             return None
 
         self._sensitivity = SensitivityAnalysis()

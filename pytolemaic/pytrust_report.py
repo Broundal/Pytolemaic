@@ -1,5 +1,4 @@
 import itertools
-import logging
 import time
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
@@ -7,6 +6,10 @@ from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import Scor
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityFullReport
 from pytolemaic.analysis_logic.quality_report import QualityReport
 from pytolemaic.utils.base_report import Report
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
+
 
 
 class PyTrustReport(Report):
@@ -20,11 +23,11 @@ class PyTrustReport(Report):
         ts = time.time()
         try:
             # some report may fail due to lack of available information
-            logging.info("Calculating {}...".format(attr))
+            logger.info("Calculating {}...".format(attr))
             out = getattr(pytrust, attr, None)
-            logging.info("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
+            logger.info("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
         except:
-            logging.info("Failed to calculate {}".format(attr))
+            logger.info("Failed to calculate {}".format(attr))
             out = None
 
         return out

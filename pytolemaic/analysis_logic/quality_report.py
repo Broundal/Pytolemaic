@@ -1,4 +1,3 @@
-import logging
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport, ScoringMetricReport
@@ -7,6 +6,9 @@ from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.constants import REGRESSION
 from pytolemaic.utils.metrics import Metrics
 
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
 
 class TestSetQualityReport(Report):
     def __init__(self, scoring_report: ScoringFullReport, dataset_analysis_report: DatasetAnalysisReport):
@@ -121,7 +123,7 @@ class ModelQualityReport(Report):
             secondary_metric = Metrics.recall.name
 
         if secondary_metric not in self.scoring_report.metric_scores:
-            logging.warning("secondary metric {} is not available in scoring report".format(secondary_metric))
+            logger.warning("secondary metric {} is not available in scoring report".format(secondary_metric))
             return 0
         else:
             return Metrics.metric_as_loss(

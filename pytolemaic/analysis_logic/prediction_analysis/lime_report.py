@@ -1,11 +1,14 @@
-import logging
 
 import numpy
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
+
 try:
     from lime.lime_tabular import LimeTabularExplainer
 except Exception as e:
-    logging.exception("Failed to import lime module:")
-    logging.error("Please try to run 'pip install lime'")
+    logger.exception("Failed to import lime module:")
+    logger.error("Please try to run 'pip install lime'")
     raise
 
 from matplotlib import pyplot as plt
@@ -45,7 +48,7 @@ class LimeExplainer():
         x = dmd_train.values.astype(float, copy=True)
         nan_mask = ~numpy.isfinite(x)
         if numpy.any(nan_mask):
-            logging.warning(
+            logger.warning(
                 "Lime cannot handle missing values. Fillna={} was used to coerce the issue.".format(self.fillna))
             x[nan_mask] = self.fillna
 
@@ -93,7 +96,7 @@ class LimeExplainer():
             label = self.model.predict(sample.reshape(1, -1))
             return dict(exp.as_list(label=int(label)))
         except:
-            logging.exception("Failed to produce lime explanation for sample {}".format(sample))
+            logger.exception("Failed to produce lime explanation for sample {}".format(sample))
             return None
 
     def plot(self, sample: numpy.ndarray):
@@ -111,7 +114,7 @@ class LimeExplainer():
             plt.tight_layout()
             plt.draw()
         except ValueError as e:
-            logging.exception("Failed to plot Lime for instance\n{}".format(sample))
+            logger.exception("Failed to plot Lime for instance\n{}".format(sample))
 
     def _lime_explaination(self, sample, num_samples=16000):
         model_regressor = ElasticNetWrapper(random_state=0, l1_ratio=0.9, alpha=1e-3, warm_start=True, copy_X=False,
@@ -146,7 +149,7 @@ class LimeExplainer():
         sample = numpy.array(sample, dtype=float, copy=True)
         nan_mask = ~numpy.isfinite(sample)
         if numpy.any(nan_mask):
-            logging.warning("Lime cannot handle missing values. Fillna(0) was used to coerce the issue.")
+            logger.warning("Lime cannot handle missing values. Fillna(0) was used to coerce the issue.")
             sample = numpy.copy(sample)
             sample[nan_mask] = self.fillna
 
@@ -167,12 +170,12 @@ class LimeExplainer():
                 converged = self._convergence_acheived(lower_exp=lower_exp, higher_exp=higher_exp)
 
             if not converged:
-                logging.warning("Lime explainer did not converge with {} samples".format(num_samples))
+                logger.warning("Lime explainer did not converge with {} samples".format(num_samples))
 
             return exp
 
         except ValueError as e:
-            logging.exception("Failed to explain Lime for instance\n{}".format(sample))
+            logger.exception("Failed to explain Lime for instance\n{}".format(sample))
             raise
 
 

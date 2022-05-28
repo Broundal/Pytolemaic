@@ -8,7 +8,9 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION
 from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.general import GeneralUtils
 from pytolemaic.utils.metrics import Metrics
-import logging
+from pytolemaic.utils.general import get_logger
+
+logger = get_logger(__name__)
 
 class Scoring():
     def __init__(self, metrics: list = None):
@@ -108,6 +110,6 @@ class Scoring():
                 error_bars[ind2] = uncertainty_model.uncertainty(dmd_2).ravel()
             return error_bars
         except:
-            logging.exception("Failed to calculate error bars")
+            logger.exception("Failed to calculate error bars")
             return numpy.zeros(dmd_test.n_samples)
 

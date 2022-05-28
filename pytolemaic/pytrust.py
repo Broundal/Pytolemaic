@@ -1,5 +1,3 @@
-import logging
-
 import numpy
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis, CovarianceShift
@@ -18,9 +16,10 @@ from pytolemaic.prediction_uncertainty.uncertainty_model import \
 from pytolemaic.pytrust_report import PyTrustReport
 from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION, FeatureTypes
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
-from pytolemaic.utils.general import GeneralUtils
+from pytolemaic.utils.general import GeneralUtils, get_logger
 from pytolemaic.utils.metrics import Metrics, Metric
 
+logger = get_logger(__name__)
 
 def cache(func):
     def cache_wrapper(self, *args, **kwargs):
@@ -500,7 +499,7 @@ class PyTrust():
                 
         # See usage example below:\n
         """
-        logging.info(example)
+        logger.info(example)
         example += cls.print_usage_example()
         return example
 
@@ -559,7 +558,7 @@ class PyTrust():
             example.append('\n**************\n')
 
         example = "\n".join(example)
-        logging.info(example)
+        logger.info(example)
         return example
 
 
