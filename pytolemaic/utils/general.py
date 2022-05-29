@@ -6,12 +6,23 @@ from logging.handlers import TimedRotatingFileHandler
 
 from sklearn.base import RegressorMixin
 
-def get_logger(name, level="DEBUG", handlers=(), log_path='default'):
-    split = name.split('.')
-    if len(split)>2 and split[0]=='pytolemaic':
-        name = split[0] + '.' + split[-1]
-    logger = logging.getLogger(name)
-    logger.setLevel(level=os.environ.get("LOGLEVEL", level))
+def add_filehandler(name='pytolemaic', log_path='default'):
+    fmt = logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s]: %(message)s")
+
+    if log_path == 'default':
+        abs_path = os.path.abspath(__file__)
+        log_path = os.path.join(abs_path, '../../../logs/log.log')
+    file_handler = TimedRotatingFileHandler(log_path, when='midnight')
+    file_handler.setFormatter(fmt)
+    file_handler.setLevel(logging.DEBUG)
+    logger = get_logger(name)
+    logger.addHandler(file_handler)
+    return logger
+
+def set_logger(name, level="DEBUG", handlers=()):
+    logger = get_logger(name)
+    if level:
+        logger.setLevel(level=os.environ.get("LOGLEVEL", level))
 
     if handlers is not None:
         if len(handlers)==0:
@@ -21,20 +32,22 @@ def get_logger(name, level="DEBUG", handlers=(), log_path='default'):
             stream_handler.setFormatter(fmt)
             stream_handler.setLevel(max(logger.level, logging.INFO))
 
-            if log_path == 'default':
-                abs_path = os.path.abspath(__file__)
-                log_path = os.path.join(abs_path, '../../../logs/log.log')
-            file_handler = TimedRotatingFileHandler(log_path, when='midnight')
-            file_handler.setFormatter(fmt)
-            file_handler.setLevel(logging.DEBUG)
-
-            handlers = [stream_handler, file_handler]
+            handlers = [stream_handler]
 
         for h in handlers:
             logger.addHandler(h)
 
     return logger
 
+def get_logger(name):
+    return logging.getLogger(name)
+
+    # split = name.split('.')
+    # name = split[0]
+    # if len(split)>2 and split[0]=='pytolemaic':
+    #     name = split[0] + '.' + split[-1]
+
+set_logger(name='pytolemaic')
 logger = get_logger(__name__)
 
 matplotlib_logger = logging.getLogger("matplotlib")
