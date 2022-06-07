@@ -18,25 +18,29 @@ class PyTrustReport(Report):
         self.pytrust = pytrust
 
     @classmethod
-    def _try_catch_report(cls, pytrust, attr):
+    def _get_report(cls, pytrust, attr, verbose=True):
 
         ts = time.time()
         try:
             # some report may fail due to lack of available information
-            logger.info("Calculating {}...".format(attr))
+            if verbose:
+                logger.info("Calculating {}...".format(attr))
             out = getattr(pytrust, attr, None)
-            logger.info("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
+            if verbose:
+                logger.info("Calculating {}... Done ({:.1f} seconds)".format(attr, time.time() - ts))
         except:
             logger.info("Failed to calculate {}".format(attr))
             out = None
 
         return out
 
+    @property
+    @cache
     def _reports(self):
-        return {key: self._try_catch_report(self.pytrust, key) for key in self.to_dict_meaning().keys()}
+        return {key: self._get_report(self.pytrust, key, verbose=True) for key in self.to_dict_meaning().keys()}
 
     def to_dict(self, printable=False):
-        return {key: report.to_dict(printable=printable) for key, report in self._reports().items() if
+        return {key: report.to_dict(printable=printable) for key, report in self._reports.items() if
                 report is not None}
 
     @classmethod
@@ -48,15 +52,18 @@ class PyTrustReport(Report):
                 }
 
     def plot(self):
-        for report in self._reports().values():
+        for report in self._reports.values():
             if report is not None:
                 report.plot()
 
     def insights(self) -> list:
-        reports = self._reports()
+        reports = self._reports.copy()
         reports.pop('quality_report')
         l = [report.insights() for report in reports.values() if report is not None]
         if any(l):
             return list(itertools.chain(*l))
         else:
             return []
+
+    def __getattr__(self, item):
+        return self._get_report(item, verbose=False)

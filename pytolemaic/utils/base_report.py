@@ -6,13 +6,13 @@ class Report():
         raise NotImplementedError
 
     @classmethod
-    def to_dict_meaning(cls):
+    def to_dict_meaning(cls)->dict:
         raise NotImplementedError
 
-    def plot(self):
+    def plot(self)->None:
         raise NotImplementedError
 
-    def insights(self):
+    def insights(self)->List[str]:
         raise NotImplementedError
 
     def _add_cls_name_prefix(self, l):
