@@ -2,7 +2,7 @@ import unittest
 
 from examples.interesting_examples import adult_example, california_housing_example, kddcup99_example, \
     prediction_uncertainty_adult_example, simple_example_classification, simple_example_regression, \
-    prediction_uncertainty_california_example, titanic_example, active_learning_example
+    prediction_uncertainty_california_example, titanic_example, active_learning_example, anomalies_in_dataset_example
 
 
 class TestInterestingExamples(unittest.TestCase):
@@ -36,3 +36,6 @@ class TestInterestingExamples(unittest.TestCase):
 
     def test_active_learning(self):
         active_learning_example.run(fast=True)
+
+    def test_anomalies_dataset(self):
+        anomalies_in_dataset_example.run(fast=True)

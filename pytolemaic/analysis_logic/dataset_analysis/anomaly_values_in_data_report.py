@@ -1,7 +1,8 @@
 import numpy
+import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.utils.multiclass import unique_labels
 
+from pytolemaic.utils.dmd import DMD
 from pytolemaic.utils.base_report import Report
 
 from pytolemaic.utils.general import get_logger
@@ -33,8 +34,8 @@ class AnomaliesInDataReport(Report):
         return dict(
             yt="Value that appear in data",
             yp="Expected value (model prediction)",
-            probabiliy_of_yt="y_proba of correct class (classification)",
-            probabiliy_of_yp="y_proba (classification)",
+            probability_of_yt="y_proba of correct class (classification)",
+            probability_of_yp="y_proba (classification)",
             n_stds = "Deviation from mean as # of stds (regression)",
             yrange="Range of feature: max(y) - min(y) (regression)",
             anomaly_score='Anomaly score. "1-1/n_stds" for numerical and "y_proba" for categorical',
@@ -57,7 +58,7 @@ class AnomaliesInDataReport(Report):
 
             v = report['anomaly_score_ratio']
             if numpy.all(v<1): # skip
-                logger.info('Feature "{}" hsa no anomalies, skipping'.format(feature))
+                logger.info('Feature "{}" has no anomalies - nothing to plot.'.format(feature))
                 continue
 
             if report['n_stds'] is not None:
@@ -69,7 +70,7 @@ class AnomaliesInDataReport(Report):
 
     def _plot_regression(self, feature_name, report, plot_only_above_threshold):
         # 1 scatter
-        ax = plt.figure(figsize=(10,10)).add_subplot()
+        ax = plt.figure(figsize=(10,5)).add_subplot()
 
         is_finite = numpy.isfinite(report['yt'])
         if plot_only_above_threshold:
@@ -80,7 +81,11 @@ class AnomaliesInDataReport(Report):
 
         x,y = report['yt'][subset], report['yp'][subset]
         ax.scatter(x,y, c=report['anomaly_score_ratio'][subset])
-        ax.plot([numpy.min(x), numpy.max(x)], [numpy.min(x), numpy.max(x)],':')
+
+        mn = numpy.min([x.min(), y.min()])
+        mx = numpy.max([x.max(), y.max()])
+        ax.plot([mn, mx], [mn, mx],':k')
+
         ax.set_xlabel('"{}": Value in data'.format(feature_name))
         ax.set_ylabel('"{}": Expected value'.format(feature_name))
         ax.set_title('Scatter plot for actual and expected values for feature "{}"'.format(feature_name))
@@ -91,18 +96,37 @@ class AnomaliesInDataReport(Report):
 
     def _plot_classification(self, feature_name, report, plot_only_above_threshold):
         from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ConfusionMatrixReport
-        from sklearn.metrics import confusion_matrix
+        class AnomalousConfusionMatrixReport(ConfusionMatrixReport):
 
-        fig, (ax1, ax2) = plt.subplots(1,2,figsize=(15, 10))
+            def plot(self, axs=None, figsize=(12, 5), title='Confusion Matrix'):
+                if axs is None:
+                    fig, axs = plt.subplots(1, 1, figsize=figsize)
 
-        is_finite = numpy.isfinite(report['yt'])
+                cm, labels, _ = self.cm_no_empty_classes(self.confusion_matrix, self.labels)
+
+                self._plot_confusion_matrix(confusion_matrix=cm,
+                                            labels=labels,
+                                            title=title,
+                                            ax=axs)
+
+                plt.tight_layout()
+
+        fig, (ax1, ax2) = plt.subplots(1,2,figsize=(10, 5)) # no sharex/sharey because 2nd matrix is more sparse.
+
+        is_finite = numpy.isfinite(report['yt'].astype(float))
+
+        if self.categorical_encoding and self.categorical_encoding.get(feature_name, None):
+            labels = [self.categorical_encoding[feature_name][k] for k in
+                      sorted(self.categorical_encoding[feature_name].keys())]
+        else:
+            labels = None
 
         for ax in [ax1, ax2]: #ax3
             # ax3 is used to weight confusion matrix samples by anomaly score. Doesn't seem to be interesting...
-            yt = report['yt'][is_finite]
-            yp = report['yp'][is_finite]
+            yt = report['yt'][is_finite].astype(int)
+            yp = report['yp'][is_finite].astype(int)
             anomaly_score_ratio = report['anomaly_score_ratio'][is_finite]
-            cm_labels = unique_labels(yt, yp)
+
 
             if ax==ax1:
                 title='Confusion matrix ("{}")'.format(feature_name)
@@ -120,51 +144,116 @@ class AnomaliesInDataReport(Report):
                     title = 'Confusion matrix for anomalous values weighted by anomaly score ("{}")'.format(feature_name)
                     weights = anomaly_score_ratio[subset]
 
-            cm = confusion_matrix(y_true=yt, y_pred=yp, labels=cm_labels,
-                                  sample_weight=weights).tolist()
+            acmr = AnomalousConfusionMatrixReport(y_true=yt, y_pred=yp, labels=labels, sample_weight=weights)
 
-            ConfusionMatrixReport._plot_confusion_matrix(
-                confusion_matrix=cm,
-                labels=[self.categorical_encoding[feature_name][k] for k in cm_labels],
-                title=title,
-                ax=ax)
+            acmr.plot(axs=ax, title=title)
+
+
 
         plt.tight_layout()
         # plt.show()
 
-    def insights(self, n_top_features=5):
+    def insights(self, n_top_features=5, n_top_samples=5, train_data=None):
         insights_out = []
         n_anomalous_samples = {}
         scores = {}
         features = self._report.keys()
+        anomaloues_samples={}
+
+        # extract data
         for feature in features:
             report = self._report[feature]
             v = report['anomaly_score_ratio']
+
+            n_anomalies = numpy.sum(v >= 1)
+            if n_anomalies == 0:
+                continue
             # if numpy.all(v < 1):  # skip
             #     continue
-            n_anomalous_samples[feature] = numpy.sum(v>=1)
+            n_anomalous_samples[feature] = n_anomalies
             scores[feature] = report['metric_score']
 
-        features = sorted(features, key=lambda f: n_anomalous_samples[f], reverse=True)
-        if n_anomalous_samples[features[0]]>0:
-            features = [f for f in features if n_anomalous_samples[f]>0]
+            inds = numpy.arange(len(v))
+            inds = inds[v > 1]
+            inds = sorted(inds, key=lambda i: v[i], reverse=True)[:n_top_samples]
 
-            n_anomalous_samples_ = [n_anomalous_samples[f] for f in features]
-            n_features_with_anomaly = numpy.sum(numpy.array(n_anomalous_samples_)>0)
+            anomaloues_samples[feature] = inds
+
+        if not n_anomalous_samples:
+            triple_dots = "..." if len(features)>n_top_features else "."
+            return ["No anomalous features found in features: {}".format(list(features)[:n_top_features]) + triple_dots]
+        else:
+            # only anomalous features
+            features = n_anomalous_samples.keys()
+            # sort by number of anomalies
+            features = sorted(features, key=lambda f: n_anomalous_samples[f], reverse=True)
+
+            # convert to array
+            n_anomalous_samples_ = numpy.array([n_anomalous_samples[f] for f in features])
+            n_features_with_anomaly = numpy.sum(n_anomalous_samples_>0)
             insight = "Found {} features with anomalous samples.".format(n_features_with_anomaly)
             insights_out.append(insight)
-
 
             insight = "Features with most anomalies are {} with {} anomalies respectively"\
                 .format(features[:n_top_features], n_anomalous_samples_[:n_top_features])
             insights_out.append(insight)
 
+            insight = ""
+            metrics = []
+            for feature in features:
+                insight += 'Anomalous samples in feature "{}":\n'.format(feature)
+                indices = anomaloues_samples[feature]
+
+                report = self._report[feature]
+                metrics.append(report['metric'])
+                report = {key: report[key][indices] for key in report
+                          if isinstance(report[key], numpy.ndarray) and len(report[key])==len(report['yt'])}
+                report['indices'] = indices
+                for key, value in report.items():
+                    report[key] = numpy.round(numpy.array(report[key]).tolist(), 3).tolist() # tolist() before round is to get desired rounding
+
+                # print(report)
+                df = pd.DataFrame(report)
+                if train_data is not None:
+                    if isinstance(train_data, numpy.ndarray):
+                        train_data = pd.DataFrame(train_data)
+                    elif isinstance(train_data, pd.DataFrame):
+                        train_data = train_data.copy()
+                        train_data.reset_index(inplace=True)
+                    elif isinstance(train_data, DMD):
+                        train_data = pd.DataFrame(train_data.values,  columns=train_data.feature_names)
+                    else:
+                        raise ValueError("type {} is not supported".format(type(train_data)))
+
+                    df = pd.merge(train_data, df)
+
+                if self.categorical_encoding and self.categorical_encoding.get(feature, None):
+                    df['yt'] = df['yt'].apply(lambda k: self.categorical_encoding[feature][k])
+                    df['yp'] = df['yp'].apply(lambda k: self.categorical_encoding[feature][k])
+
+                df.rename(columns={'yt': 'Value in data', 'yp': 'Value expected by model'},
+                          inplace=True)
+
+                df.sort_values('indices', inplace=True)
+                df.set_index('indices',inplace=True, drop=True)
+                mx = pd.get_option('display.max_columns')
+                pd.set_option('display.max_columns',None)
+                insight += "{}\n".format(df.head(n_top_samples) )
+                pd.set_option('display.max_columns',mx)
+            insights_out.append(insight)
+
+            # sort by features easiest to predict by other features:
             features = sorted(features, key=lambda f: scores[f], reverse=True)
             scores = [scores[f] for f in features]
             n_anomalous_samples_ = [n_anomalous_samples[f] for f in features]
 
-            insight = "Features with highest score are {} with {}/{} score / # anomalies respectively" \
-                .format(features[:n_top_features], scores[:n_top_features], n_anomalous_samples_[:n_top_features])
+            metrics = list(set(metrics))
+            metrics = " or ".join(metrics) + " metric" + "s"*(len(metrics)-1)
+
+            insight = "Features easiest to predict based on other features are {} with scores={} ({}). Number of anomalies in these features: {}" \
+                .format(features[:n_top_features],
+                        numpy.round(scores[:n_top_features],3),
+                        metrics, n_anomalous_samples_[:n_top_features])
             insights_out.append(insight)
 
         return insights_out

@@ -1,10 +1,12 @@
 import itertools
 import time
 
+from pytolemaic.analysis_logic.dataset_analysis.anomaly_values_in_data_report import AnomaliesInDataReport
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis_report import DatasetAnalysisReport
 from pytolemaic.analysis_logic.model_analysis.scoring.scoring_report import ScoringFullReport
 from pytolemaic.analysis_logic.model_analysis.sensitivity.sensitivity_reports import SensitivityFullReport
 from pytolemaic.analysis_logic.quality_report import QualityReport
+
 from pytolemaic.utils.base_report import Report
 from pytolemaic.utils.general import get_logger
 
@@ -35,8 +37,10 @@ class PyTrustReport(Report):
         return out
 
     @property
-    @cache
     def _reports(self):
+        logger.info("Calculating all possible reports, this may take some time.\n"
+                    "It's possible to access the reports directly through the following attributes:\n"
+                    +"\n".join(["* pytrust.{} or pytrust.report.{}".format(key) for key in self.to_dict_meaning().keys()]))
         return {key: self._get_report(self.pytrust, key, verbose=True) for key in self.to_dict_meaning().keys()}
 
     def to_dict(self, printable=False):
@@ -49,6 +53,7 @@ class PyTrustReport(Report):
                 'quality_report': QualityReport.to_dict_meaning(),
                 'dataset_analysis_report': DatasetAnalysisReport.to_dict_meaning(),
                 'sensitivity_report': SensitivityFullReport.to_dict_meaning(),
+                'anomalies_in_data_report': AnomaliesInDataReport.to_dict_meaning()
                 }
 
     def plot(self):

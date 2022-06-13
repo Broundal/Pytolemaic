@@ -1,5 +1,5 @@
 from pytolemaic.utils.general import GeneralUtils
-
+from typing import List
 
 class Report():
     def to_dict(self, printable=False):

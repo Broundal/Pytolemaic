@@ -1,32 +1,39 @@
 from typing import List
 
 from matplotlib import pyplot as plt
-
-import time
-
-import gower
 import numpy
 from xgboost import XGBRegressor
 
+from pytolemaic import FeatureTypes
 from pytolemaic.utils.dmd import DMD
-from pytolemaic.utils.constants import FeatureTypes
+from pytolemaic.utils.general import get_logger
 from pytolemaic.utils.metrics import Metrics, Metric
 from sklearn.preprocessing import LabelEncoder
+from pytolemaic.analysis_logic.dataset_analysis.anomaly_values_in_data_report import AnomaliesInDataReport
 
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-class FeatureValueAnomalyDetector():
+logger = get_logger(__name__)
 
-    def __init__(self, base_estimator='dt', use_target=True,
+class AnomalyValuesDetector():
+
+    def __init__(self, use_target=True,
                  reg_metric='r2', clas_metric='recall',
-                 clas_threshold=0.99,
-                 reg_method = 'binning',
+                 clas_threshold=0.95,
+                 reg_method = 'std',
                  contamination= 0.02,
-                 n_stds = None,
+                 n_stds = 3,
                  range_ratio = 0.05,
-                 **submodel_kwargs):
-        self.base_estimator = base_estimator
+                 **kwargs):
+        """
+        reg_metric : metric to assess regression quality - no effect on anomalies analysis
+        clas_metric : metric to assess classification quality - no effect on anomalies analysis
+        clas_threshold : Threshold to determine level on confidence requried for anomaly score
+        reg_method: 'std' or 'binning'. 'std': anomaly is measured by distance from mean; 'binning':
+                     binning is performed and then anomaly is measured as mis-classification
+        contamination: percentage of samples to be considered as anomalies - determine threshold but not anomaly score.
+        n_std: if reg_method='std', set threshold distance from mean > # of stds - determine threshold but not anomaly score.
+        range_ratio: if reg_method='std' anomaly score will be resetted if distance/range < range_ratio.
+        """
 
-        self.submodel_kwargs = submodel_kwargs
         self.use_target = use_target
         self.models = {}
 
@@ -37,6 +44,7 @@ class FeatureValueAnomalyDetector():
         self.contamination = contamination
         self.n_stds = n_stds
         self.range_ratio = range_ratio # to discard small anomalies when std is almost 0
+
 
     def _get_metric(self, metric_name)->Metric:
         metric = Metrics.supported_metrics().get(metric_name, None)
@@ -49,12 +57,16 @@ class FeatureValueAnomalyDetector():
         from xgboost import XGBRegressor, XGBClassifier
         kwargs = dict(random_state=0,
                        n_estimators=250,
-                       n_jobs=-1)
-        kwargs.update(self.submodel_kwargs)
+                       n_jobs=-1,
+                       eval_metric='merror',
+                       use_label_encoder=False)
         model = XGBClassifier(**kwargs) if is_classification else XGBRegressor(**kwargs)
+
         return model
 
-    def analyze(self, dmd_train: DMD, features_to_analyze:List[str]=None, perform_extra_iteration=False):
+    def analyze(self, dmd_train: DMD, features_to_analyze:List[str]=None, perform_extra_iteration=False,
+                max_samples=None):
+
         inds1, inds2, train1, train2 = self.split_train_into_2_parts(dmd_train)
 
         if features_to_analyze:
@@ -70,11 +82,12 @@ class FeatureValueAnomalyDetector():
         reports = {}
         for ifeature in features_to_analyze:
             name = dmd_train.feature_names[ifeature]
-            print("\n\nAnalyzing feature #{}: {}".format(ifeature, name))
+            logger.info("\n\nAnalyzing feature #{}: {}".format(ifeature, name))
 
             report1, report2 = self.calculate_anomaly_scores(
-                 train1=train1, train2=train2, ifeature=ifeature,
-                 feature_types=dmd_train.feature_types, perform_extra_iteration=perform_extra_iteration)
+                train1=train1, train2=train2, ifeature=ifeature,
+                feature_types=dmd_train.feature_types, perform_extra_iteration=perform_extra_iteration,
+                max_samples=max_samples)
 
             for report in [report1, report2]:
                 report['anomaly_score_ratio'] = report['anomaly_score']/report['threshold']
@@ -89,9 +102,9 @@ class FeatureValueAnomalyDetector():
                     v2 = numpy.array(v2)
                 if isinstance(v1, numpy.ndarray):
                     if len(v1.shape)==1:
-                        v = numpy.zeros(dmd_train.n_samples) #1D
+                        v = numpy.zeros(dmd_train.n_samples, dtype=v1.dtype) #1D
                     else:
-                        v = numpy.zeros((dmd_train.n_samples, v1.shape[1])) #2D
+                        v = numpy.zeros((dmd_train.n_samples, v1.shape[1]), dtype=v1.dtype) #2D
                     v[inds1] = v1
                     v[inds2] = v2
                     report[k] = v
@@ -101,7 +114,7 @@ class FeatureValueAnomalyDetector():
                     report[k] = (v1+v2)/2
 
             v = report['anomaly_score_ratio']
-            print("Found {} samples with anomaly score >= {:.3g}, and {} (out of {}) samples with anomaly score > 0".format(
+            logger.info("Found {} samples with anomaly score >= {:.3g}, and {} (out of {}) samples with anomaly score > 0".format(
                 sum(v>=1), report['threshold'], sum(v > 0), len(v)))
 
             reports[name] = report
@@ -121,7 +134,7 @@ class FeatureValueAnomalyDetector():
         #
         #
         #     v = anomaly_score_threshold[:, ifeature]
-        #     print("Found {} samples with anomaly score >= {:.3g}, and {} (out of {}) samples with anomaly score > 0".format(
+        #     logger.info("Found {} samples with anomaly score >= {:.3g}, and {} (out of {}) samples with anomaly score > 0".format(
         #         sum(v>=1), min(report1['threshold'], report2['threshold']), sum(v > 0), len(v)))
         #
         #     if False:
@@ -143,7 +156,7 @@ class FeatureValueAnomalyDetector():
         #         v[v<1]=0
         #
         #
-        #         print(ifeature, dmd_train.feature_names[ifeature], sum(v), sum(v)/len(v))
+        #         logger.info(ifeature, dmd_train.feature_names[ifeature], sum(v), sum(v)/len(v))
         #         plt.plot(v, '-', label='{}'.format(dmd_train.feature_names[ifeature]))
         #     plt.legend()
         #     plt.show()
@@ -164,30 +177,36 @@ class FeatureValueAnomalyDetector():
         #
         # return anomaly_score_raw
 
-    def calculate_anomaly_scores(self, train1, train2, feature_types, ifeature, perform_extra_iteration):
-        print("Analysis started")
+    def calculate_anomaly_scores(self, train1, train2, feature_types, ifeature, perform_extra_iteration, max_samples=None):
+        logger.info("Analysis started")
 
         report2 = self._analyze_one_way(ifeature, train=train1, validation=train2,
-                                        feature_types=feature_types, metric_score_only=perform_extra_iteration)
+                                        feature_types=feature_types, metric_score_only=perform_extra_iteration,
+                                        max_samples=max_samples)
         report1 = self._analyze_one_way(ifeature, train=train2, validation=train1,
-                                        feature_types=feature_types)
+                                        feature_types=feature_types,
+                                        max_samples=max_samples)
         metric = report1['metric']
-        print("P1 train, P2 test ({}): {:.3g}".format(metric, report2['metric_score']))
-        print("P2 train, P1 test ({}): {:.3g}".format(metric, report1['metric_score']))
+        logger.info("P1 train, P2 test ({}): {:.3g}".format(metric, report2['metric_score']))
+        logger.info("P2 train, P1 test ({}): {:.3g}".format(metric, report1['metric_score']))
 
         if perform_extra_iteration: # clean the train data from anomalies and re-iterate
             # 1st iteration
             inds_to_keep1 = report1['anomaly_score'] < report1['threshold']
+
             report2 = self._analyze_one_way(ifeature=ifeature, train=train1[inds_to_keep1, :], validation=train2,
-                                            feature_types=feature_types)
+                                            feature_types=feature_types,
+                                            max_samples=max_samples)
 
             # 2nd iteration
             inds_to_keep2 = report2['anomaly_score'] < report2['threshold']
-            report1 = self._analyze_one_way(ifeature=ifeature, train=train2[inds_to_keep2, :], validation=train1,
-                                            feature_types=feature_types)
 
-            print("Cleaned P1 train, P2 test ({}): {:.3g}".format(metric, report2['metric_score']))
-            print("Cleaned P2 train, P1 test ({}): {:.3g}".format(metric, report1['metric_score']))
+            report1 = self._analyze_one_way(ifeature=ifeature, train=train2[inds_to_keep2, :], validation=train1,
+                                            feature_types=feature_types,
+                                            max_samples=max_samples)
+
+            logger.info("Cleaned P1 train, P2 test ({}): {:.3g}".format(metric, report2['metric_score']))
+            logger.info("Cleaned P2 train, P1 test ({}): {:.3g}".format(metric, report1['metric_score']))
         return report1, report2
 
     def split_train_into_2_parts(self, dmd_train):
@@ -253,12 +272,12 @@ class FeatureValueAnomalyDetector():
         u, c = numpy.unique(y_, return_counts=True)
         if len(bins) != max(y_) or len(bins) > max_bins or min(c) < 20:
             # empty bins
-            print("len(bin)=={}, max(y)=={}".format(len(bins), max(y)))
+            logger.debug("len(bin)=={}, max(y)=={}".format(len(bins), max(y)))
 
             bins = numpy.percentile(y, numpy.arange(max_bins) * 100/max_bins)
             bins = numpy.histogram_bin_edges(y, bins=bins)
             bins = numpy.unique(bins)
-            print("len(bin)=={}, max(y)=={}".format(len(bins), max(y)))
+            logger.debug("len(bin)=={}, max(y)=={}".format(len(bins), max(y)))
         return bins
 
 
@@ -289,13 +308,13 @@ class FeatureValueAnomalyDetector():
     #             break
     #
     #     if p_out is None:
-    #         print("highpass:clas_threshold {} not met".format(self.clas_threshold))
+    #         logger.info("highpass:clas_threshold {} not met".format(self.clas_threshold))
     #         return []
     #     else:
     #
     #         high_pass = numpy.arange(len(yv))[max_yproba > p_out]
     #         out = [j for j in high_pass if yp[j] != yv[j] and isfinite[j]]
-    #         print("highpass: clas_threshold with threshold {:.3g} - len(out)={}".format(p_out, len(out)))
+    #         logger.info("highpass: clas_threshold with threshold {:.3g} - len(out)={}".format(p_out, len(out)))
     #
     #         return out
 
@@ -333,7 +352,7 @@ class FeatureValueAnomalyDetector():
                 correct = candidates >= p  # candidate==nan --> cond=False. '>=' because p can be 1
                 denominator = numpy.sum((max_yproba>=p) & isfinite) # how many samples has max_proba >= p
 
-            # print(key, j, p, numpy.sum(correct), denominator, numpy.sum(correct) / denominator)
+            # logger.info(key, j, p, numpy.sum(correct), denominator, numpy.sum(correct) / denominator)
 
             # condition: at least some samples has max_proba > p, and enough candidates are correct:
             if denominator > 0 and numpy.sum(correct) / denominator > self.clas_threshold:
@@ -344,7 +363,7 @@ class FeatureValueAnomalyDetector():
 
         out = numpy.zeros_like(candidates, dtype=float)
         if p_out is None:
-            print("{}pass:clas_threshold {} not met".format(key, self.clas_threshold))
+            logger.debug("{}pass:clas_threshold {} not met".format(key, self.clas_threshold))
             return out
         else:
             if key=='low':
@@ -358,7 +377,7 @@ class FeatureValueAnomalyDetector():
             return out
 
     def _analyze_one_way(self, ifeature, train: numpy.ndarray, validation: numpy.ndarray,
-                         feature_types, metric_score_only=False):
+                         feature_types, max_samples=None, metric_score_only=False):
 
         """
         report_regression = \
@@ -372,8 +391,8 @@ class FeatureValueAnomalyDetector():
         report_classification = \
             dict(yt=[],
                  yp=[],
-                 probabiliy_of_yt = [], # y_proba of correct class
-                 probabiliy_of_yp = [], # y_proba of highest proba
+                 probability_of_yt = [], # y_proba of correct class
+                 probability_of_yp = [], # y_proba of highest proba
                  anomaly_score=[],
                  threshold=None,
                  metric_score=None)
@@ -385,6 +404,7 @@ class FeatureValueAnomalyDetector():
         x, y = self._get_xy(data=train, itarget=ifeature, drop_na=True)
         xv, yv = self._get_xy(data=validation, itarget=ifeature, drop_na=False)
 
+        yv_orig = yv.copy()
 
         if is_classification or self.reg_method == 'binning':
             if is_classification: # code to avoid 1 class in 1 set, but not in the other
@@ -400,10 +420,24 @@ class FeatureValueAnomalyDetector():
             y, bins, le = self._encode_target(y, is_classification=is_classification, le=None, bins=None)
             yv, _, _ = self._encode_target(yv, is_classification=is_classification, le=le, bins=bins)
             is_classification = True
+        else:
+            le = None
 
         model = self.get_model(is_classification=is_classification) # e.g. XGBoost
+        max_samples = max_samples or len(x)
+        if max_samples < len(x):
+            to_keep = numpy.arange(len(x)) < max_samples
+            numpy.random.RandomState(0).shuffle(to_keep)
+
+            if is_classification:
+                u, inds = numpy.unique(y, return_index=True)
+                to_keep[inds] = True # make sure all classes are represented to avoid bugs
+
+            x = x[to_keep,:]
+            y = y[to_keep]
         model.fit(x, y)
-        yp = model.predict(xv).astype(float)
+
+        yp = model.predict(xv)
 
         # average error (score) for entire validation set
         isfinite = numpy.isfinite(yv)
@@ -416,9 +450,9 @@ class FeatureValueAnomalyDetector():
             yproba = model.predict_proba(xv)
 
 
-            # print('highpass - certainty in incorrect answer')
+            # logger.debug('highpass - certainty in incorrect answer')
             out_high = self._analyze_yproba(yv, yproba, key='high')
-            # print('lowpass - certainty the correct answer is incorrect')
+            # logger.debug('lowpass - certainty the correct answer is incorrect')
             out_low = self._analyze_yproba(yv, yproba, key='low')
 
             out_anomaly_score = numpy.max(
@@ -433,12 +467,14 @@ class FeatureValueAnomalyDetector():
                 threshold = numpy.min(out_anomaly_score)+1
             threshold = max(threshold, 0.75)
 
-            yp[~numpy.isfinite(yv)] = numpy.nan
+            # yp[~numpy.isfinite(yv)] = numpy.nan
+            # yt_int = yv.astype(int).astype(object)
+            # yt_int[~numpy.isfinite(yv)] = numpy.nan
             report_classification = \
-                dict(yt=yv,
-                     yp=yp,
-                     probabiliy_of_yt=[yproba[i, int(yv[i])] if numpy.isfinite(yv[i]) else numpy.nan for i in numpy.arange(len(yv))],  # y_proba of correct class
-                     probabiliy_of_yp=yproba,  # y_proba of highest proba
+                dict(yt=yv_orig,
+                     yp=le.inverse_transform(yp),
+                     probability_of_yt=[yproba[i, int(yv[i])] if numpy.isfinite(yv[i]) else numpy.nan for i in numpy.arange(len(yv))],  # y_proba of correct class
+                     probability_of_yp=yproba,  # y_proba of highest proba
                      anomaly_score=out_anomaly_score,
                      threshold=threshold,
                      metric_score=metric_score,
@@ -454,10 +490,10 @@ class FeatureValueAnomalyDetector():
             deltas_orig = deltas.copy()
             deltas_scaled = scale(deltas)
 
-            if 'dt' in self.reg_method or 'xgb' in self.reg_method:
+            if self.reg_method=='std':
                 # trying to divide the space into subspaces with similar error.
                 y_delta = deltas_scaled[isfinite]
-                noise = (1 + 1e-3 * rs.rand(len(y_delta)))
+                noise = 1 + 1e-3 * numpy.random.RandomState(0).rand(len(y_delta))
                 y_delta *= noise
 
                 x_ = xv[isfinite,:].copy()
@@ -505,7 +541,7 @@ class FeatureValueAnomalyDetector():
 
                 yp[~numpy.isfinite(yv)] = numpy.nan
                 report_regression = \
-                    dict(yt=yv,
+                    dict(yt=yv_orig,
                          yp=yp,
                          n_stds=n_stds,
                          yrange=yrange,
@@ -519,68 +555,25 @@ class FeatureValueAnomalyDetector():
                 raise NotImplementedError(str(self.reg_method))
 
 
+    def anomalies_in_data_report(self, train: DMD, test:DMD=None,
+                                 features_to_analyze: List[str] = None,
+                                 perform_extra_iteration=False,
+                                 max_samples=None,
+                                 **kwargs) -> AnomaliesInDataReport:
 
-if __name__ == '__main__':
+        if test is not None:
+            train = DMD.concat([train, test])
 
-    from resources.datasets.california_housing import CaliforniaHousing
-    from resources.datasets.uci_adult import UCIAdult
-    from resources.datasets.linear import LinearRegressionDataset
-    import os, pandas
-    from pytolemaic import FeatureTypes, DMD, HOME_DIR, PyTrust
-    num, cat = FeatureTypes.numerical, FeatureTypes.categorical
+        if not features_to_analyze:
+            extra_msg = "This may take some time. Use features_to_analyze argument to analyze a subset of features."
+            logger.info("Analyzing {} features for anomalous values. {}".format(train.n_features, extra_msg))
+        else:
+            logger.info("Analyzing {} features for anomalous values.".format(len(features_to_analyze)))
 
-    # # train, test = CaliforniaHousing().as_dmd()
-    # train, test = UCIAdult().as_dmd()
-    # train = DMD.concat([train,test])
-    #
-    # ##
-
-    #
-    train_path = os.path.join(HOME_DIR, 'resources', 'datasets', 'titanic-train.csv')
-    df_train = pandas.read_csv(train_path)
-    feature_types = [num, cat, cat, cat, num, num, num, cat, num, cat, cat]
-    feature_types = [t for i,t in enumerate(feature_types) if df_train.columns[i] not in ['PassengerId', 'Pclass', 'Name']]
-    df_train.drop(columns=['PassengerId', 'Pclass', 'Name'], inplace=True)
-
-    dmd_train, dmd_test = DMD.from_df(df_train=df_train, df_test=None,
-                                      is_classification=True,
-                                      target_name='Survived',
-                                      feature_types=feature_types,
-                                      categorical_encoding=True, nan_list=['?'],
-                                      split_ratio=None)
-
-    dmd_train,dmd_test = UCIAdult().as_dmd()
-    print(dmd_train.feature_names)
-
-    ##
-    """"""
-    rs = numpy.random.RandomState(0)
-    x = rs.rand(100000,3)
-    x[:,0] = x[:,1] + x[:,2]  + 1e-2*rs.rand(len(x))
-    x[:12,0]+=0.2
-    # x[10:20,0]*=0.2
-    y = rs.rand(100000)
-    #
-    # dmd_train = DMD(x, y,
-    #                 feature_types=[num]*x.shape[1],
-    #                 )
-
-    fad = FeatureValueAnomalyDetector(
-        base_estimator='xgb', use_target=False,
-                 reg_metric='r2', clas_metric='recall',
-                 clas_threshold=0.95,
-                contamination=0.001,
-                n_stds=3,
-                # reg_method='binning',
-                reg_method='xgb',
-        eval_metric='merror', use_label_encoder=False, # xgb kwargs
-    )
-    out_report = fad.analyze(dmd_train, features_to_analyze=['sex'])
-
-    from anomaly_values_in_data_report import AnomaliesInDataReport
-    report = AnomaliesInDataReport(out_report, dmd_train.categorical_encoding_by_feature_name)
-
-    print("\n".join(report.insights(n_top_features=3)))
-
-    report.plot(plot_only_above_threshold=False)
-    plt.show()
+        analysis = self.analyze(dmd_train=train,
+                                features_to_analyze=features_to_analyze,
+                                perform_extra_iteration=perform_extra_iteration,
+                                max_samples=max_samples)
+        return AnomaliesInDataReport(
+            anomalies_report = analysis,
+            categorical_encoding_by_feature_name = train.categorical_encoding_by_feature_name)

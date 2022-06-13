@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy
 
 from pytolemaic.analysis_logic.dataset_analysis.dataset_analysis import DatasetAnalysis, CovarianceShift
@@ -18,6 +20,8 @@ from pytolemaic.utils.constants import CLASSIFICATION, REGRESSION, FeatureTypes
 from pytolemaic.utils.dmd import DMD, ShuffleSplitter, StratifiedSplitter
 from pytolemaic.utils.general import GeneralUtils, get_logger
 from pytolemaic.utils.metrics import Metrics, Metric
+from pytolemaic.analysis_logic.dataset_analysis.anomaly_values_in_data_report import AnomaliesInDataReport
+from pytolemaic.analysis_logic.dataset_analysis.anomaly_values_in_data import AnomalyValuesDetector
 
 logger = get_logger(__name__)
 
@@ -323,6 +327,35 @@ class PyTrust():
         report = dataset_analysis.dataset_analysis_report(train=train, test=test)
         return report
 
+
+    @classmethod
+    def create_anomalies_in_data_report(cls, train: DMD, test:DMD=None,
+                                        anomalies_values_detector:AnomalyValuesDetector=None,
+                                        features_to_analyze:List[str]=None,
+                                        max_samples=100000,
+                                        use_target: bool = False,
+                                        **kwargs) -> AnomaliesInDataReport:
+        """
+        Create anomalies-in-data report by analyzing train data
+
+        Args:
+            train - train data
+            test - test data, if available
+            anomalies_values_detector - if to use custom detector
+            use_target - whether to use target to detect anomalies. Has effect only if anomalies_values_detector is not provided
+            features_to_analyze - list of feature to analyze. If None, all features will be analyzed.
+            max_samples - limit the number of samples to use for model trainings. Set value to 'None' to remove limitation.
+        Returns:
+            AnomaliesInDataReport
+        """
+
+        anomalies_values_detector = anomalies_values_detector or AnomalyValuesDetector(use_target=use_target, **kwargs)
+
+        report = anomalies_values_detector.anomalies_in_data_report(train=train, test=test, features_to_analyze=features_to_analyze, max_samples=max_samples, **kwargs)
+        return report
+
+
+
     @classmethod
     def create_pytrust_report(cls, pytrust) -> PyTrustReport:
         """
@@ -335,13 +368,13 @@ class PyTrust():
     @classmethod
     def create_pytrust_for_separability_test(cls, train: DMD, test: DMD, covariance_shift=None, **pytrust_kwargs):
         """
-        Create scoring report
+        Create Pytrust object on train/test separation model, to analyze source of discrepancy between sets.
         Args:
             train - train data (DMD).
             test - test data (DMD).
 
         Returns:
-            separability pytrust
+            PyTrust initiated on separability model
         """
 
         covariance_shift = covariance_shift or CovarianceShift()
@@ -377,6 +410,19 @@ class PyTrust():
         self.dataset_analysis = DatasetAnalysis(problem_Type=CLASSIFICATION if self.is_classification else REGRESSION)
         return self.create_dataset_analysis_report(train=self.train, test=self.test, is_classification=self.is_classification,
                                                    dataset_analysis=self.dataset_analysis)
+
+    def _create_anomalies_in_data_report(self, **kwargs)->AnomaliesInDataReport:
+        defaults = dict(use_target=False, #default is True
+                        reg_metric='r2', #default
+                        clas_metric='recall', #default
+                        clas_threshold=0.95, # default
+                        contamination=0.001,
+                        reg_method='std', # default
+                        n_stds=3)
+
+        defaults.update(kwargs)
+        self.anomaly_values_analysis = AnomalyValuesDetector(**defaults)
+        return self.create_anomalies_in_data_report(train=self.train, test=self.test, anomalies_values_detector=self.anomaly_values_analysis)
 
     def _create_pytrust_report(self):
         return self.create_pytrust_report(pytrust=self)
@@ -465,6 +511,12 @@ class PyTrust():
     @cache
     def dataset_analysis_report(self)->DatasetAnalysisReport:
         return self._create_dataset_analysis_report()
+
+    @property
+    @cache
+    def anomalies_in_data_report(self)->AnomaliesInDataReport:
+        return self._create_anomalies_in_data_report()
+
 
     @property
     @cache
