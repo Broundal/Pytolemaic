@@ -399,10 +399,22 @@ class SklearnClassificationReport(Report):
 
 
 class ConfusionMatrixReport(Report):
-    def __init__(self, y_true, y_pred, labels: list = None):
-        self._confusion_matrix = confusion_matrix(y_true=y_true, y_pred=y_pred,
-                                                  labels=unique_labels(y_true, y_pred)).tolist()
-        self._labels = labels if labels is not None else unique_labels(y_true, y_pred).tolist()
+    def __init__(self, y_true, y_pred, labels: list = None, sample_weight=None):
+
+        u_labels = unique_labels(y_true, y_pred)
+        cm_labels = numpy.arange(numpy.max(u_labels)+1)
+        if labels:
+            if len(cm_labels) > len(labels):
+                raise ValueError("Not enough labels for given data")
+            elif len(cm_labels) < len(labels):
+                cm_labels = numpy.arange(len(labels))
+
+        cm = confusion_matrix(y_true=y_true, y_pred=y_pred, labels=cm_labels,
+                              sample_weight=sample_weight)
+
+        self._labels = labels or cm_labels
+
+        self._confusion_matrix = cm.tolist()
         if isinstance(self._labels, numpy.ndarray):
             self._labels = self._labels.tolist()
 
@@ -417,7 +429,7 @@ class ConfusionMatrixReport(Report):
     @property
     def normalized_confusion_matrix(self):
         cm = numpy.array(self.confusion_matrix)
-        cm = cm / cm.sum(axis=1)[:, numpy.newaxis]
+        cm = cm / (1e-3+cm.sum(axis=1)[:, numpy.newaxis])
 
         return GeneralUtils.f3(cm).tolist()
 
@@ -446,7 +458,8 @@ class ConfusionMatrixReport(Report):
 
         ax.set(xticks=[-0.5] + numpy.arange(cm.shape[1]).tolist() + [cm.shape[1] - 0.5],
                yticks=[-0.5] + numpy.arange(cm.shape[0]).tolist() + [cm.shape[0] - 0.5],
-               xticklabels=[''] + labels + [''], yticklabels=[''] + labels + [''],
+               xticklabels=[''] + labels + [''],
+               yticklabels=[''] + labels + [''],
                title=title,
                ylabel='True labels',
                xlabel='Predicted labels')
@@ -461,25 +474,58 @@ class ConfusionMatrixReport(Report):
             cm = cm.astype(int)
         # noinspection PyArgumentList
         thresh = cm.max() / 2.
+        # mx_i = numpy.max(cm, axis=1) # max per line
+        # mx_j = numpy.max(cm, axis=0) # max per col
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                ax.text(j, i, format(cm[i, j], fmt),
-                        ha="center", va="center",
-                        color="white" if cm[i, j] > thresh else "black")
+                if len(cm)>5 and cm[i,j] == 0:# cm[i,j]<=0.75*mx_j[j] and cm[i,j]<=0.75*mx_i[i]:
+                    pass # matrix is too big, make it more readable
+                else:
+                    ax.text(j, i, format(cm[i, j], fmt),
+                            ha="center", va="center",
+                            color="white" if cm[i, j] > thresh else "black",
+                            clip_on=True,
+                            )
         return ax
 
-    def plot(self, axs=None, figsize=(12,5)):
+    def cm_no_empty_classes(self, cm, labels, another_cm=None):
+        """
+        remove classes which are not present in confusion matrix
+        """
+        cm = numpy.array(cm)
+        labels = numpy.array(labels)
+
+        to_keep = (numpy.sum(cm, axis=0)>0) | (numpy.sum(cm, axis=1)>0) # yt or yp
+        cm = cm[to_keep,:]
+        cm = cm[:,to_keep]
+        labels = labels[to_keep]
+
+        if another_cm:
+            another_cm = numpy.array(another_cm)
+            another_cm = another_cm[to_keep, :]
+            another_cm = another_cm[:, to_keep]
+            another_cm = another_cm.tolist()
+
+        return cm.tolist(), labels.tolist(), another_cm
+
+    def plot(self, axs=None, figsize=(12,5), show_empty_class=False):
         if axs is None:
-            fig, axs = plt.subplots(1, 2, figsize=figsize)
+            fig, axs = plt.subplots(1, 2, figsize=figsize, sharex=True, sharey=True)
 
         ax1, ax2 = axs
 
-        self._plot_confusion_matrix(confusion_matrix=self.confusion_matrix,
-                                    labels=self.labels,
+        cm = self.confusion_matrix
+        cm_norm = self.normalized_confusion_matrix
+        labels = self.labels
+        if not show_empty_class:
+            cm, labels, cm_norm = self.cm_no_empty_classes(self.confusion_matrix, self.labels, another_cm=self.normalized_confusion_matrix)
+
+        self._plot_confusion_matrix(confusion_matrix=cm,
+                                    labels=labels,
                                     title='Confusion Matrix',
                                     ax=ax1)
-        self._plot_confusion_matrix(confusion_matrix=self.normalized_confusion_matrix,
-                                    labels=self.labels,
+        self._plot_confusion_matrix(confusion_matrix=cm_norm,
+                                    labels=labels,
                                     title='Normalized confusion Matrix',
                                     ax=ax2)
 
@@ -801,3 +847,9 @@ class ScoringFullReport(Report):
 if __name__ == '__main__':
     from pprint import pprint
     pprint(ScoringFullReport.to_dict_meaning(), width=160)
+
+    x = numpy.random.randint(0,50,3000)
+    y = numpy.random.randint(0,50,3000)
+    labels=numpy.round(numpy.random.rand(100), 2).tolist()
+    ConfusionMatrixReport(y_true=x, y_pred=y, labels=labels).plot()
+    plt.show()
