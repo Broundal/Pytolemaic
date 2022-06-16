@@ -403,7 +403,7 @@ class ConfusionMatrixReport(Report):
 
         u_labels = unique_labels(y_true, y_pred)
         cm_labels = numpy.arange(numpy.max(u_labels)+1)
-        if labels:
+        if labels is not None:
             if len(cm_labels) > len(labels):
                 raise ValueError("Not enough labels for given data")
             elif len(cm_labels) < len(labels):
