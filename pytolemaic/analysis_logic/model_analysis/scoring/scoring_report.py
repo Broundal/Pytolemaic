@@ -412,7 +412,7 @@ class ConfusionMatrixReport(Report):
         cm = confusion_matrix(y_true=y_true, y_pred=y_pred, labels=cm_labels,
                               sample_weight=sample_weight)
 
-        self._labels = labels or cm_labels
+        self._labels = labels if labels is not None else cm_labels
 
         self._confusion_matrix = cm.tolist()
         if isinstance(self._labels, numpy.ndarray):

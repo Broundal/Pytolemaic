@@ -4,7 +4,7 @@ import sklearn.model_selection
 from matplotlib import pyplot as plt
 from sklearn.tree import DecisionTreeClassifier
 
-from pytolemaic import PyTrust
+from pytolemaic import PyTrust, FeatureTypes
 
 
 def run():
@@ -40,6 +40,7 @@ def run():
         xtrain=xtrain, ytrain=ytrain,
         xtest=xtest, ytest=ytest,
         feature_names=feature_names,
+        feature_types=[FeatureTypes.numerical] * xtrain.shape[1],
         target_labels={i: label for i, label in enumerate(labels)},
         splitter='stratified',
         metric='recall')
@@ -51,6 +52,8 @@ def run():
     pytrust.dataset_analysis_report.plot()
 
     pytrust.quality_report.plot()
+
+    pytrust.anomalies_in_data_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
     explainer = pytrust.create_lime_explainer(max_samples=16000)

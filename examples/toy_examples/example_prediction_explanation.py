@@ -28,7 +28,7 @@ def run():
 
         # Create explanation for target sample
         print("\nLet's create a Lime explainer")
-        lime_explainer = pytrust.create_lime_explainer(max_samples=8000)
+        lime_explainer = pytrust.create_lime_explainer(max_samples=4000)
 
         print("And plot explanation for the first sample in test data: {}".format(sample))
         lime_explainer.plot(sample)

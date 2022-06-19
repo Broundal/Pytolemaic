@@ -67,6 +67,9 @@ class AnomalyValuesDetector():
     def analyze(self, dmd_train: DMD, features_to_analyze:List[str]=None, perform_extra_iteration=False,
                 max_samples=None):
 
+        if dmd_train.feature_types is None:
+            raise ValueError("Analysis for anomalous values in dataset requires feature types information.")
+
         inds1, inds2, train1, train2 = self.split_train_into_2_parts(dmd_train)
 
         if features_to_analyze:

@@ -40,7 +40,8 @@ class PyTrustReport(Report):
     def _reports(self):
         logger.info("Calculating all possible reports, this may take some time.\n"
                     "It's possible to access the reports directly through the following attributes:\n"
-                    +"\n".join(["* pytrust.{} or pytrust.report.{}".format(key) for key in self.to_dict_meaning().keys()]))
+                    +"\n".join(["* pytrust.{} or pytrust.report.{}".format(key, key)
+                                for key in self.to_dict_meaning().keys()]))
         return {key: self._get_report(self.pytrust, key, verbose=True) for key in self.to_dict_meaning().keys()}
 
     def to_dict(self, printable=False):

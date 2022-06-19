@@ -46,8 +46,9 @@ class Scoring():
             y_proba = y_proba if y_proba is not None else model.predict_proba(x_test)
             y_pred = y_pred if y_pred is not None else numpy.argmax(y_proba, axis=1)
 
+            labels_ = labels if labels is not None else unique_labels(y_true, y_pred)
             confusion_matrix = ConfusionMatrixReport(y_true=y_true, y_pred=y_pred,
-                                                     labels=labels or unique_labels(y_true, y_pred))
+                                                     labels=labels_)
 
             classification_report = SklearnClassificationReport(y_true=y_true, y_pred=y_pred, y_proba=y_proba, labels=labels)
 

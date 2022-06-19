@@ -32,6 +32,14 @@ def run(fast=False):
     print('\n'.join(pytrust.dataset_analysis_report.insights()))
     print("Calculating... Done")
 
+    print("Let's check for anomalies in the dataset")
+    print("Calculating...")
+    pytrust.anomalies_in_data_report.plot()
+    print('\n'.join(pytrust.anomalies_in_data_report.insights()))
+    print("Calculating... Done")
+
+    plt.show()
+
     print("Let's calculate score report")
     print("Calculating...")
     scoring_report = pytrust.scoring_report

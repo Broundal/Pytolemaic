@@ -11,6 +11,10 @@ def run(fast=False):
     classifier = dataset.get_model()
     train, test = dataset.as_dmd()
 
+    if fast:
+        train, _ = train.split(0.7)
+        test, _ = test.split(0.7)
+
     metric = Metrics.recall.name
 
     pytrust = PyTrust(

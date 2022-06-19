@@ -45,7 +45,7 @@ class AnomaliesInDataReport(Report):
             metric="Metric used to calculate metric_score")
 
     def plot(self, features_to_plot=None,
-             plot_only_above_threshold=True,
+             plot_only_above_threshold=False,
              figsize=(10,10)):
         features_to_plot = features_to_plot or sorted(self._report.keys())
 
