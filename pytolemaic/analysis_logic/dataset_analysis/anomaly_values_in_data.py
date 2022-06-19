@@ -529,7 +529,7 @@ class AnomalyValuesDetector():
 
                 # score is 1-1/#std. e.g. std=2 --> score=0.5. std=3 --> score=0.66
                 # high score --> high anomaly
-                anomaly_score = 1 - 1 / n_stds
+                anomaly_score = 1 - 1 / (n_stds+1e-10)
 
                 # points with low error are considered normal, even if out of distribution for leaf
                 anomaly_score[numpy.abs(yp-yv) < self.range_ratio * yrange] = 0

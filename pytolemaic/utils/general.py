@@ -171,6 +171,7 @@ class GeneralUtils():
 
     @classmethod
     def shorten_long_dict(cls, dictionary: dict, dict_limit=20, list_limit=10):
+        dictionary = copy.copy(dictionary)
         if len(dictionary) > dict_limit:
             keys = list(dictionary.keys())[:dict_limit]
             dictionary = {key: dictionary[key] for key in keys}

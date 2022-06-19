@@ -12,8 +12,8 @@ def run(fast=False):
     train, test = dataset.as_dmd()
 
     if fast:
-        train, _ = train.split(0.7)
-        test, _ = test.split(0.7)
+        train, _ = train.split(0.98)
+        test, _ = test.split(0.98)
 
     metric = Metrics.recall.name
 

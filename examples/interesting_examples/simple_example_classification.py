@@ -7,7 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 from pytolemaic import PyTrust, FeatureTypes
 
 
-def run():
+def run(fast=False):
     # Dataset: xtrain, ytrain, xtest, ytest
     # noinspection PyUnresolvedReferences
     data = sklearn.datasets.load_wine(return_X_y=False)
@@ -22,6 +22,15 @@ def run():
 
     xtrain, ytrain = x[train_inds], y[train_inds]
     xtest, ytest = x[test_inds], y[test_inds]
+
+    if fast:
+        inds = numpy.random.permutation(len(xtrain))[:500]
+        xtrain = xtrain[inds,:]
+        ytrain = ytrain[inds]
+        inds = numpy.random.permutation(len(xtest))[:500]
+        xtest = xtest[inds, :]
+        ytest = ytest[inds]
+
 
     # Train estimator
     estimator = DecisionTreeClassifier()
@@ -56,7 +65,7 @@ def run():
     pytrust.anomalies_in_data_report.plot()
 
     sample = xtest[0, :].reshape(1, -1)
-    explainer = pytrust.create_lime_explainer(max_samples=16000)
+    explainer = pytrust.create_lime_explainer(max_samples=4000 if fast else 16000)
     explainer.explain(sample=sample)
 
     uncertainty_model = pytrust.create_uncertainty_model(method='default')

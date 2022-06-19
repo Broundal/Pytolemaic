@@ -173,8 +173,8 @@ class DatasetAnalysis():
     def dataset_analysis_report(self, train: DMD, test:DMD=None) -> DatasetAnalysisReport:
         nan_counts_features, nan_counts_samples = self.count_missing_values(dataset=train)
 
-        self.count_unique_classes(dataset=train)
-        self.count_outliers(dataset=train)
+        # self.count_unique_classes(dataset=train)
+        # self.count_outliers(dataset=train)
         if test is None:
             covariance_report = None
         else:

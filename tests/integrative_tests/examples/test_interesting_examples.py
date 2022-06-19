@@ -8,10 +8,10 @@ from examples.interesting_examples import adult_example, california_housing_exam
 class TestInterestingExamples(unittest.TestCase):
 
     def test_simple_example_cla(self):
-        simple_example_classification.run()
+        simple_example_classification.run(fast=True)
 
     def test_simple_example_reg(self):
-        simple_example_regression.run()
+        simple_example_regression.run(fast=True)
 
     # @unittest.skip("adult_dataset example - Takes time")
     def test_adult_dataset(self):

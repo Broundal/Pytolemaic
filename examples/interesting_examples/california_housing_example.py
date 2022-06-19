@@ -12,6 +12,10 @@ def run(fast=False):
     estimator = dataset.get_model()
     train, test = dataset.as_dmd()
 
+    if fast:
+        train, _ = train.split(0.95)
+        test, _ = test.split(0.95)
+
     metric = Metrics.rmse.name
 
     pytrust = PyTrust(
@@ -37,8 +41,6 @@ def run(fast=False):
     pytrust.anomalies_in_data_report.plot()
     print('\n'.join(pytrust.anomalies_in_data_report.insights()))
     print("Calculating... Done")
-
-    plt.show()
 
     print("Let's calculate score report")
     print("Calculating...")
