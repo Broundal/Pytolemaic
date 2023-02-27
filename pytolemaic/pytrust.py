@@ -71,7 +71,7 @@ pytrust = PyTrust(model=model, # Trained model with Sklearn-like API
 # If your data is in pandas.DataFrame format with non-numeric values, see help(key='basic pytrust from df') 
 
 # run all analysis and get a list of distilled insights",
-insights = pytrust.insights()
+insights = pytrust.insights
 print("\\n".join(insights))
 
 # run all analysis and plot all graphs
